@@ -1,0 +1,30 @@
+﻿# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+.cache/
+# React / frontend
+node_modules/
+dist/
+build/
+coverage/
+.next/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
