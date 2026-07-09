@@ -359,6 +359,24 @@ button {
   stroke-width: 5;
 }
 
+
+.sleeve {
+  fill: #d9dde4;
+  stroke: #596a78;
+  stroke-width: 7;
+}
+
+.sleeve-mark {
+  fill: #ffffff;
+  stroke: #596a78;
+  stroke-width: 4;
+}
+
+.sleeve-text {
+  fill: #172033;
+  font-size: 25px;
+  font-weight: 900;
+}
 @media (max-width: 720px) {
   .app-header {
     align-items: flex-start;

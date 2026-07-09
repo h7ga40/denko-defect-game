@@ -3,7 +3,9 @@ export type DefectType =
   | "reverse_loop"
   | "reverse_polarity"
   | "missing_ground"
-  | "sheath_too_short";
+  | "sheath_too_short"
+  | "ring_sleeve_wrong_mark"
+  | "ring_sleeve_insufficient_insert";
 
 export type Problem = {
   id: string;
@@ -96,5 +98,37 @@ export const problems: Problem[] = [
     answer: "外装がボックス内に十分入っていない",
     explanation:
       "ケーブル外装はボックス内へ適切に入れる必要があります。図では外装の入り込みが短すぎる状態として示しています。",
+  },
+  {
+    id: "ring-sleeve-wrong-mark",
+    title: "リングスリーブ 刻印不適合",
+    circuitName: "リングスリーブ圧着の簡略図",
+    defectType: "ring_sleeve_wrong_mark",
+    question: "図のリングスリーブ圧着状態として、最も適切な欠陥を選んでください。",
+    choices: [
+      "欠陥なし",
+      "リングスリーブの刻印が不適合",
+      "心線の差し込み不足",
+      "接地線の接続忘れ",
+    ],
+    answer: "リングスリーブの刻印が不適合",
+    explanation:
+      "リングスリーブは電線の本数と太さに合うサイズ・刻印で圧着します。図は接続条件に対して刻印が合っていない例として示しています。",
+  },
+  {
+    id: "ring-sleeve-insert",
+    title: "リングスリーブ 心線差し込み不足",
+    circuitName: "リングスリーブ圧着の簡略図",
+    defectType: "ring_sleeve_insufficient_insert",
+    question: "図のリングスリーブ圧着状態として、最も適切な欠陥を選んでください。",
+    choices: [
+      "欠陥なし",
+      "心線の差し込み不足",
+      "白線と黒線の接続が逆",
+      "輪作りの向きが逆",
+    ],
+    answer: "心線の差し込み不足",
+    explanation:
+      "心線はリングスリーブ内へ十分に差し込んでから圧着します。図では片方の心線が短く、圧着部に十分入っていない状態です。",
   },
 ];
