@@ -19,39 +19,49 @@ export function WiringDiagram({ defectType }: WiringDiagramProps) {
     return <RingSleeveDiagram defectType={defectType} />;
   }
 
-  const blackTarget = defectType === "reverse_polarity" ? "side" : "center";
-  const whiteTarget = defectType === "reverse_polarity" ? "center" : "side";
+  return <LampReceptacleDiagram defectType={defectType} />;
+}
+
+function LampReceptacleDiagram({
+  defectType,
+}: {
+  defectType: "none" | "reverse_loop" | "reverse_polarity";
+}) {
+  const blackTarget = defectType === "reverse_polarity" ? "shell" : "center";
+  const whiteTarget = defectType === "reverse_polarity" ? "center" : "shell";
   const reverseLoop = defectType === "reverse_loop";
 
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label="ランプレセプタクル配線図">
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
-      <circle className="fixture" cx="360" cy="190" r="84" />
-      <circle className="terminal center" cx="360" cy="190" r="22" />
-      <circle className="terminal side" cx="500" cy="190" r="22" />
+      <rect className="cable-sheath" x="72" y="170" width="88" height="40" rx="20" />
+      <circle className="fixture" cx="424" cy="190" r="92" />
+      <circle className="fixture-inner" cx="424" cy="190" r="58" />
+      <circle className="terminal center" cx="424" cy="190" r="21" />
+      <circle className="terminal side" cx="508" cy="190" r="21" />
       <text className="label" x="360" y="103" textAnchor="middle">
         ランプレセプタクル
       </text>
-      <text className="small" x="360" y="246" textAnchor="middle">
+      <text className="small" x="424" y="266" textAnchor="middle">
         中心接点
       </text>
-      <text className="small" x="500" y="246" textAnchor="middle">
+      <text className="small" x="508" y="266" textAnchor="middle">
         ねじ受け側
       </text>
 
       <Wire
         colorName="black"
         label="黒"
-        y={145}
+        y={154}
         target={blackTarget}
         reverseLoop={reverseLoop && blackTarget === "center"}
       />
       <Wire
         colorName="white"
         label="白"
-        y={235}
+        y={226}
         target={whiteTarget}
-        reverseLoop={reverseLoop && whiteTarget === "side"}
+        reverseLoop={reverseLoop && whiteTarget === "shell"}
       />
 
       {defectType !== "none" && (
@@ -62,7 +72,6 @@ export function WiringDiagram({ defectType }: WiringDiagramProps) {
     </svg>
   );
 }
-
 function Wire({
   colorName,
   label,
@@ -73,29 +82,28 @@ function Wire({
   colorName: "black" | "white";
   label: string;
   y: number;
-  target: "center" | "side";
+  target: "center" | "shell";
   reverseLoop: boolean;
 }) {
-  const targetX = target === "center" ? 360 : 500;
-  const targetY = target === "center" ? 190 : 190;
+  const targetX = target === "center" ? 424 : 508;
+  const targetY = 190;
+  const approachX = reverseLoop ? targetX + 44 : targetX - 44;
   const loopPath = reverseLoop
-    ? `M ${targetX - 8} ${targetY - 26} C ${targetX - 44} ${targetY - 12}, ${targetX - 44} ${targetY + 28}, ${targetX - 8} ${targetY + 26}`
-    : `M ${targetX + 8} ${targetY - 26} C ${targetX + 44} ${targetY - 12}, ${targetX + 44} ${targetY + 28}, ${targetX + 8} ${targetY + 26}`;
+    ? `M ${targetX + 12} ${targetY - 27} C ${targetX + 45} ${targetY - 10}, ${targetX + 45} ${targetY + 27}, ${targetX + 12} ${targetY + 27}`
+    : `M ${targetX - 12} ${targetY - 27} C ${targetX - 45} ${targetY - 10}, ${targetX - 45} ${targetY + 27}, ${targetX - 12} ${targetY + 27}`;
 
   return (
     <g>
-      <path className={`wire ${colorName}`} d={`M 95 ${y} C 190 ${y}, 220 ${targetY}, ${targetX - 36} ${targetY}`} />
+      <path className={`wire ${colorName}`} d={`M 120 ${y} C 214 ${y}, 286 ${targetY}, ${approachX} ${targetY}`} />
       <path className={`wire loop ${reverseLoop ? "alert" : colorName}`} d={loopPath} />
-      <rect className={`tag ${colorName}`} x="56" y={y - 21} width="54" height="42" rx="9" />
-      <text className="tag-text" x="83" y={y + 7} textAnchor="middle">
+      <rect className={`tag ${colorName}`} x="50" y={y - 21} width="54" height="42" rx="9" />
+      <text className="tag-text" x="77" y={y + 7} textAnchor="middle">
         {label}
       </text>
-      {reverseLoop && <circle className="warning" cx={targetX - 38} cy={targetY} r="18" />}
+      {reverseLoop && <circle className="warning" cx={targetX + 38} cy={targetY} r="18" />}
     </g>
   );
 }
-
-
 function RingSleeveDiagram({
   defectType,
 }: {

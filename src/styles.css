@@ -243,6 +243,11 @@ button {
   stroke: #879caf;
   stroke-width: 7;
 }
+.fixture-inner {
+  fill: none;
+  stroke: #d9e5ec;
+  stroke-width: 4;
+}
 
 .device,
 .box {
