@@ -66,6 +66,32 @@ button {
   text-align: center;
 }
 
+.mode-switch {
+  display: inline-flex;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 5px;
+  border: 1px solid #c8d7e0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.mode-button {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #526272;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.mode-button.selected {
+  background: #1f6f8b;
+  color: #ffffff;
+}
+
 .problem-card,
 .score-card {
   background: #ffffff;
@@ -105,6 +131,60 @@ button {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.candidate-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.candidate-list {
+  display: grid;
+  align-self: start;
+  gap: 8px;
+}
+
+.candidate-tab {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  min-height: 54px;
+  padding: 10px 12px;
+  border: 1px solid #c8d7e0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+  cursor: pointer;
+  font-weight: 800;
+  text-align: left;
+}
+
+.candidate-tab span {
+  color: #27606d;
+  font-size: 0.82rem;
+}
+
+.candidate-tab.selected {
+  border-color: #1f6f8b;
+  background: #eaf7fb;
+}
+
+.candidate-card {
+  min-width: 0;
+}
+
+.candidate-theme {
+  margin: 10px 0 0;
+  color: #526272;
+  font-weight: 700;
+}
+
+.point-list {
+  margin: 14px 0 0;
+  padding-left: 1.2rem;
+  color: #526272;
+  line-height: 1.7;
 }
 
 .question {
@@ -382,6 +462,112 @@ button {
   font-size: 25px;
   font-weight: 900;
 }
+
+.candidate-svg-title {
+  fill: #172033;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.candidate-wire {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 7;
+}
+
+.candidate-wire.black {
+  stroke: #171717;
+}
+
+.candidate-wire.white {
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 1px #56616b) drop-shadow(0 0 1px #56616b);
+}
+
+.candidate-wire.red {
+  stroke: #c83349;
+}
+
+.candidate-wire.green {
+  stroke: #17945f;
+}
+
+.candidate-wire.blue {
+  stroke: #2f6fbb;
+}
+
+.candidate-device {
+  fill: #ffffff;
+  stroke: #596a78;
+  stroke-width: 4;
+}
+
+.candidate-device.power {
+  fill: #172033;
+  stroke: #172033;
+}
+
+.candidate-device.switch {
+  fill: #fff8e8;
+}
+
+.candidate-device.breaker,
+.candidate-device.terminal {
+  fill: #eef4f8;
+}
+
+.candidate-device.lamp {
+  fill: #fff8d6;
+}
+
+.candidate-device.pilot {
+  fill: #eaf7fb;
+}
+
+.candidate-device.receptacle {
+  fill: #ffffff;
+}
+
+.candidate-connector {
+  fill: #ffffff;
+  stroke: #596a78;
+  stroke-width: 4;
+}
+
+.candidate-label {
+  fill: #172033;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.candidate-device.power + .candidate-label {
+  fill: #ffffff;
+}
+
+.small-label {
+  font-size: 13px;
+}
+
+.device-mark {
+  stroke: #596a78;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.ground-hole {
+  fill: #17945f;
+}
+
+.wire-label {
+  fill: #526272;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 5;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 @media (max-width: 720px) {
   .app-header {
     align-items: flex-start;
@@ -398,5 +584,19 @@ button {
 
   .choices {
     grid-template-columns: 1fr;
+  }
+
+  .mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .candidate-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

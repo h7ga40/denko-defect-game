@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { CandidateDiagramView } from "./components/CandidateDiagramView";
 import { ProblemView } from "./components/ProblemView";
 import { ScoreView } from "./components/ScoreView";
 import { problems } from "./data/problems";
@@ -11,6 +12,7 @@ function getStoredBestScore() {
 }
 
 export default function App() {
+  const [mode, setMode] = useState<"quiz" | "diagrams">("quiz");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -54,20 +56,36 @@ export default function App() {
       <header className="app-header">
         <div>
           <p className="eyebrow">第二種電気工事士 技能試験</p>
-          <h1>欠陥判定トレーニング</h1>
+          <h1>{mode === "quiz" ? "欠陥判定トレーニング" : "候補問題 複線図"}</h1>
         </div>
-        <div className="score-pill" aria-label="現在のスコア">
-          {correctCount} / {problems.length}
-        </div>
+        {mode === "quiz" && (
+          <div className="score-pill" aria-label="現在のスコア">
+            {correctCount} / {problems.length}
+          </div>
+        )}
       </header>
 
-      {completed ? (
-        <ScoreView
-          bestScore={bestScore}
-          correctCount={correctCount}
-          onRestart={restart}
-          total={problems.length}
-        />
+      <nav className="mode-switch" aria-label="学習モード">
+        <button
+          className={mode === "quiz" ? "mode-button selected" : "mode-button"}
+          onClick={() => setMode("quiz")}
+          type="button"
+        >
+          欠陥判定
+        </button>
+        <button
+          className={mode === "diagrams" ? "mode-button selected" : "mode-button"}
+          onClick={() => setMode("diagrams")}
+          type="button"
+        >
+          複線図
+        </button>
+      </nav>
+
+      {mode === "diagrams" ? (
+        <CandidateDiagramView />
+      ) : completed ? (
+        <ScoreView bestScore={bestScore} correctCount={correctCount} onRestart={restart} total={problems.length} />
       ) : (
         <ProblemView
           index={currentIndex}
