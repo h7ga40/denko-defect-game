@@ -315,7 +315,7 @@ function toOverviewType(device: CandidateDevice): InspectionSlot["overviewType"]
     return "receptacle";
   }
 
-  if (device.type === "terminal" || device.type === "breaker") {
+  if (device.type === "terminal" || device.type === "breaker" || device.type === "box" || device.type === "motor") {
     return "device";
   }
 
