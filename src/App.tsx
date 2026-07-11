@@ -13,7 +13,7 @@ function getStoredBestScore() {
 }
 
 export default function App() {
-  const [mode, setMode] = useState<"quiz" | "diagrams" | "inspection">("quiz");
+  const [mode, setMode] = useState<"quiz" | "diagrams" | "inspection">("inspection");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -72,11 +72,11 @@ export default function App() {
 
       <nav className="mode-switch" aria-label="学習モード">
         <button
-          className={mode === "quiz" ? "mode-button selected" : "mode-button"}
-          onClick={() => setMode("quiz")}
+          className={mode === "inspection" ? "mode-button selected" : "mode-button"}
+          onClick={() => setMode("inspection")}
           type="button"
         >
-          欠陥判定
+          施工チェック
         </button>
         <button
           className={mode === "diagrams" ? "mode-button selected" : "mode-button"}
@@ -86,11 +86,11 @@ export default function App() {
           複線図
         </button>
         <button
-          className={mode === "inspection" ? "mode-button selected" : "mode-button"}
-          onClick={() => setMode("inspection")}
+          className={mode === "quiz" ? "mode-button selected" : "mode-button"}
+          onClick={() => setMode("quiz")}
           type="button"
         >
-          施工チェック
+          欠陥判定
         </button>
       </nav>
 

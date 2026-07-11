@@ -1,5 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "../data/candidateDiagrams";
+import type { InspectionPart } from "../data/inspectionGame";
+
+type InspectionAnswers = Record<string, string>;
+
+type CandidateSvgProps = {
+  diagram: CandidateDiagram;
+  inspectionParts?: InspectionPart[];
+  answers?: InspectionAnswers;
+  selectedPartId?: string;
+  submitted?: boolean;
+  onSelectPart?: (partId: string) => void;
+};
 
 export function CandidateDiagramView() {
   const [selectedNo, setSelectedNo] = useState(1);
@@ -44,7 +56,14 @@ export function CandidateDiagramView() {
   );
 }
 
-function CandidateSvg({ diagram }: { diagram: CandidateDiagram }) {
+export function CandidateSvg({
+  answers = {},
+  diagram,
+  inspectionParts = [],
+  onSelectPart,
+  selectedPartId,
+  submitted = false,
+}: CandidateSvgProps) {
   const devicesById = new Map(diagram.devices.map((device) => [device.id, device]));
 
   return (
@@ -81,6 +100,48 @@ function CandidateSvg({ diagram }: { diagram: CandidateDiagram }) {
       {diagram.devices.map((device) => (
         <DeviceNode device={device} key={device.id} />
       ))}
+
+      {inspectionParts.map((part) => {
+        const selected = part.id === selectedPartId;
+        const answered = Boolean(answers[part.id]);
+        const answerIsCorrect = answers[part.id] === part.answer;
+        const className = [
+          "hotspot",
+          selected ? "selected" : "",
+          answered ? "answered" : "",
+          submitted && answerIsCorrect ? "correct" : "",
+          submitted && answered && !answerIsCorrect ? "wrong" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        function handleKeyDown(event: KeyboardEvent<SVGRectElement>) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelectPart?.(part.id);
+          }
+        }
+
+        return (
+          <g key={part.id}>
+            <rect
+              aria-label={`${part.title}を選択`}
+              className={className}
+              height={part.hotspot.height}
+              onClick={() => onSelectPart?.(part.id)}
+              onKeyDown={handleKeyDown}
+              role="button"
+              tabIndex={0}
+              width={part.hotspot.width}
+              x={part.hotspot.x}
+              y={part.hotspot.y}
+            />
+            <text className="hotspot-label" x={part.hotspot.x + 12} y={part.hotspot.y + 22}>
+              {answered ? "回答済" : "選択"}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }

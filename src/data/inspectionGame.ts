@@ -1,3 +1,4 @@
+import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "./candidateDiagrams";
 import type { DefectType } from "./problems";
 
 export type InspectionSlot = {
@@ -48,6 +49,7 @@ type InspectionTemplate = {
 export type InspectionGameRound = {
   id: string;
   title: string;
+  candidate: CandidateDiagram;
   parts: InspectionPart[];
   defectCount: number;
 };
@@ -257,26 +259,85 @@ export const inspectionTemplates: InspectionTemplate[] = [
 ];
 
 export function createInspectionRound(): InspectionGameRound {
-  const defectCount = randomInt(2, 3);
-  const shuffledTemplates = shuffle(inspectionTemplates);
-  const defectTemplates = shuffledTemplates.slice(0, defectCount);
-  const normalTemplates = shuffle(
-    inspectionTemplates.filter((template) => !defectTemplates.some((defect) => defect.id === template.id)),
-  ).slice(0, inspectionSlots.length - defectCount);
-  const templates = shuffle([...defectTemplates, ...normalTemplates]);
-  const slots = shuffle(inspectionSlots);
-  const parts = templates.map((template, index) => {
-    const slot = slots[index];
-    const hasDefect = defectTemplates.some((defect) => defect.id === template.id);
+  const candidate = randomItem(candidateDiagrams);
+  const slots = shuffle(createSlotsForCandidate(candidate)).slice(0, 6);
+  const defectCount = Math.min(randomInt(2, 3), slots.length);
+  const defectSlotIds = new Set(shuffle(slots).slice(0, defectCount).map((slot) => slot.id));
+  const usedTemplateIds = new Set<string>();
+  const parts = slots.map((slot, index) => {
+    const hasDefect = defectSlotIds.has(slot.id);
+    const template = selectTemplateForSlot(slot, hasDefect, usedTemplateIds);
+    usedTemplateIds.add(template.id);
     return toInspectionPart(template, slot, hasDefect, index + 1);
   });
 
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    title: `ランダム施工チェック ${defectCount}か所欠陥`,
+    title: `候補問題No.${candidate.no} 施工チェック`,
+    candidate,
     parts,
     defectCount,
   };
+}
+
+function createSlotsForCandidate(candidate: CandidateDiagram): InspectionSlot[] {
+  return candidate.devices
+    .filter((device) => device.type !== "power")
+    .map((device) => toInspectionSlot(candidate, device));
+}
+
+function toInspectionSlot(candidate: CandidateDiagram, device: CandidateDevice): InspectionSlot {
+  const width = device.type === "lamp" || device.type === "pilot" ? 132 : 144;
+  const height = device.type === "lamp" || device.type === "pilot" ? 120 : 112;
+
+  return {
+    id: `candidate-${candidate.no}-${device.id}`,
+    location: `候補問題No.${candidate.no}「${device.label}」付近`,
+    overviewLabel: device.label,
+    overviewType: toOverviewType(device),
+    x: device.x,
+    y: device.y,
+    hotspot: {
+      x: clamp(device.x - width / 2, 28, 692 - width),
+      y: clamp(device.y - height / 2, 60, 360 - height),
+      width,
+      height,
+    },
+  };
+}
+
+function toOverviewType(device: CandidateDevice): InspectionSlot["overviewType"] {
+  if (device.type === "lamp" || device.type === "pilot") {
+    return "lamp";
+  }
+
+  if (device.type === "receptacle" || device.type === "grounded_receptacle") {
+    return "receptacle";
+  }
+
+  if (device.type === "terminal" || device.type === "breaker") {
+    return "device";
+  }
+
+  return device.type;
+}
+
+function selectTemplateForSlot(
+  slot: InspectionSlot,
+  hasDefect: boolean,
+  usedTemplateIds: Set<string>,
+): InspectionTemplate {
+  const compatibleTemplates = inspectionTemplates.filter((template) => isTemplateCompatible(template, slot));
+  const preferredTemplates = hasDefect
+    ? compatibleTemplates.filter((template) => template.defectType !== "none")
+    : compatibleTemplates;
+  const unusedTemplates = preferredTemplates.filter((template) => !usedTemplateIds.has(template.id));
+  const candidates = unusedTemplates.length > 0 ? unusedTemplates : preferredTemplates;
+  return randomItem(candidates.length > 0 ? candidates : inspectionTemplates);
+}
+
+function isTemplateCompatible(template: InspectionTemplate, slot: InspectionSlot) {
+  return template.overviewType === slot.overviewType || template.overviewType === "connector";
 }
 
 function toInspectionPart(
@@ -309,4 +370,12 @@ function shuffle<T>(items: T[]) {
 
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomItem<T>(items: T[]) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
