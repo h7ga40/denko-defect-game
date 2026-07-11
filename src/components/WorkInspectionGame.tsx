@@ -1,23 +1,24 @@
 import { useMemo, useState } from "react";
-import { inspectionParts, requiredDefectCount, type InspectionPart } from "../data/inspectionGame";
+import { createInspectionRound, type InspectionGameRound, type InspectionPart } from "../data/inspectionGame";
 import { WiringDiagram } from "./svg/WiringDiagram";
 
 type InspectionAnswers = Record<string, string>;
 
 export function WorkInspectionGame() {
-  const [selectedPartId, setSelectedPartId] = useState(inspectionParts[0].id);
+  const [round, setRound] = useState<InspectionGameRound>(() => createInspectionRound());
+  const [selectedPartId, setSelectedPartId] = useState(() => round.parts[0].id);
   const [answers, setAnswers] = useState<InspectionAnswers>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const selectedPart = inspectionParts.find((part) => part.id === selectedPartId) ?? inspectionParts[0];
-  const markedDefects = inspectionParts.filter((part) => {
+  const selectedPart = round.parts.find((part) => part.id === selectedPartId) ?? round.parts[0];
+  const markedDefects = round.parts.filter((part) => {
     const answer = answers[part.id];
     return answer && answer !== "欠陥なし";
   });
   const answeredCount = Object.keys(answers).length;
   const correctCount = useMemo(
-    () => inspectionParts.filter((part) => answers[part.id] === part.answer).length,
-    [answers],
+    () => round.parts.filter((part) => answers[part.id] === part.answer).length,
+    [answers, round.parts],
   );
 
   function selectAnswer(answer: string) {
@@ -32,9 +33,11 @@ export function WorkInspectionGame() {
   }
 
   function restart() {
+    const nextRound = createInspectionRound();
+    setRound(nextRound);
     setAnswers({});
     setSubmitted(false);
-    setSelectedPartId(inspectionParts[0].id);
+    setSelectedPartId(nextRound.parts[0].id);
   }
 
   return (
@@ -43,17 +46,18 @@ export function WorkInspectionGame() {
         <div className="problem-meta">
           <span>施工チェックゲーム</span>
           <span>
-            回答 {answeredCount} / {inspectionParts.length}
+            回答 {answeredCount} / {round.parts.length}
           </span>
         </div>
-        <h2>全体複線図から工作部分を選択</h2>
+        <h2>{round.title}</h2>
         <p className="candidate-theme">
-          欠陥は{requiredDefectCount}か所あります。各工作部分を選んで判定し、最後にまとめて採点します。
+          欠陥は{round.defectCount}か所あります。毎回、工作部分と欠陥内容がランダムに変わります。
         </p>
         <div className="diagram-wrap">
           <InspectionOverviewSvg
             answers={answers}
             onSelect={setSelectedPartId}
+            parts={round.parts}
             selectedPartId={selectedPart.id}
             submitted={submitted}
           />
@@ -98,7 +102,7 @@ export function WorkInspectionGame() {
         </div>
 
         {submitted ? (
-          <InspectionResult answers={answers} correctCount={correctCount} onRestart={restart} />
+          <InspectionResult answers={answers} correctCount={correctCount} onRestart={restart} parts={round.parts} />
         ) : (
           <button className="primary complete-button" onClick={() => setSubmitted(true)} type="button">
             完了して採点する
@@ -132,18 +136,20 @@ function InspectionResult({
   answers,
   correctCount,
   onRestart,
+  parts,
 }: {
   answers: InspectionAnswers;
   correctCount: number;
   onRestart: () => void;
+  parts: InspectionPart[];
 }) {
   return (
     <div className="inspection-result">
       <h3>
-        採点結果: {correctCount} / {inspectionParts.length}
+        採点結果: {correctCount} / {parts.length}
       </h3>
       <ul>
-        {inspectionParts.map((part) => {
+        {parts.map((part) => {
           const answer = answers[part.id] ?? "未回答";
           const correct = answer === part.answer;
           return (
@@ -166,11 +172,13 @@ function InspectionResult({
 function InspectionOverviewSvg({
   answers,
   onSelect,
+  parts,
   selectedPartId,
   submitted,
 }: {
   answers: InspectionAnswers;
   onSelect: (partId: string) => void;
+  parts: InspectionPart[];
   selectedPartId: string;
   submitted: boolean;
 }) {
@@ -191,15 +199,18 @@ function InspectionOverviewSvg({
       <OverviewWire from={[350, 255]} to={[145, 278]} color="black" />
 
       <OverviewNode x={115} y={190} label="電源" type="power" />
-      <OverviewNode x={270} y={120} label="片切S" type="switch" />
-      <OverviewNode x={465} y={110} label="ランプA" type="lamp" />
-      <OverviewNode x={595} y={150} label="ランプB" type="lamp" />
-      <OverviewNode x={350} y={255} label="リング" type="connector" />
-      <OverviewNode x={145} y={278} label="ボックス" type="box" />
-      <OverviewNode x={590} y={288} label="接地極付" type="receptacle" />
+      {parts.map((part) => (
+        <OverviewNode
+          key={part.id}
+          x={part.x}
+          y={part.y}
+          label={part.overviewLabel}
+          type={part.overviewType}
+        />
+      ))}
       <OverviewNode x={160} y={305} label="接地" type="ground" />
 
-      {inspectionParts.map((part) => {
+      {parts.map((part) => {
         const selected = part.id === selectedPartId;
         const answered = Boolean(answers[part.id]);
         const answerIsCorrect = answers[part.id] === part.answer;
@@ -255,7 +266,7 @@ function OverviewNode({
   y,
 }: {
   label: string;
-  type: "power" | "switch" | "lamp" | "connector" | "box" | "receptacle" | "ground";
+  type: "power" | "switch" | "lamp" | "connector" | "box" | "receptacle" | "ground" | "device";
   x: number;
   y: number;
 }) {
