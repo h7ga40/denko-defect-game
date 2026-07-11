@@ -19,9 +19,184 @@ export function WiringDiagram({ defectType }: WiringDiagramProps) {
     return <RingSleeveDiagram defectType={defectType} />;
   }
 
+  if (
+    defectType === "exposed_receptacle_sheath" ||
+    defectType === "breaker_line_load_reverse" ||
+    defectType === "push_connector_insufficient_insert" ||
+    defectType === "terminal_block_wrong_terminal" ||
+    defectType === "ceiling_connector_polarity" ||
+    defectType === "mounting_frame_loose" ||
+    defectType === "switch_wrong_terminal" ||
+    defectType === "receptacle_polarity"
+  ) {
+    return <AccessoryDefectDiagram defectType={defectType} />;
+  }
+
   return <LampReceptacleDiagram defectType={defectType} />;
 }
 
+function AccessoryDefectDiagram({
+  defectType,
+}: {
+  defectType:
+    | "exposed_receptacle_sheath"
+    | "breaker_line_load_reverse"
+    | "push_connector_insufficient_insert"
+    | "terminal_block_wrong_terminal"
+    | "ceiling_connector_polarity"
+    | "mounting_frame_loose"
+    | "switch_wrong_terminal"
+    | "receptacle_polarity";
+}) {
+  const titles = {
+    exposed_receptacle_sheath: "露出コンセント",
+    breaker_line_load_reverse: "配線用遮断器",
+    push_connector_insufficient_insert: "差し込みコネクタ",
+    terminal_block_wrong_terminal: "端子台",
+    ceiling_connector_polarity: "引掛けシーリング",
+    mounting_frame_loose: "連用取付枠",
+    switch_wrong_terminal: "スイッチ",
+    receptacle_polarity: "コンセント",
+  };
+
+  return (
+    <svg viewBox="0 0 720 390" role="img" aria-label={`${titles[defectType]}の欠陥図`}>
+      <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
+      <text className="label" x="360" y="62" textAnchor="middle">
+        {titles[defectType]}
+      </text>
+      {defectType === "exposed_receptacle_sheath" && <ExposedReceptacleDefect />}
+      {defectType === "breaker_line_load_reverse" && <BreakerDefect />}
+      {defectType === "push_connector_insufficient_insert" && <PushConnectorDefect />}
+      {defectType === "terminal_block_wrong_terminal" && <TerminalBlockDefect />}
+      {defectType === "ceiling_connector_polarity" && <CeilingConnectorDefect />}
+      {defectType === "mounting_frame_loose" && <MountingFrameDefect />}
+      {defectType === "switch_wrong_terminal" && <SwitchDefect />}
+      {defectType === "receptacle_polarity" && <ReceptacleDefect />}
+    </svg>
+  );
+}
+
+function ExposedReceptacleDefect() {
+  return (
+    <g>
+      <rect className="device" x="410" y="118" width="130" height="150" rx="16" />
+      <line className="device-mark" x1="450" y1="158" x2="450" y2="215" />
+      <line className="device-mark" x1="500" y1="158" x2="500" y2="215" />
+      <rect className="cable-sheath alert-fill" x="96" y="176" width="82" height="38" rx="18" />
+      <path className="wire black" d="M 176 186 C 250 160, 330 150, 425 170" />
+      <path className="wire white" d="M 176 206 C 250 236, 330 242, 425 215" />
+      <line className="missing" x1="178" y1="176" x2="278" y2="142" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">外装が器具内まで入っていません</text>
+    </g>
+  );
+}
+
+function BreakerDefect() {
+  return (
+    <g>
+      <rect className="device" x="298" y="105" width="135" height="170" rx="12" />
+      <text className="small" x="365" y="135" textAnchor="middle">上: 電源側</text>
+      <text className="small" x="365" y="255" textAnchor="middle">下: 負荷側</text>
+      <circle className="terminal center" cx="335" cy="155" r="14" />
+      <circle className="terminal center" cx="395" cy="155" r="14" />
+      <circle className="terminal side" cx="335" cy="225" r="14" />
+      <circle className="terminal side" cx="395" cy="225" r="14" />
+      <path className="wire alert" d="M 110 150 C 190 260, 250 225, 335 225" />
+      <path className="wire alert" d="M 110 230 C 200 105, 270 155, 395 155" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">電源側と負荷側が逆です</text>
+    </g>
+  );
+}
+
+function PushConnectorDefect() {
+  return (
+    <g>
+      <rect className="device" x="300" y="135" width="150" height="105" rx="18" />
+      <circle className="connector" cx="340" cy="188" r="15" />
+      <circle className="connector" cx="375" cy="188" r="15" />
+      <circle className="connector" cx="410" cy="188" r="15" />
+      <path className="wire black" d="M 110 150 C 190 150, 230 175, 340 188" />
+      <path className="wire white" d="M 110 225 C 190 225, 225 200, 375 188" />
+      <path className="wire alert" d="M 110 188 C 165 188, 205 188, 275 188" />
+      <line className="missing" x1="282" y1="188" x2="323" y2="188" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">心線が確認位置まで届いていません</text>
+    </g>
+  );
+}
+
+function TerminalBlockDefect() {
+  return (
+    <g>
+      <rect className="device" x="250" y="110" width="220" height="150" rx="10" />
+      {[0, 1, 2, 3].map((index) => (
+        <g key={index}>
+          <rect className="terminal" x={275 + index * 45} y="150" width="34" height="58" rx="5" />
+          <text className="small" x={292 + index * 45} y="135" textAnchor="middle">{index + 1}</text>
+        </g>
+      ))}
+      <path className="wire black" d="M 95 165 C 170 165, 215 178, 292 178" />
+      <path className="wire alert" d="M 95 220 C 185 240, 255 178, 382 178" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">指定端子ではなく隣の端子へ接続</text>
+    </g>
+  );
+}
+
+function CeilingConnectorDefect() {
+  return (
+    <g>
+      <circle className="fixture" cx="420" cy="190" r="78" />
+      <rect className="device" x="372" y="150" width="96" height="80" rx="16" />
+      <circle className="terminal center" cx="395" cy="190" r="16" />
+      <circle className="terminal side" cx="445" cy="190" r="16" />
+      <path className="wire black" d="M 105 150 C 210 150, 260 190, 445 190" />
+      <path className="wire white" d="M 105 230 C 220 230, 285 190, 395 190" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">白線と黒線の接続先が逆です</text>
+    </g>
+  );
+}
+
+function MountingFrameDefect() {
+  return (
+    <g>
+      <rect className="device" x="250" y="96" width="220" height="190" rx="8" />
+      <rect className="device" x="310" y="135" width="100" height="112" rx="10" />
+      <circle className="terminal center" cx="290" cy="126" r="12" />
+      <circle className="warning" cx="430" cy="254" r="22" />
+      <line className="missing" x1="416" y1="238" x2="446" y2="270" />
+      <line className="missing" x1="446" y1="238" x2="416" y2="270" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">片側の固定爪が掛かっていません</text>
+    </g>
+  );
+}
+
+function SwitchDefect() {
+  return (
+    <g>
+      <rect className="device" x="325" y="110" width="120" height="165" rx="14" />
+      <text className="small" x="385" y="143" textAnchor="middle">共通</text>
+      <circle className="terminal center" cx="355" cy="170" r="15" />
+      <circle className="terminal side" cx="415" cy="170" r="15" />
+      <circle className="terminal side" cx="385" cy="230" r="15" />
+      <path className="wire alert" d="M 95 180 C 190 180, 250 170, 415 170" />
+      <path className="wire red" d="M 95 240 C 205 250, 285 230, 385 230" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">黒線が指定端子に入っていません</text>
+    </g>
+  );
+}
+
+function ReceptacleDefect() {
+  return (
+    <g>
+      <rect className="device" x="390" y="115" width="130" height="160" rx="18" />
+      <line className="device-mark" x1="430" y1="160" x2="430" y2="220" />
+      <line className="device-mark" x1="480" y1="160" x2="480" y2="220" />
+      <path className="wire black" d="M 105 150 C 220 150, 290 195, 480 195" />
+      <path className="wire white" d="M 105 235 C 220 235, 290 195, 430 195" />
+      <text className="defect-label" x="360" y="330" textAnchor="middle">接地側と非接地側が逆です</text>
+    </g>
+  );
+}
 function LampReceptacleDiagram({
   defectType,
 }: {
