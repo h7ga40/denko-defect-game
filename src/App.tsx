@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { CandidateDiagramView } from "./components/CandidateDiagramView";
 import { ProblemView } from "./components/ProblemView";
 import { ScoreView } from "./components/ScoreView";
+import { WorkInspectionGame } from "./components/WorkInspectionGame";
 import { problems } from "./data/problems";
 
 const STORAGE_KEY = "denko-defect-game-best-score";
@@ -12,7 +13,7 @@ function getStoredBestScore() {
 }
 
 export default function App() {
-  const [mode, setMode] = useState<"quiz" | "diagrams">("quiz");
+  const [mode, setMode] = useState<"quiz" | "diagrams" | "inspection">("quiz");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -56,7 +57,11 @@ export default function App() {
       <header className="app-header">
         <div>
           <p className="eyebrow">第二種電気工事士 技能試験</p>
-          <h1>{mode === "quiz" ? "欠陥判定トレーニング" : "候補問題 複線図"}</h1>
+          <h1>
+            {mode === "quiz" && "欠陥判定トレーニング"}
+            {mode === "diagrams" && "候補問題 複線図"}
+            {mode === "inspection" && "施工チェックゲーム"}
+          </h1>
         </div>
         {mode === "quiz" && (
           <div className="score-pill" aria-label="現在のスコア">
@@ -80,9 +85,18 @@ export default function App() {
         >
           複線図
         </button>
+        <button
+          className={mode === "inspection" ? "mode-button selected" : "mode-button"}
+          onClick={() => setMode("inspection")}
+          type="button"
+        >
+          施工チェック
+        </button>
       </nav>
 
-      {mode === "diagrams" ? (
+      {mode === "inspection" ? (
+        <WorkInspectionGame />
+      ) : mode === "diagrams" ? (
         <CandidateDiagramView />
       ) : completed ? (
         <ScoreView bestScore={bestScore} correctCount={correctCount} onRestart={restart} total={problems.length} />
