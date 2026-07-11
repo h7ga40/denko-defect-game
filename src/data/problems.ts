@@ -5,10 +5,13 @@ export type DefectType =
   | "missing_ground"
   | "sheath_too_short"
   | "ring_sleeve_wrong_mark"
+  | "ring_sleeve_wrong_size"
   | "ring_sleeve_insufficient_insert"
+  | "ring_sleeve_insulation_bite"
   | "exposed_receptacle_sheath"
   | "breaker_line_load_reverse"
   | "push_connector_insufficient_insert"
+  | "push_connector_wrong_wire_count"
   | "terminal_block_wrong_terminal"
   | "ceiling_connector_polarity"
   | "mounting_frame_loose"
@@ -140,6 +143,38 @@ export const problems: Problem[] = [
       "心線はリングスリーブ内へ十分に差し込んでから圧着します。図では片方の心線が短く、圧着部に十分入っていない状態です。",
   },
   {
+    id: "ring-sleeve-wrong-size",
+    title: "リングスリーブ サイズ不適合",
+    circuitName: "リングスリーブ圧着の簡略図",
+    defectType: "ring_sleeve_wrong_size",
+    question: "図のリングスリーブ圧着状態として、最も適切な欠陥を選んでください。",
+    choices: [
+      "欠陥なし",
+      "リングスリーブのサイズが不適合",
+      "心線の差し込み不足",
+      "差し込みコネクタの接続本数が不適合",
+    ],
+    answer: "リングスリーブのサイズが不適合",
+    explanation:
+      "接続する電線の太さと本数に対して、使用するリングスリーブのサイズを合わせる必要があります。図は必要条件より小さいスリーブを使った例です。",
+  },
+  {
+    id: "ring-sleeve-insulation-bite",
+    title: "リングスリーブ 絶縁被覆かみ込み",
+    circuitName: "リングスリーブ圧着の簡略図",
+    defectType: "ring_sleeve_insulation_bite",
+    question: "図のリングスリーブ圧着状態として、最も適切な欠陥を選んでください。",
+    choices: [
+      "欠陥なし",
+      "絶縁被覆をかみ込んでいる",
+      "白線と黒線の接続が逆",
+      "リングスリーブの刻印が不適合",
+    ],
+    answer: "絶縁被覆をかみ込んでいる",
+    explanation:
+      "リングスリーブは心線部分を圧着します。絶縁被覆をかみ込むと導体が正しく圧着されず、欠陥になります。",
+  },
+  {
     id: "exposed-receptacle-sheath",
     title: "露出コンセント 外装処理不良",
     circuitName: "露出コンセントの簡略施工図",
@@ -168,6 +203,17 @@ export const problems: Problem[] = [
     choices: ["欠陥なし", "心線の差し込み不足", "外装がボックス内に十分入っていない", "白線と黒線の接続が逆"],
     answer: "心線の差し込み不足",
     explanation: "差し込みコネクタは心線を奥まで確実に差し込みます。図では片方の心線が確認窓まで届いていません。",
+  },
+  {
+    id: "push-connector-wire-count",
+    title: "差し込みコネクタ 接続本数不適合",
+    circuitName: "差し込みコネクタの簡略施工図",
+    defectType: "push_connector_wrong_wire_count",
+    question: "差し込みコネクタの使用状態として、欠陥を選んでください。",
+    choices: ["欠陥なし", "接続本数に合わないコネクタを使用している", "リングスリーブのサイズが不適合", "輪作りの向きが逆"],
+    answer: "接続本数に合わないコネクタを使用している",
+    explanation:
+      "差し込みコネクタは接続する心線の本数に合うものを使います。図では4本接続が必要な箇所に3本用のコネクタを使っています。",
   },
   {
     id: "terminal-block-wrong-terminal",
@@ -218,4 +264,5 @@ export const problems: Problem[] = [
     choices: ["欠陥なし", "白線と黒線の接続が逆", "接地線の接続忘れ", "輪作りの向きが逆"],
     answer: "白線と黒線の接続が逆",
     explanation: "コンセントは接地側に白線、非接地側に黒線を接続します。図では左右の極性が逆です。",
-  },];
+  },
+];

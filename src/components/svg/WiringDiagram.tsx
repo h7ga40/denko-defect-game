@@ -23,14 +23,17 @@ export function WiringDiagram({ defectType }: WiringDiagramProps) {
     case "sheath_too_short":
       return <OutletBoxDiagram />;
     case "ring_sleeve_wrong_mark":
+    case "ring_sleeve_wrong_size":
     case "ring_sleeve_insufficient_insert":
+    case "ring_sleeve_insulation_bite":
       return <RingSleeveDiagram defectType={defectType} />;
     case "exposed_receptacle_sheath":
       return <ExposedReceptacleDiagram />;
     case "breaker_line_load_reverse":
       return <BreakerDiagram />;
     case "push_connector_insufficient_insert":
-      return <PushConnectorDiagram />;
+    case "push_connector_wrong_wire_count":
+      return <PushConnectorDiagram defectType={defectType} />;
     case "terminal_block_wrong_terminal":
       return <TerminalBlockDiagram />;
     case "ceiling_connector_polarity":
