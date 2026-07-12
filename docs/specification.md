@@ -1,42 +1,116 @@
 # Specification: 電気工事士2種技能試験ゲーム
 
-## 1. Project Goal
+## 1. 目的
 
-第二種電気工事士技能試験の欠陥判定を練習するWebミニゲーム。候補問題の簡略配線図を見て欠陥を選び、正誤と解説、スコアを確認できる。
+第二種電気工事士技能試験の受験者が、候補問題の複線図、施工後チェック、部品ごとの欠陥をスマートフォンとPCで反復学習できるWebアプリを提供する。
 
-## 2. Target Users
+## 2. 対象環境
 
-- 第二種電気工事士技能試験の受験者
-- 候補問題の施工後チェックを練習したい学習者
-- 欠陥名と図の特徴を短時間で反復したい人
+- PCブラウザ
+- Android Chromeを含むスマートフォンブラウザ
+- GitHub Pagesによる静的ホスティング
+- サーバーAPIやユーザー登録は使用しない
 
-## 3. Core Features
+## 3. モード
 
-- 簡略SVG配線図を見て欠陥を選ぶクイズ
-- 回答後の正誤判定と解説表示
-- 問題数、正解数、最高記録の表示
-- 最高記録をlocalStorageへ保存
-- スマートフォンとPCの両方で操作できるレスポンシブUI
+ナビゲーション順と初期表示は、施工チェック、複線図、欠陥判定の順。初期モードは施工チェック。
 
-## 4. Technology Stack
+### 3.1 施工チェック
 
-- Primary language / stack: React
-- Runtime / framework: Vite + React + TypeScript
-- Data storage: localStorage
-- Drawing: React component SVG
+候補問題No.1～No.13から1問をランダムに選ぶ。
 
-## 5. Architecture Notes
+複線図上の選択対象:
 
-- Source code lives in `src/`.
-- Project notes live in `docs/`.
-- AI handoff context lives in `ai_context/`.
-- `src/data/problems.ts` contains the quiz data.
-- `src/components/svg/WiringDiagram.tsx` renders simplified wiring diagrams from defect types.
-- `src/components/ProblemView.tsx` handles question display and answer feedback.
-- `src/components/ScoreView.tsx` handles final score display.
+- 直接選択: ランプ、引掛シーリング、スイッチ、コンセント、遮断器、端子台など
+- ボックスとして選択: アウトレットボックス、ジョイントボックス
+- candidateDiagrams.ts の connector はアウトレットボックス、box はジョイントボックスとして扱う
 
-## 6. Open Questions
+ボックスを選ぶと右側に内部配線図を表示し、リングスリーブ2件と差し込みコネクタ2件を選択できる。
 
-- 問題データを実際の候補問題番号ごとに増やすか。
-- 欠陥判定の文言を公開資料に合わせて厳密化するか。
-- GitHub Pages公開用のdeploy設定を追加するか。
+出題ルール:
+
+- ボックス内接続部から2～3件を欠陥としてランダム設定
+- リングスリーブは刻印不適合またはサイズ不適合
+- 差し込みコネクタは差し込み不足または接続本数不適合
+- 複線図から直接選ぶ器具は現時点では正常施工
+- 選択直後は答え合わせしない
+- 完了ボタンで全設問をまとめて採点
+- 未回答は不正解として結果に表示
+- 欠陥ありとして回答した接続部を採点前から一覧表示
+- 再出題時に候補問題、接続部テンプレート、欠陥位置を再抽選
+
+### 3.2 複線図
+
+- 公式番号対応の候補問題No.1～No.13を切り替えて表示
+- SVGは学習用に簡略化した独自図
+- 電源、器具、接続点、配線色、主要ラベルを表示
+
+### 3.3 欠陥判定
+
+- problems.ts に18問を定義
+- 1問ずつ回答後に正誤と解説を表示
+- 全問終了後に得点を表示
+- 最高得点を denko-defect-game-best-score キーでlocalStorageへ保存
+- 欠陥タイプごとのSVGコンポーネントを使用
+
+## 4. データモデル
+
+### candidateDiagrams.ts
+
+CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。
+
+### boxInspectionGame.ts
+
+- InspectionBox: 複線図上のボックス、選択範囲、内部接続部
+- BoxInspectionPart: ボックス内の設問、選択肢、正解、解説
+- DirectInspectionPart: 複線図から直接選ぶ器具の設問
+- BoxInspectionRound: 候補問題、ボックス、直接選択器具、全採点対象、欠陥数
+- createBoxInspectionRound(): ラウンド生成とランダム化
+
+### problems.ts
+
+DefectType、Problem、欠陥判定モードの全18問を管理する。
+
+## 5. コンポーネント
+
+- App.tsx: モード切替、欠陥判定の進行、最高得点
+- WorkInspectionGame.tsx: 施工チェックの回答、採点、再出題
+- CandidateDiagramView.tsx / CandidateSvg: 複線図とホットスポット
+- BoxWiringDiagram.tsx: ボックス内の4接続部
+- ProblemView.tsx / ScoreView.tsx: 欠陥判定と最終得点
+- WiringDiagram.tsx: DefectTypeから個別SVGへのルーター
+- svg/diagrams/: 部品ごとに分割したSVG
+
+## 6. 操作・表示要件
+
+- モバイルは1カラム、PCは施工チェックを2カラム表示
+- SVGはviewBoxで画面幅へ追従
+- 選択枠は破線、状態に応じて色を変更
+- SVG文字や装飾はpointer-eventsを無効化し、背面のホットスポットへタップを通す
+- モバイルでは選択枠を太く濃く表示
+- 選択肢はPCで2列、狭い画面で1列
+
+## 7. ビルド・公開
+
+- 開発: npm run dev
+- 検証: npm run build
+- 出力: dist/
+- Vite base: 相対パス ./
+- masterへのプッシュでGitHub Actionsを実行
+- Node.js 24、npm ci、ビルド、Pages artifact upload、Pages deployの順
+- 公開URL: https://h7ga40.github.io/denko-defect-game/
+
+## 8. 既知の制約
+
+- 複線図は公式図そのものではなく学習用簡略図
+- 直接選択器具は正常施工のみ
+- ボックス内の線色、太さ、本数、スリーブ条件は候補問題ごとの材料条件と未連動
+- 施工チェック状態は再読み込みでリセット
+- 最高得点保存は欠陥判定モードのみ
+
+## 9. 次期候補
+
+- ケーブル太さと本数からリングスリーブサイズ・刻印を算出
+- ボックス内配線を候補問題ごとに生成
+- 直接選択器具にも欠陥あり・なしをランダム設定
+- Android Chromeで13問すべてを実機回帰確認
