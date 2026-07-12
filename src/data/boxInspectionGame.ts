@@ -40,6 +40,7 @@ export type BoxInspectionRound = {
   title: string;
   candidate: CandidateDiagram;
   boxes: InspectionBox[];
+  directParts: DirectInspectionPart[];
   parts: BoxInspectionPart[];
   defectCount: number;
 };
@@ -98,7 +99,8 @@ export function createBoxInspectionRound(): BoxInspectionRound {
     title: "候補問題No." + candidate.no + " 施工チェック",
     candidate,
     boxes,
-    parts: boxes.flatMap((box) => box.parts),
+    directParts,
+    parts: [...boxes.flatMap((box) => box.parts), ...directParts],
     defectCount,
   };
 }

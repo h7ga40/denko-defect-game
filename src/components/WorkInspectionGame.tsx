@@ -14,7 +14,8 @@ export function WorkInspectionGame() {
   const [submitted, setSubmitted] = useState(false);
 
   const selectedBox = round.boxes.find((box) => box.id === selectedBoxId) ?? round.boxes[0];
-  const selectedPart = selectedBox.parts.find((part) => part.id === selectedPartId) ?? selectedBox.parts[0];
+  const selectedDirectPart = round.directParts.find((part) => part.id === selectedDirectPartId);
+  const selectedPart = selectedDirectPart ?? selectedBox.parts.find((part) => part.id === selectedPartId) ?? selectedBox.parts[0];
   const answeredCount = Object.keys(answers).length;
   const markedDefects = round.parts.filter((part) => answers[part.id] && answers[part.id] !== "欠陥なし");
   const correctCount = useMemo(() => round.parts.filter((part) => answers[part.id] === part.answer).length, [answers, round.parts]);
@@ -23,6 +24,7 @@ export function WorkInspectionGame() {
     const box = round.boxes.find((item) => item.id === boxId);
     if (!box) return;
     setSelectedBoxId(boxId);
+    setSelectedDirectPartId(null);
     setSelectedPartId(box.parts[0].id);
   }
 
@@ -40,6 +42,7 @@ export function WorkInspectionGame() {
     setRound(nextRound);
     setSelectedBoxId(nextRound.boxes[0].id);
     setSelectedPartId(nextRound.boxes[0].parts[0].id);
+    setSelectedDirectPartId(null);
     setAnswers({});
     setSubmitted(false);
   }
@@ -59,9 +62,12 @@ export function WorkInspectionGame() {
           <CandidateSvg
             answers={answers}
             diagram={round.candidate}
+            directParts={round.directParts}
             inspectionBoxes={round.boxes}
             onSelectBox={selectBox}
-            selectedBoxId={selectedBox.id}
+            onSelectDirectPart={selectDirectPart}
+            selectedBoxId={selectedDirectPart ? undefined : selectedBox.id}
+            selectedDirectPartId={selectedDirectPart?.id}
             submitted={submitted}
           />
         </div>
@@ -73,17 +79,21 @@ export function WorkInspectionGame() {
           <span>{selectedPart.location}</span>
           <span>{answers[selectedPart.id] ? "回答済み" : "未回答"}</span>
         </div>
-        <h2>{selectedBox.label}</h2>
+        <h2>{selectedDirectPart ? selectedPart.title : selectedBox.label}</h2>
         <div className="diagram-wrap focused-diagram">
-          <BoxWiringDiagram
-            answers={answers}
-            box={selectedBox}
-            onSelectPart={setSelectedPartId}
-            selectedPartId={selectedPart.id}
-            submitted={submitted}
-          />
+          {selectedDirectPart ? (
+            <DirectDeviceDiagram part={selectedDirectPart} />
+          ) : (
+            <BoxWiringDiagram
+              answers={answers}
+              box={selectedBox}
+              onSelectPart={setSelectedPartId}
+              selectedPartId={selectedPart.id}
+              submitted={submitted}
+            />
+          )}
         </div>
-        <h3 className="connection-title">{selectedPart.title}</h3>
+        {!selectedDirectPart && <h3 className="connection-title">{selectedPart.title}</h3>}
         <p className="question">{selectedPart.question}</p>
         <div className="choices" role="list">
           {selectedPart.choices.map((choice) => {
