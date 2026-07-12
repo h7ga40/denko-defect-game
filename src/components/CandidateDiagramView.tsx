@@ -1,16 +1,16 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "../data/candidateDiagrams";
-import type { InspectionPart } from "../data/inspectionGame";
+import type { InspectionBox } from "../data/boxInspectionGame";
 
 type InspectionAnswers = Record<string, string>;
 
 type CandidateSvgProps = {
   diagram: CandidateDiagram;
-  inspectionParts?: InspectionPart[];
+  inspectionBoxes?: InspectionBox[];
   answers?: InspectionAnswers;
-  selectedPartId?: string;
+  selectedBoxId?: string;
   submitted?: boolean;
-  onSelectPart?: (partId: string) => void;
+  onSelectBox?: (boxId: string) => void;
 };
 
 export function CandidateDiagramView() {
@@ -59,9 +59,9 @@ export function CandidateDiagramView() {
 export function CandidateSvg({
   answers = {},
   diagram,
-  inspectionParts = [],
-  onSelectPart,
-  selectedPartId,
+  inspectionBoxes = [],
+  onSelectBox,
+  selectedBoxId,
   submitted = false,
 }: CandidateSvgProps) {
   const devicesById = new Map(diagram.devices.map((device) => [device.id, device]));
@@ -97,52 +97,46 @@ export function CandidateSvg({
         );
       })}
 
-      {diagram.devices.map((device) => (
+      {diagram.devices.filter((device) => !inspectionBoxes.some((box) => box.sourceDeviceId === device.id)).map((device) => (
         <DeviceNode device={device} key={device.id} />
       ))}
 
-      {inspectionParts.map((part) => {
-        const selected = part.id === selectedPartId;
-        const answered = Boolean(answers[part.id]);
-        const answerIsCorrect = answers[part.id] === part.answer;
+      {inspectionBoxes.map((box) => {
+        const selected = box.id === selectedBoxId;
+        const answered = box.parts.every((part) => Boolean(answers[part.id]));
+        const answerIsCorrect = box.parts.every((part) => answers[part.id] === part.answer);
         const className = [
           "hotspot",
+          "box-hotspot",
           selected ? "selected" : "",
           answered ? "answered" : "",
           submitted && answerIsCorrect ? "correct" : "",
           submitted && answered && !answerIsCorrect ? "wrong" : "",
-        ]
-          .filter(Boolean)
-          .join(" ");
-
-        function handleKeyDown(event: KeyboardEvent<SVGRectElement>) {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            onSelectPart?.(part.id);
-          }
-        }
+        ].filter(Boolean).join(" ");
 
         return (
-          <g key={part.id}>
+          <g key={box.id}>
             <rect
-              aria-label={`${part.title}を選択`}
+              aria-label={box.label + "を選択"}
               className={className}
-              height={part.hotspot.height}
-              onClick={() => onSelectPart?.(part.id)}
-              onKeyDown={handleKeyDown}
+              height={box.hotspot.height}
+              onClick={() => onSelectBox?.(box.id)}
               role="button"
               tabIndex={0}
-              width={part.hotspot.width}
-              x={part.hotspot.x}
-              y={part.hotspot.y}
+              width={box.hotspot.width}
+              x={box.hotspot.x}
+              y={box.hotspot.y}
             />
-            <text className="hotspot-label" x={part.hotspot.x + 12} y={part.hotspot.y + 22}>
+            <rect className={"candidate-box " + box.boxType} x={box.x - 45} y={box.y - 28} width="90" height="56" rx="8" />
+            <text className="candidate-label small-label" x={box.x} y={box.y + 5} textAnchor="middle">
+              {box.boxType === "joint" ? "JB" : "OB"}
+            </text>
+            <text className="hotspot-label" x={box.hotspot.x + 10} y={box.hotspot.y + 20}>
               {answered ? "回答済" : "選択"}
             </text>
           </g>
         );
-      })}
-    </svg>
+      })}    </svg>
   );
 }
 
