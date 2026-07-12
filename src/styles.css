@@ -784,3 +784,19 @@ button {
     stroke-width: 5;
   }
 }
+
+
+.connection-spec-label {
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.wire-size-label {
+  fill: #172033;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3;
+  font-size: 8px;
+  font-weight: 900;
+  pointer-events: none;
+}

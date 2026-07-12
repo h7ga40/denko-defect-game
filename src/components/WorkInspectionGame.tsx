@@ -115,11 +115,11 @@ export function WorkInspectionGame() {
   );
 }
 
-function DefectList({ markedDefects }: { markedDefects: BoxInspectionPart[] }) {
+function DefectList({ markedDefects }: { markedDefects: Array<BoxInspectionPart | DirectInspectionPart> }) {
   return <div className="defect-list"><strong>欠陥ありとして選択した接続部</strong>{markedDefects.length === 0 ? <p>まだ欠陥ありにした接続部はありません。</p> : <ul>{markedDefects.map((part) => <li key={part.id}>{part.location}: {part.title}</li>)}</ul>}</div>;
 }
 
-function InspectionResult({ answers, correctCount, onRestart, parts }: { answers: InspectionAnswers; correctCount: number; onRestart: () => void; parts: BoxInspectionPart[] }) {
+function InspectionResult({ answers, correctCount, onRestart, parts }: { answers: InspectionAnswers; correctCount: number; onRestart: () => void; parts: Array<BoxInspectionPart | DirectInspectionPart> }) {
   return (
     <div className="inspection-result">
       <h3>採点結果: {correctCount} / {parts.length}</h3>
