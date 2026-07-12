@@ -27,6 +27,14 @@ export type InspectionBox = {
   parts: BoxInspectionPart[];
 };
 
+export type DirectInspectionPart = BoxInspectionPart & {
+  sourceDeviceId: string;
+  deviceType: CandidateDevice["type"];
+  x: number;
+  y: number;
+  hotspot: { x: number; y: number; width: number; height: number };
+};
+
 export type BoxInspectionRound = {
   id: string;
   title: string;
@@ -84,6 +92,7 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   const defectCount = Math.min(randomInt(2, 3), sources.length * 2);
   const defectIds = new Set(shuffle(sources.flatMap((device) => [device.id + "-ring-1", device.id + "-ring-2", device.id + "-connector-1", device.id + "-connector-2"])).slice(0, defectCount));
   const boxes = sources.map((device, index) => createBox(candidate, device, index, defectIds));
+  const directParts = candidate.devices.filter((device) => device.type !== "power" && device.type !== "connector" && device.type !== "box").map(createDirectPart);
   return {
     id: Date.now() + "-" + Math.random().toString(36).slice(2),
     title: "候補問題No." + candidate.no + " 施工チェック",
@@ -138,3 +147,29 @@ function randomItem<T>(items: T[]) { return items[Math.floor(Math.random() * ite
 function randomInt(min: number, max: number) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function shuffle<T>(items: T[]) { return [...items].sort(() => Math.random() - 0.5); }
 function clamp(value: number, min: number, max: number) { return Math.min(max, Math.max(min, value)); }
+
+function createDirectPart(device: CandidateDevice): DirectInspectionPart {
+  const width = device.type === "lamp" || device.type === "pilot" ? 112 : 124;
+  const height = 94;
+  return {
+    id: "device-" + device.id,
+    boxId: "",
+    sourceDeviceId: device.id,
+    deviceType: device.type,
+    title: device.label,
+    location: "複線図上の「" + device.label + "」",
+    defectType: "none",
+    question: device.label + "の施工状態を判定してください。",
+    choices: ["欠陥なし", "接続不良", "取付不良", "極性誤り"],
+    answer: "欠陥なし",
+    explanation: "この器具は正常に施工されています。接続部の欠陥は、ボックス内配線図で判定します。",
+    x: device.x,
+    y: device.y,
+    hotspot: {
+      x: clamp(device.x - width / 2, 28, 692 - width),
+      y: clamp(device.y - height / 2, 60, 360 - height),
+      width,
+      height,
+    },
+  };
+}

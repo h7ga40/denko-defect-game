@@ -1,16 +1,19 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "../data/candidateDiagrams";
-import type { InspectionBox } from "../data/boxInspectionGame";
+import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
 
 type InspectionAnswers = Record<string, string>;
 
 type CandidateSvgProps = {
   diagram: CandidateDiagram;
   inspectionBoxes?: InspectionBox[];
+  directParts?: DirectInspectionPart[];
   answers?: InspectionAnswers;
   selectedBoxId?: string;
+  selectedDirectPartId?: string;
   submitted?: boolean;
   onSelectBox?: (boxId: string) => void;
+  onSelectDirectPart?: (partId: string) => void;
 };
 
 export function CandidateDiagramView() {
@@ -60,8 +63,11 @@ export function CandidateSvg({
   answers = {},
   diagram,
   inspectionBoxes = [],
+  directParts = [],
   onSelectBox,
+  onSelectDirectPart,
   selectedBoxId,
+  selectedDirectPartId,
   submitted = false,
 }: CandidateSvgProps) {
   const devicesById = new Map(diagram.devices.map((device) => [device.id, device]));
@@ -136,7 +142,35 @@ export function CandidateSvg({
             </text>
           </g>
         );
-      })}    </svg>
+      })}
+      {directParts.map((part) => {
+        const selected = part.id === selectedDirectPartId;
+        const answered = Boolean(answers[part.id]);
+        const correct = answers[part.id] === part.answer;
+        const className = [
+          "hotspot",
+          "device-hotspot",
+          selected ? "selected" : "",
+          answered ? "answered" : "",
+          submitted && correct ? "correct" : "",
+          submitted && answered && !correct ? "wrong" : "",
+        ].filter(Boolean).join(" ");
+        return (
+          <rect
+            aria-label={part.title + "を選択"}
+            className={className}
+            height={part.hotspot.height}
+            key={part.id}
+            onClick={() => onSelectDirectPart?.(part.id)}
+            role="button"
+            tabIndex={0}
+            width={part.hotspot.width}
+            x={part.hotspot.x}
+            y={part.hotspot.y}
+          />
+        );
+      })}
+    </svg>
   );
 }
 

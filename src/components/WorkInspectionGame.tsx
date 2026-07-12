@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound } from "../data/boxInspectionGame";
+import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart } from "../data/boxInspectionGame";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
 
@@ -9,6 +9,7 @@ export function WorkInspectionGame() {
   const [round, setRound] = useState<BoxInspectionRound>(() => createBoxInspectionRound());
   const [selectedBoxId, setSelectedBoxId] = useState(() => round.boxes[0].id);
   const [selectedPartId, setSelectedPartId] = useState(() => round.boxes[0].parts[0].id);
+  const [selectedDirectPartId, setSelectedDirectPartId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<InspectionAnswers>({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -23,6 +24,10 @@ export function WorkInspectionGame() {
     if (!box) return;
     setSelectedBoxId(boxId);
     setSelectedPartId(box.parts[0].id);
+  }
+
+  function selectDirectPart(partId: string) {
+    setSelectedDirectPartId(partId);
   }
 
   function selectAnswer(answer: string) {
@@ -48,7 +53,7 @@ export function WorkInspectionGame() {
         </div>
         <h2>{round.title}</h2>
         <p className="candidate-theme">
-          複線図からジョイントボックスまたはアウトレットボックスを選び、ボックス内の接続部を判定します。欠陥は{round.defectCount}か所です。
+          ランプ・スイッチ・コンセントなどは複線図から直接選択し、リングスリーブと差し込みコネクタはボックス内で選択します。欠陥は{round.defectCount}か所です。
         </p>
         <div className="diagram-wrap">
           <CandidateSvg
@@ -65,7 +70,7 @@ export function WorkInspectionGame() {
 
       <article className="problem-card inspection-question">
         <div className="problem-meta">
-          <span>{selectedBox.location}</span>
+          <span>{selectedPart.location}</span>
           <span>{answers[selectedPart.id] ? "回答済み" : "未回答"}</span>
         </div>
         <h2>{selectedBox.label}</h2>
@@ -115,5 +120,21 @@ function InspectionResult({ answers, correctCount, onRestart, parts }: { answers
       })}</ul>
       <button className="primary" onClick={onRestart} type="button">もう一度チェックする</button>
     </div>
+  );
+}
+
+function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
+  return (
+    <svg viewBox="0 0 720 390" role="img" aria-label={part.title + "の施工図"}>
+      <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
+      <text className="label" x="360" y="70" textAnchor="middle">{part.title}</text>
+      <rect className="device" x="260" y="128" width="200" height="112" rx="16" />
+      <text className="label" x="360" y="194" textAnchor="middle">正常施工</text>
+      <path className="wire black" d="M 90 170 C 165 170, 200 175, 260 175" />
+      <path className="wire white" d="M 90 205 C 165 205, 200 195, 260 195" />
+      <path className="wire black" d="M 460 175 C 525 175, 560 170, 630 170" />
+      <path className="wire white" d="M 460 195 C 525 195, 560 205, 630 205" />
+      <text className="small" x="360" y="285" textAnchor="middle">複線図で選択した器具</text>
+    </svg>
   );
 }
