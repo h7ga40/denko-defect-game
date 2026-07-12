@@ -756,3 +756,31 @@ button {
   color: #27606d;
   font-size: 1rem;
 }
+
+
+/* SVG labels are decorative; keep the full selection area tappable on touch devices. */
+.candidate-label,
+.device-mark,
+.ground-hole {
+  pointer-events: none;
+}
+
+.hotspot,
+.box-connection-hit {
+  pointer-events: all;
+  touch-action: manipulation;
+}
+
+.box-hotspot,
+.device-hotspot {
+  fill: rgba(31, 111, 139, 0.14);
+  stroke-width: 4;
+}
+
+@media (max-width: 720px) {
+  .box-hotspot,
+  .device-hotspot {
+    fill: rgba(31, 111, 139, 0.18);
+    stroke-width: 5;
+  }
+}
