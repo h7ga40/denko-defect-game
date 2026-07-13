@@ -1,6 +1,7 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "../data/candidateDiagrams";
 import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
+import { CandidateMaterials } from "./CandidateMaterials";
 
 type InspectionAnswers = Record<string, string>;
 
@@ -46,6 +47,7 @@ export function CandidateDiagramView() {
         </div>
         <h2>{selected.title}</h2>
         <p className="candidate-theme">{selected.theme}</p>
+        <CandidateMaterials candidateNo={selected.no} />
         <div className="diagram-wrap">
           <CandidateSvg diagram={selected} />
         </div>

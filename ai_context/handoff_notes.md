@@ -11,6 +11,7 @@
 - Vite 8 + React 19 + TypeScript 7。
 - App.tsxに施工チェック、複線図、欠陥判定の3モード。初期モードは施工チェック。
 - candidateDiagrams.tsに公式番号対応の候補問題No.1～No.13を定義。
+- candidateMaterials.tsに公表図から確認できる支給部材候補を定義。数量・長さ・使用要否は伏せる。
 - boxInspectionGame.tsが施工チェックのランダムラウンドを生成。
 - WorkInspectionGame.tsxが回答、欠陥選択一覧、採点、再出題を管理。
 - CandidateSvgはボックスと直接選択器具のホットスポットを表示。
