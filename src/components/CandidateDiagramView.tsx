@@ -1,9 +1,10 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "../data/candidateDiagrams";
 import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
 import { CandidateMaterials } from "./CandidateMaterials";
 
 type InspectionAnswers = Record<string, string>;
+type SelectionStatus = "idle" | "selected" | "answered" | "correct" | "wrong";
 
 type CandidateSvgProps = {
   diagram: CandidateDiagram;
@@ -15,6 +16,12 @@ type CandidateSvgProps = {
   submitted?: boolean;
   onSelectBox?: (boxId: string) => void;
   onSelectDirectPart?: (partId: string) => void;
+};
+
+type Interaction = {
+  label: string;
+  status: SelectionStatus;
+  onSelect: () => void;
 };
 
 export function CandidateDiagramView() {
@@ -52,9 +59,7 @@ export function CandidateDiagramView() {
           <CandidateSvg diagram={selected} />
         </div>
         <ul className="point-list">
-          {selected.points.map((point) => (
-            <li key={point}>{point}</li>
-          ))}
+          {selected.points.map((point) => <li key={point}>{point}</li>)}
         </ul>
       </article>
     </section>
@@ -73,9 +78,11 @@ export function CandidateSvg({
   submitted = false,
 }: CandidateSvgProps) {
   const devicesById = new Map(diagram.devices.map((device) => [device.id, device]));
+  const boxesByDeviceId = new Map(inspectionBoxes.map((box) => [box.sourceDeviceId, box]));
+  const partsByDeviceId = new Map(directParts.map((part) => [part.sourceDeviceId, part]));
 
   return (
-    <svg viewBox="0 0 720 390" role="img" aria-label={`候補問題${diagram.no}の複線図`}>
+    <svg viewBox="0 0 720 390" role="img" aria-label={"候補問題" + diagram.no + "の複線図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="candidate-svg-title" x="360" y="54" textAnchor="middle">
         No.{diagram.no} {diagram.title}
@@ -84,9 +91,7 @@ export function CandidateSvg({
       {diagram.connections.map((connection, index) => {
         const from = devicesById.get(connection.from);
         const to = devicesById.get(connection.to);
-        if (!from || !to) {
-          return null;
-        }
+        if (!from || !to) return null;
 
         const offset = getParallelOffset(index, from, to);
         const path = makeWirePath(from, to, offset);
@@ -94,8 +99,8 @@ export function CandidateSvg({
         const labelY = (from.y + to.y) / 2 + offset.y * 1.8 - 8;
 
         return (
-          <g key={`${connection.from}-${connection.to}-${connection.color}-${index}`}>
-            <path className={`candidate-wire ${connection.color}`} d={path} />
+          <g key={connection.from + "-" + connection.to + "-" + connection.color + "-" + index}>
+            <path className={"candidate-wire " + connection.color} d={path} />
             {connection.label && (
               <text className="wire-label" x={labelX} y={labelY} textAnchor="middle">
                 {connection.label}
@@ -105,134 +110,162 @@ export function CandidateSvg({
         );
       })}
 
-      {diagram.devices.filter((device) => !inspectionBoxes.some((box) => box.sourceDeviceId === device.id)).map((device) => (
-        <DeviceNode device={device} key={device.id} />
-      ))}
-
-      {inspectionBoxes.map((box) => {
-        const selected = box.id === selectedBoxId;
-        const answered = box.parts.every((part) => Boolean(answers[part.id]));
-        const answerIsCorrect = box.parts.every((part) => answers[part.id] === part.answer);
-        const className = [
-          "hotspot",
-          "box-hotspot",
-          selected ? "selected" : "",
-          answered ? "answered" : "",
-          submitted && answerIsCorrect ? "correct" : "",
-          submitted && answered && !answerIsCorrect ? "wrong" : "",
-        ].filter(Boolean).join(" ");
-
-        return (
-          <g key={box.id}>
-            <rect
-              aria-label={box.label + "を選択"}
-              className={className}
-              height={box.hotspot.height}
-              onClick={() => onSelectBox?.(box.id)}
-              role="button"
-              tabIndex={0}
-              width={box.hotspot.width}
-              x={box.hotspot.x}
-              y={box.hotspot.y}
+      {diagram.devices.map((device) => {
+        const box = boxesByDeviceId.get(device.id);
+        if (box) {
+          const answered = box.parts.every((part) => Boolean(answers[part.id]));
+          const correct = box.parts.every((part) => answers[part.id] === part.answer);
+          const status = getStatus(box.id === selectedBoxId, answered, correct, submitted);
+          return (
+            <BoxNode
+              box={box}
+              interaction={{
+                label: box.label + "を選択",
+                status,
+                onSelect: () => onSelectBox?.(box.id),
+              }}
+              key={box.id}
             />
-            <rect className={"candidate-box " + box.boxType} x={box.x - 45} y={box.y - 28} width="90" height="56" rx="8" />
-            <text className="candidate-label small-label" x={box.x} y={box.y + 5} textAnchor="middle">
-              {box.boxType === "joint" ? "JB" : "OB"}
-            </text>
-            <text className="hotspot-label" x={box.hotspot.x + 10} y={box.hotspot.y + 20}>
-              {answered ? "回答済" : "選択"}
-            </text>
-          </g>
-        );
-      })}
-      {directParts.map((part) => {
-        const selected = part.id === selectedDirectPartId;
-        const answered = Boolean(answers[part.id]);
-        const correct = answers[part.id] === part.answer;
-        const className = [
-          "hotspot",
-          "device-hotspot",
-          selected ? "selected" : "",
-          answered ? "answered" : "",
-          submitted && correct ? "correct" : "",
-          submitted && answered && !correct ? "wrong" : "",
-        ].filter(Boolean).join(" ");
-        return (
-          <rect
-            aria-label={part.title + "を選択"}
-            className={className}
-            height={part.hotspot.height}
-            key={part.id}
-            onClick={() => onSelectDirectPart?.(part.id)}
-            role="button"
-            tabIndex={0}
-            width={part.hotspot.width}
-            x={part.hotspot.x}
-            y={part.hotspot.y}
-          />
-        );
+          );
+        }
+
+        const part = partsByDeviceId.get(device.id);
+        const interaction = part
+          ? {
+              label: part.title + "を選択",
+              status: getStatus(
+                part.id === selectedDirectPartId,
+                Boolean(answers[part.id]),
+                answers[part.id] === part.answer,
+                submitted,
+              ),
+              onSelect: () => onSelectDirectPart?.(part.id),
+            }
+          : undefined;
+
+        return <DeviceNode device={device} interaction={interaction} key={device.id} />;
       })}
     </svg>
   );
 }
 
-function DeviceNode({ device }: { device: CandidateDevice }) {
+function getStatus(selected: boolean, answered: boolean, correct: boolean, submitted: boolean): SelectionStatus {
+  if (submitted && answered) return correct ? "correct" : "wrong";
+  if (selected) return "selected";
+  if (answered) return "answered";
+  return "idle";
+}
+
+function SelectableGroup({
+  children,
+  interaction,
+  x,
+  y,
+  width,
+  height,
+}: {
+  children: ReactNode;
+  interaction?: Interaction;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) {
+  function handleKeyDown(event: KeyboardEvent<SVGGElement>) {
+    if (!interaction || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    interaction.onSelect();
+  }
+
+  const className = interaction
+    ? "candidate-node candidate-selectable " + interaction.status
+    : "candidate-node";
+
+  return (
+    <g
+      aria-label={interaction?.label}
+      className={className}
+      onClick={interaction?.onSelect}
+      onKeyDown={handleKeyDown}
+      role={interaction ? "button" : undefined}
+      tabIndex={interaction ? 0 : undefined}
+    >
+      {interaction && (
+        <rect
+          className="candidate-hit-area"
+          height={height}
+          width={width}
+          x={x - width / 2}
+          y={y - height / 2}
+          rx="12"
+        />
+      )}
+      {children}
+      {interaction && interaction.status !== "idle" && (
+        <circle className="candidate-status-dot" cx={x + width / 2 - 10} cy={y - height / 2 + 10} r="7" />
+      )}
+    </g>
+  );
+}
+
+function BoxNode({ box, interaction }: { box: InspectionBox; interaction: Interaction }) {
+  return (
+    <SelectableGroup height={76} interaction={interaction} width={112} x={box.x} y={box.y}>
+      <rect className={"candidate-box candidate-device " + box.boxType} x={box.x - 45} y={box.y - 28} width="90" height="56" rx="8" />
+      <text className="candidate-label small-label" x={box.x} y={box.y + 5} textAnchor="middle">
+        {box.boxType === "joint" ? "JB" : "OB"}
+      </text>
+    </SelectableGroup>
+  );
+}
+
+function DeviceNode({ device, interaction }: { device: CandidateDevice; interaction?: Interaction }) {
   if (device.type === "power") {
     return (
-      <g>
+      <SelectableGroup height={80} interaction={interaction} width={100} x={device.x} y={device.y}>
         <rect className="candidate-device power" x={device.x - 42} y={device.y - 34} width="84" height="68" rx="8" />
-        <text className="candidate-label" x={device.x} y={device.y + 5} textAnchor="middle">
-          {device.label}
-        </text>
-      </g>
+        <text className="candidate-label" x={device.x} y={device.y + 5} textAnchor="middle">{device.label}</text>
+      </SelectableGroup>
     );
   }
 
   if (device.type === "connector") {
     return (
-      <g>
-        <circle className="candidate-connector" cx={device.x} cy={device.y} r="18" />
-        <text className="candidate-label small-label" x={device.x} y={device.y + 38} textAnchor="middle">
-          {device.label}
-        </text>
-      </g>
+      <SelectableGroup height={64} interaction={interaction} width={72} x={device.x} y={device.y}>
+        <circle className="candidate-connector candidate-device" cx={device.x} cy={device.y} r="18" />
+        <text className="candidate-label small-label" x={device.x} y={device.y + 38} textAnchor="middle">{device.label}</text>
+      </SelectableGroup>
     );
   }
 
   if (device.type === "lamp" || device.type === "pilot") {
     return (
-      <g>
-        <circle className={`candidate-device ${device.type}`} cx={device.x} cy={device.y} r="34" />
+      <SelectableGroup height={94} interaction={interaction} width={94} x={device.x} y={device.y}>
+        <circle className={"candidate-device " + device.type} cx={device.x} cy={device.y} r="34" />
         <line className="device-mark" x1={device.x - 18} y1={device.y - 18} x2={device.x + 18} y2={device.y + 18} />
         <line className="device-mark" x1={device.x + 18} y1={device.y - 18} x2={device.x - 18} y2={device.y + 18} />
-        <text className="candidate-label small-label" x={device.x} y={device.y + 54} textAnchor="middle">
-          {device.label}
-        </text>
-      </g>
+        <text className="candidate-label small-label" x={device.x} y={device.y + 54} textAnchor="middle">{device.label}</text>
+      </SelectableGroup>
     );
   }
 
   if (device.type === "receptacle" || device.type === "grounded_receptacle") {
     return (
-      <g>
+      <SelectableGroup height={102} interaction={interaction} width={104} x={device.x} y={device.y}>
         <rect className="candidate-device receptacle" x={device.x - 42} y={device.y - 40} width="84" height="80" rx="12" />
         <line className="device-mark" x1={device.x - 14} y1={device.y - 16} x2={device.x - 14} y2={device.y + 16} />
         <line className="device-mark" x1={device.x + 14} y1={device.y - 16} x2={device.x + 14} y2={device.y + 16} />
         {device.type === "grounded_receptacle" && <circle className="ground-hole" cx={device.x} cy={device.y + 22} r="5" />}
-        <text className="candidate-label small-label" x={device.x} y={device.y + 60} textAnchor="middle">
-          {device.label}
-        </text>
-      </g>
+        <text className="candidate-label small-label" x={device.x} y={device.y + 60} textAnchor="middle">{device.label}</text>
+      </SelectableGroup>
     );
   }
 
   return (
-    <g>
-      <rect className={`candidate-device ${device.type}`} x={device.x - 44} y={device.y - 32} width="88" height="64" rx="8" />
-      <text className="candidate-label" x={device.x} y={device.y + 5} textAnchor="middle">
-        {device.label}
-      </text>
-    </g>
+    <SelectableGroup height={84} interaction={interaction} width={108} x={device.x} y={device.y}>
+      <rect className={"candidate-device " + device.type} x={device.x - 44} y={device.y - 32} width="88" height="64" rx="8" />
+      <text className="candidate-label" x={device.x} y={device.y + 5} textAnchor="middle">{device.label}</text>
+    </SelectableGroup>
   );
 }
 
@@ -243,7 +276,7 @@ function makeWirePath(from: CandidateDevice, to: CandidateDevice, offset: { x: n
   const endY = to.y + offset.y;
   const controlX = (startX + endX) / 2;
   const controlY = (startY + endY) / 2 - Math.min(44, Math.abs(endX - startX) * 0.12);
-  return `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
+  return "M " + startX + " " + startY + " Q " + controlX + " " + controlY + " " + endX + " " + endY;
 }
 
 function getParallelOffset(index: number, from: CandidateDevice, to: CandidateDevice) {

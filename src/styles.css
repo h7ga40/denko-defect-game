@@ -576,6 +576,56 @@ button {
   fill: #ffffff;
   stroke: #596a78;
   stroke-width: 4;
+  transition: fill 120ms ease, stroke 120ms ease, stroke-width 120ms ease;
+}
+
+.candidate-selectable {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.candidate-hit-area {
+  fill: transparent;
+  pointer-events: all;
+  stroke: none;
+}
+
+.candidate-selectable:hover .candidate-device,
+.candidate-selectable:focus-visible .candidate-device,
+.candidate-selectable.selected .candidate-device {
+  stroke: #1f6f8b;
+  stroke-width: 7;
+}
+
+.candidate-selectable:focus-visible {
+  outline: none;
+}
+
+.candidate-selectable.answered .candidate-device,
+.candidate-selectable.correct .candidate-device {
+  stroke: #198754;
+  stroke-width: 7;
+}
+
+.candidate-selectable.wrong .candidate-device {
+  stroke: #c83349;
+  stroke-width: 7;
+}
+
+.candidate-status-dot {
+  fill: #1f6f8b;
+  pointer-events: none;
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+
+.candidate-selectable.answered .candidate-status-dot,
+.candidate-selectable.correct .candidate-status-dot {
+  fill: #198754;
+}
+
+.candidate-selectable.wrong .candidate-status-dot {
+  fill: #c83349;
 }
 
 .candidate-device.power {
