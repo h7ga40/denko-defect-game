@@ -29,10 +29,10 @@
 
 出題ルール:
 
-- ボックス内接続部から2～3件を欠陥としてランダム設定
+- ボックス内接続部と欠陥テンプレートを持つ直接選択器具から、合計2～3件を欠陥としてランダム設定
 - リングスリーブは刻印不適合またはサイズ不適合
 - 差し込みコネクタは差し込み不足または接続本数不適合
-- 複線図から直接選ぶ器具は現時点では正常施工
+- 直接選択器具は部品種別に応じて正常施工または既存の欠陥テンプレートを割り当てる
 - 選択直後は答え合わせしない
 - 完了ボタンで全設問をまとめて採点
 - 未回答は不正解として結果に表示
@@ -63,11 +63,11 @@
 
 ### candidateDiagrams.ts
 
-CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。
+CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。CandidateDeviceは処理分類のtypeと、記号・欠陥テンプレートを識別するvariantを分けて保持する。
 
 ### boxInspectionGame.ts
 
-- InspectionBox: 複線図上のボックス、選択範囲、内部接続部
+- InspectionBox: 複線図上のボックスと内部接続部
 - BoxInspectionPart: ボックス内の設問、選択肢、正解、解説
 - DirectInspectionPart: 複線図から直接選ぶ器具の設問
 - BoxInspectionRound: 候補問題、ボックス、直接選択器具、全採点対象、欠陥数
@@ -81,7 +81,7 @@ DefectType、Problem、欠陥判定モードの全18問を管理する。
 
 - App.tsx: モード切替、欠陥判定の進行、最高得点
 - WorkInspectionGame.tsx: 施工チェックの回答、採点、再出題
-- CandidateDiagramView.tsx / CandidateSvg: 複線図とホットスポット
+- CandidateDiagramView.tsx / CandidateSvg: 複線図、部品記号、部品本体の選択状態
 - BoxWiringDiagram.tsx: ボックス内の可変接続部、芯線、刻印、コネクタ極数
 - ProblemView.tsx / ScoreView.tsx: 欠陥判定と最終得点
 - WiringDiagram.tsx: DefectTypeから個別SVGへのルーター
@@ -91,9 +91,9 @@ DefectType、Problem、欠陥判定モードの全18問を管理する。
 
 - モバイルは1カラム、PCは施工チェックを2カラム表示
 - SVGはviewBoxで画面幅へ追従
-- 選択枠は破線、状態に応じて色を変更
-- SVG文字や装飾はpointer-eventsを無効化し、背面のホットスポットへタップを通す
-- モバイルでは選択枠を太く濃く表示
+- 部品本体を選択し、選択中・回答済み・正解・不正解は部品の輪郭色と状態マーカーで表示
+- 部品の背面に透明なタップ領域を置き、SVG文字や装飾はpointer-eventsを無効化する
+- キーボードのEnter／Spaceでも部品を選択できる
 - 選択肢はPCで2列、狭い画面で1列
 
 ## 7. ビルド・公開
@@ -109,7 +109,6 @@ DefectType、Problem、欠陥判定モードの全18問を管理する。
 ## 8. 既知の制約
 
 - 複線図は公式図そのものではなく学習用簡略図
-- 直接選択器具は正常施工のみ
 - ボックス内の接続部数と芯数は簡略複線図から算出する。公式材料表・施工条件の完全転記ではない
 - 施工チェック状態は再読み込みでリセット
 - 最高得点保存は欠陥判定モードのみ
@@ -118,5 +117,4 @@ DefectType、Problem、欠陥判定モードの全18問を管理する。
 
 - ケーブル太さと本数からリングスリーブサイズ・刻印を算出
 - ボックス内配線を候補問題ごとに生成
-- 直接選択器具にも欠陥あり・なしをランダム設定
 - Android Chromeで13問すべてを実機回帰確認

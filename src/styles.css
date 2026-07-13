@@ -675,9 +675,49 @@ button {
 }
 
 .device-mark {
+  fill: none;
+  pointer-events: none;
   stroke: #596a78;
   stroke-width: 4;
   stroke-linecap: round;
+}
+
+.device-detail {
+  fill: none;
+  pointer-events: none;
+  stroke: #596a78;
+  stroke-width: 3;
+}
+
+.device-detail-fill {
+  fill: #596a78;
+  pointer-events: none;
+}
+
+.pilot-core {
+  fill: #f0b429;
+  pointer-events: none;
+  stroke: #596a78;
+  stroke-width: 3;
+}
+
+.candidate-symbol-text {
+  fill: #526272;
+  font-size: 13px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.candidate-symbol-text.centered {
+  text-anchor: middle;
+}
+
+.candidate-symbol-text.motor-mark {
+  font-size: 23px;
+}
+
+.candidate-device.ceiling-connector {
+  fill: #fff8d6;
 }
 
 .ground-hole {
@@ -693,41 +733,6 @@ button {
   font-weight: 900;
 }
 
-.hotspot {
-  fill: rgba(31, 111, 139, 0.08);
-  stroke: #1f6f8b;
-  stroke-dasharray: 8 6;
-  stroke-width: 3;
-  cursor: pointer;
-}
-
-.hotspot:hover,
-.hotspot.selected {
-  fill: rgba(31, 111, 139, 0.2);
-  stroke-dasharray: none;
-}
-
-.hotspot.answered {
-  fill: rgba(25, 135, 84, 0.12);
-  stroke: #198754;
-}
-
-.hotspot.correct {
-  fill: rgba(25, 135, 84, 0.22);
-  stroke: #198754;
-}
-
-.hotspot.wrong {
-  fill: rgba(200, 51, 73, 0.2);
-  stroke: #c83349;
-}
-
-.hotspot-label {
-  fill: #172033;
-  font-size: 13px;
-  font-weight: 900;
-  pointer-events: none;
-}
 
 @media (max-width: 720px) {
   .app-header {
@@ -815,25 +820,11 @@ button {
   pointer-events: none;
 }
 
-.hotspot,
 .box-connection-hit {
   pointer-events: all;
   touch-action: manipulation;
 }
 
-.box-hotspot,
-.device-hotspot {
-  fill: rgba(31, 111, 139, 0.14);
-  stroke-width: 4;
-}
-
-@media (max-width: 720px) {
-  .box-hotspot,
-  .device-hotspot {
-    fill: rgba(31, 111, 139, 0.18);
-    stroke-width: 5;
-  }
-}
 
 
 .connection-spec-label {

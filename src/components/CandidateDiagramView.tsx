@@ -143,7 +143,7 @@ export function CandidateSvg({
             }
           : undefined;
 
-        return <DeviceNode device={device} interaction={interaction} key={device.id} />;
+        return <CandidateDeviceNode device={device} interaction={interaction} key={device.id} />;
       })}
     </svg>
   );
@@ -219,7 +219,13 @@ function BoxNode({ box, interaction }: { box: InspectionBox; interaction: Intera
   );
 }
 
-function DeviceNode({ device, interaction }: { device: CandidateDevice; interaction?: Interaction }) {
+export function CandidateDeviceNode({ device, interaction }: { device: CandidateDevice; interaction?: Interaction }) {
+  const label = (
+    <text className="candidate-label small-label" x={device.x} y={device.y > 300 ? device.y - 45 : device.y + 54} textAnchor="middle">
+      {device.label}
+    </text>
+  );
+
   if (device.type === "power") {
     return (
       <SelectableGroup height={80} interaction={interaction} width={100} x={device.x} y={device.y}>
@@ -238,25 +244,155 @@ function DeviceNode({ device, interaction }: { device: CandidateDevice; interact
     );
   }
 
-  if (device.type === "lamp" || device.type === "pilot") {
+  if (device.variant === "lamp_receptacle") {
     return (
-      <SelectableGroup height={94} interaction={interaction} width={94} x={device.x} y={device.y}>
-        <circle className={"candidate-device " + device.type} cx={device.x} cy={device.y} r="34" />
-        <line className="device-mark" x1={device.x - 18} y1={device.y - 18} x2={device.x + 18} y2={device.y + 18} />
-        <line className="device-mark" x1={device.x + 18} y1={device.y - 18} x2={device.x - 18} y2={device.y + 18} />
-        <text className="candidate-label small-label" x={device.x} y={device.y + 54} textAnchor="middle">{device.label}</text>
+      <SelectableGroup height={104} interaction={interaction} width={98} x={device.x} y={device.y}>
+        <circle className="candidate-device lamp" cx={device.x} cy={device.y} r="34" />
+        <circle className="device-detail" cx={device.x} cy={device.y} r="14" />
+        <circle className="device-detail-fill" cx={device.x - 22} cy={device.y} r="4" />
+        <circle className="device-detail-fill" cx={device.x + 22} cy={device.y} r="4" />
+        {label}
       </SelectableGroup>
     );
   }
 
-  if (device.type === "receptacle" || device.type === "grounded_receptacle") {
+  if (device.variant === "ceiling_connector") {
     return (
-      <SelectableGroup height={102} interaction={interaction} width={104} x={device.x} y={device.y}>
+      <SelectableGroup height={102} interaction={interaction} width={108} x={device.x} y={device.y}>
+        <rect className="candidate-device ceiling-connector" x={device.x - 40} y={device.y - 27} width="80" height="54" rx="18" />
+        <ellipse className="device-detail" cx={device.x} cy={device.y} rx="18" ry="11" />
+        <line className="device-mark" x1={device.x - 24} y1={device.y - 12} x2={device.x - 14} y2={device.y - 12} />
+        <line className="device-mark" x1={device.x + 14} y1={device.y + 12} x2={device.x + 24} y2={device.y + 12} />
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "pilot_lamp") {
+    return (
+      <SelectableGroup height={90} interaction={interaction} width={90} x={device.x} y={device.y}>
+        <circle className="candidate-device pilot" cx={device.x} cy={device.y} r="27" />
+        <circle className="pilot-core" cx={device.x} cy={device.y} r="11" />
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (
+    device.variant === "single_pole_switch"
+    || device.variant === "three_way_switch"
+    || device.variant === "four_way_switch"
+    || device.variant === "switch_group"
+  ) {
+    const switchMark = device.variant === "three_way_switch"
+      ? "3"
+      : device.variant === "four_way_switch"
+        ? "4"
+        : device.variant === "switch_group" ? "H" : "1";
+    return (
+      <SelectableGroup height={100} interaction={interaction} width={112} x={device.x} y={device.y}>
+        <rect className="candidate-device switch" x={device.x - 44} y={device.y - 31} width="88" height="62" rx="8" />
+        <circle className="device-detail-fill" cx={device.x - 24} cy={device.y + 12} r="4" />
+        <circle className="device-detail-fill" cx={device.x + 24} cy={device.y - 12} r="4" />
+        <line className="device-mark" x1={device.x - 20} y1={device.y + 9} x2={device.x + 18} y2={device.y - 9} />
+        <text className="candidate-symbol-text" x={device.x + 29} y={device.y + 20}>{switchMark}</text>
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "timer_switch" || device.variant === "automatic_switch") {
+    return (
+      <SelectableGroup height={100} interaction={interaction} width={112} x={device.x} y={device.y}>
+        <rect className="candidate-device terminal" x={device.x - 44} y={device.y - 32} width="88" height="64" rx="8" />
+        <circle className="device-detail" cx={device.x - 19} cy={device.y} r="13" />
+        <line className="device-mark" x1={device.x - 19} y1={device.y} x2={device.x - 12} y2={device.y - 8} />
+        <text className="candidate-symbol-text centered" x={device.x + 19} y={device.y + 5}>
+          {device.variant === "timer_switch" ? "TS" : "A"}
+        </text>
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "circuit_breaker" || device.variant === "earth_leakage_breaker") {
+    return (
+      <SelectableGroup height={94} interaction={interaction} width={108} x={device.x} y={device.y}>
+        <rect className="candidate-device breaker" x={device.x - 44} y={device.y - 32} width="88" height="64" rx="8" />
+        <line className="device-mark" x1={device.x - 20} y1={device.y + 12} x2={device.x + 6} y2={device.y - 12} />
+        <circle className="device-detail-fill" cx={device.x - 22} cy={device.y + 14} r="4" />
+        <text className="candidate-symbol-text centered" x={device.x + 22} y={device.y + 5}>
+          {device.variant === "earth_leakage_breaker" ? "BE" : "B"}
+        </text>
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "exposed_receptacle") {
+    return (
+      <SelectableGroup height={104} interaction={interaction} width={104} x={device.x} y={device.y}>
+        <circle className="candidate-device receptacle" cx={device.x} cy={device.y} r="36" />
+        <line className="device-mark" x1={device.x - 12} y1={device.y - 15} x2={device.x - 12} y2={device.y + 8} />
+        <line className="device-mark" x1={device.x + 12} y1={device.y - 15} x2={device.x + 12} y2={device.y + 8} />
+        <circle className="device-detail" cx={device.x} cy={device.y + 20} r="5" />
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (
+    device.type === "receptacle"
+    || device.type === "grounded_receptacle"
+  ) {
+    const grounded = device.type === "grounded_receptacle";
+    const is20A = device.variant === "grounded_20a_receptacle";
+    return (
+      <SelectableGroup height={106} interaction={interaction} width={108} x={device.x} y={device.y}>
         <rect className="candidate-device receptacle" x={device.x - 42} y={device.y - 40} width="84" height="80" rx="12" />
-        <line className="device-mark" x1={device.x - 14} y1={device.y - 16} x2={device.x - 14} y2={device.y + 16} />
-        <line className="device-mark" x1={device.x + 14} y1={device.y - 16} x2={device.x + 14} y2={device.y + 16} />
-        {device.type === "grounded_receptacle" && <circle className="ground-hole" cx={device.x} cy={device.y + 22} r="5" />}
-        <text className="candidate-label small-label" x={device.x} y={device.y + 60} textAnchor="middle">{device.label}</text>
+        <line className="device-mark" x1={device.x - 14} y1={device.y - 16} x2={device.x - 14} y2={device.y + 12} />
+        <line className="device-mark" x1={device.x + 14} y1={device.y - 16} x2={device.x + 14} y2={device.y + 12} />
+        {is20A && <line className="device-mark" x1={device.x + 4} y1={device.y - 16} x2={device.x + 24} y2={device.y - 16} />}
+        {grounded && <circle className="ground-hole" cx={device.x} cy={device.y + 24} r="5" />}
+        {device.variant === "eet_receptacle" && (
+          <text className="candidate-symbol-text centered" x={device.x + 27} y={device.y + 31}>EET</text>
+        )}
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "earth_terminal" || device.variant === "terminal_block") {
+    return (
+      <SelectableGroup height={94} interaction={interaction} width={108} x={device.x} y={device.y}>
+        <rect className="candidate-device terminal" x={device.x - 44} y={device.y - 30} width="88" height="60" rx="8" />
+        {[-22, 0, 22].map((offset) => (
+          <circle className="device-detail" cx={device.x + offset} cy={device.y} key={offset} r="6" />
+        ))}
+        <text className="candidate-symbol-text centered" x={device.x} y={device.y + 23}>
+          {device.variant === "earth_terminal" ? "ED" : "T"}
+        </text>
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "motor_terminal") {
+    return (
+      <SelectableGroup height={100} interaction={interaction} width={104} x={device.x} y={device.y}>
+        <circle className="candidate-device terminal" cx={device.x} cy={device.y} r="35" />
+        <text className="candidate-symbol-text motor-mark" x={device.x} y={device.y + 8} textAnchor="middle">M</text>
+        {label}
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "load_device") {
+    return (
+      <SelectableGroup height={100} interaction={interaction} width={104} x={device.x} y={device.y}>
+        <circle className="candidate-device terminal" cx={device.x} cy={device.y} r="33" />
+        <text className="candidate-symbol-text motor-mark" x={device.x} y={device.y + 8} textAnchor="middle">負荷</text>
+        {label}
       </SelectableGroup>
     );
   }
@@ -268,7 +404,6 @@ function DeviceNode({ device, interaction }: { device: CandidateDevice; interact
     </SelectableGroup>
   );
 }
-
 function makeWirePath(from: CandidateDevice, to: CandidateDevice, offset: { x: number; y: number }) {
   const startX = from.x + offset.x;
   const startY = from.y + offset.y;

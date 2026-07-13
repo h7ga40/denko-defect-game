@@ -11,10 +11,33 @@ export type DeviceType =
   | "box"
   | "motor";
 
+export type DeviceVariant =
+  | "lamp_receptacle"
+  | "ceiling_connector"
+  | "pilot_lamp"
+  | "single_pole_switch"
+  | "three_way_switch"
+  | "four_way_switch"
+  | "switch_group"
+  | "exposed_receptacle"
+  | "grounded_receptacle"
+  | "grounded_20a_receptacle"
+  | "eet_receptacle"
+  | "circuit_breaker"
+  | "earth_leakage_breaker"
+  | "timer_switch"
+  | "automatic_switch"
+  | "earth_terminal"
+  | "terminal_block"
+  | "motor_terminal"
+  | "load_device"
+  | "omitted_work";
+
 export type CandidateDevice = {
   id: string;
   label: string;
   type: DeviceType;
+  variant?: DeviceVariant;
   x: number;
   y: number;
 };
@@ -46,11 +69,11 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p", label: "電源", type: "power", x: 92, y: 205 },
       { id: "j1", label: "接続点", type: "connector", x: 240, y: 205 },
-      { id: "c", label: "引掛シーリング イ", type: "lamp", x: 240, y: 96 },
-      { id: "sw", label: "Hイ/ロ/ハ", type: "switch", x: 240, y: 315 },
+      { id: "c", label: "引掛シーリング イ", type: "lamp", variant: "ceiling_connector", x: 240, y: 96 },
+      { id: "sw", label: "Hイ/ロ/ハ", type: "switch", variant: "switch_group", x: 240, y: 315 },
       { id: "j2", label: "接続点", type: "connector", x: 435, y: 205 },
-      { id: "r", label: "R ロ", type: "lamp", x: 435, y: 96 },
-      { id: "omit", label: "施工省略 ハ", type: "receptacle", x: 435, y: 315 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 435, y: 96 },
+      { id: "omit", label: "施工省略 ハ", type: "receptacle", variant: "omitted_work", x: 435, y: 315 },
     ],
     connections: [
       { from: "p", to: "j1", color: "black", label: "EM-EEF 2.0-2C" },
@@ -69,11 +92,11 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p", label: "電源", type: "power", x: 80, y: 198 },
       { id: "j1", label: "接続点", type: "connector", x: 220, y: 198 },
-      { id: "r1", label: "R イ", type: "lamp", x: 220, y: 85 },
+      { id: "r1", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 220, y: 85 },
       { id: "j2", label: "接続点", type: "connector", x: 430, y: 198 },
-      { id: "pl", label: "PL 常時", type: "pilot", x: 430, y: 85 },
-      { id: "r2", label: "R イ", type: "lamp", x: 605, y: 198 },
-      { id: "sw", label: "スイッチ 2", type: "switch", x: 430, y: 310 },
+      { id: "pl", label: "PL 常時", type: "pilot", variant: "pilot_lamp", x: 430, y: 85 },
+      { id: "r2", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 605, y: 198 },
+      { id: "sw", label: "スイッチ 2", type: "switch", variant: "single_pole_switch", x: 430, y: 310 },
       { id: "omit", label: "施工省略", type: "box", x: 575, y: 310 },
     ],
     connections: [
@@ -94,13 +117,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p", label: "電源", type: "power", x: 88, y: 200 },
       { id: "j1", label: "接続点", type: "connector", x: 210, y: 248 },
-      { id: "sw", label: "スイッチ ロ", type: "switch", x: 210, y: 330 },
+      { id: "sw", label: "スイッチ ロ", type: "switch", variant: "single_pole_switch", x: 210, y: 330 },
       { id: "j2", label: "接続点", type: "connector", x: 350, y: 248 },
-      { id: "ts", label: "TS イ", type: "terminal", x: 350, y: 96 },
-      { id: "c", label: "引掛 イ", type: "lamp", x: 540, y: 115 },
-      { id: "r", label: "R ロ", type: "lamp", x: 540, y: 248 },
-      { id: "e", label: "接地極付 E", type: "grounded_receptacle", x: 350, y: 330 },
-      { id: "ed", label: "ED", type: "terminal", x: 560, y: 330 },
+      { id: "ts", label: "TS イ", type: "terminal", variant: "timer_switch", x: 350, y: 96 },
+      { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 540, y: 115 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 540, y: 248 },
+      { id: "e", label: "接地極付 E", type: "grounded_receptacle", variant: "grounded_receptacle", x: 350, y: 330 },
+      { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 560, y: 330 },
     ],
     connections: [
       { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C" },
@@ -121,15 +144,15 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p100", label: "100V電源", type: "power", x: 80, y: 135 },
       { id: "p200", label: "3φ200V電源", type: "power", x: 80, y: 232 },
-      { id: "b", label: "B", type: "breaker", x: 205, y: 135 },
-      { id: "be", label: "BE", type: "breaker", x: 205, y: 232 },
+      { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", x: 205, y: 135 },
+      { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", x: 205, y: 232 },
       { id: "j1", label: "接続点", type: "connector", x: 345, y: 135 },
       { id: "j2", label: "接続点", type: "connector", x: 345, y: 232 },
-      { id: "r", label: "R 電源表示灯", type: "pilot", x: 255, y: 318 },
-      { id: "m", label: "M 3φ200V", type: "motor", x: 345, y: 318 },
-      { id: "ed", label: "ED", type: "terminal", x: 430, y: 338 },
-      { id: "c", label: "引掛 イ", type: "lamp", x: 555, y: 242 },
-      { id: "sw", label: "スイッチ イ", type: "switch", x: 630, y: 318 },
+      { id: "r", label: "R 電源表示灯", type: "pilot", variant: "pilot_lamp", x: 255, y: 318 },
+      { id: "m", label: "M 3φ200V", type: "motor", variant: "motor_terminal", x: 345, y: 318 },
+      { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 430, y: 338 },
+      { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 555, y: 242 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 630, y: 318 },
     ],
     connections: [
       { from: "p100", to: "b", color: "black" },
@@ -151,14 +174,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p100", label: "100V電源", type: "power", x: 80, y: 120 },
       { id: "p200", label: "200V電源", type: "power", x: 80, y: 200 },
-      { id: "b", label: "B", type: "breaker", x: 185, y: 120 },
-      { id: "be", label: "BE", type: "breaker", x: 185, y: 200 },
-      { id: "ed", label: "ED", type: "terminal", x: 120, y: 278 },
+      { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", x: 185, y: 120 },
+      { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", x: 185, y: 200 },
+      { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 120, y: 278 },
       { id: "j", label: "接続点", type: "connector", x: 360, y: 160 },
-      { id: "r", label: "R ロ", type: "lamp", x: 325, y: 275 },
-      { id: "outlet", label: "20A 250V E", type: "grounded_receptacle", x: 390, y: 320 },
-      { id: "sw", label: "スイッチ イ", type: "switch", x: 472, y: 300 },
-      { id: "c", label: "引掛 イ", type: "lamp", x: 570, y: 230 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 325, y: 275 },
+      { id: "outlet", label: "20A 250V E", type: "grounded_receptacle", variant: "grounded_20a_receptacle", x: 390, y: 320 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 472, y: 300 },
+      { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 570, y: 230 },
     ],
     connections: [
       { from: "p100", to: "b", color: "black" },
@@ -177,13 +200,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
     theme: `${sourceNote}。露出形コンセントと2か所の照明器具を含む回路。`,
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: 引掛シーリング、露出形コンセント、スイッチ"],
     devices: [
-      { id: "c1", label: "引掛 イ", type: "lamp", x: 185, y: 100 },
+      { id: "c1", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 185, y: 100 },
       { id: "j1", label: "接続点", type: "connector", x: 300, y: 205 },
-      { id: "sw1", label: "スイッチ イ3", type: "switch", x: 300, y: 320 },
-      { id: "c2", label: "引掛 イ", type: "lamp", x: 410, y: 100 },
+      { id: "sw1", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 300, y: 320 },
+      { id: "c2", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 410, y: 100 },
       { id: "j2", label: "接続点", type: "connector", x: 525, y: 205 },
-      { id: "outlet", label: "露出形", type: "receptacle", x: 525, y: 100 },
-      { id: "sw2", label: "スイッチ イ3", type: "switch", x: 525, y: 320 },
+      { id: "outlet", label: "露出形", type: "receptacle", variant: "exposed_receptacle", x: 525, y: 100 },
+      { id: "sw2", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 525, y: 320 },
       { id: "p", label: "電源", type: "power", x: 645, y: 205 },
     ],
     connections: [
@@ -204,12 +227,12 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p", label: "電源", type: "power", x: 96, y: 105 },
       { id: "j1", label: "接続点", type: "connector", x: 96, y: 250 },
-      { id: "sw1", label: "スイッチ イ3", type: "switch", x: 96, y: 335 },
+      { id: "sw1", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 96, y: 335 },
       { id: "box", label: "ジョイント", type: "box", x: 330, y: 250 },
-      { id: "r1", label: "R イ", type: "lamp", x: 330, y: 105 },
-      { id: "sw2", label: "スイッチ イ4", type: "switch", x: 330, y: 335 },
-      { id: "r2", label: "R イ", type: "lamp", x: 540, y: 105 },
-      { id: "sw3", label: "スイッチ イ3", type: "switch", x: 540, y: 335 },
+      { id: "r1", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 330, y: 105 },
+      { id: "sw2", label: "スイッチ イ4", type: "switch", variant: "four_way_switch", x: 330, y: 335 },
+      { id: "r2", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 540, y: 105 },
+      { id: "sw3", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 540, y: 335 },
     ],
     connections: [
       { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C" },
@@ -228,14 +251,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
     points: ["電源: 1φ2W 100V", "電線: VVR 2.0-2C", "器具: B、T、3路スイッチ、ランプレセプタクル、引掛シーリング"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 70, y: 170 },
-      { id: "b1", label: "B", type: "breaker", x: 170, y: 140 },
-      { id: "b2", label: "B", type: "breaker", x: 170, y: 245 },
-      { id: "t", label: "T", type: "terminal", x: 245, y: 245 },
-      { id: "s3", label: "3路S R", type: "switch", x: 345, y: 245 },
+      { id: "b1", label: "B", type: "breaker", variant: "circuit_breaker", x: 170, y: 140 },
+      { id: "b2", label: "B", type: "breaker", variant: "circuit_breaker", x: 170, y: 245 },
+      { id: "t", label: "T", type: "terminal", variant: "terminal_block", x: 245, y: 245 },
+      { id: "s3", label: "3路S R", type: "switch", variant: "three_way_switch", x: 345, y: 245 },
       { id: "box", label: "接続箱", type: "box", x: 500, y: 170 },
-      { id: "c1", label: "引掛 イ", type: "lamp", x: 650, y: 105 },
-      { id: "r", label: "R ロ", type: "lamp", x: 650, y: 250 },
-      { id: "c2", label: "引掛 ハ", type: "lamp", x: 520, y: 328 },
+      { id: "c1", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 650, y: 105 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 650, y: 250 },
+      { id: "c2", label: "引掛 ハ", type: "lamp", variant: "ceiling_connector", x: 520, y: 328 },
     ],
     connections: [
       { from: "p", to: "b1", color: "black" },
@@ -255,15 +278,15 @@ export const candidateDiagrams: CandidateDiagram[] = [
     theme: `${sourceNote}。EET、接地、ランプレセプタクル、引掛シーリングを含む回路。`,
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、E1.6", "器具: ランプレセプタクル、引掛シーリング、EET、接地"],
     devices: [
-      { id: "r1", label: "R イ", type: "lamp", x: 115, y: 105 },
+      { id: "r1", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 115, y: 105 },
       { id: "j1", label: "接続点", type: "connector", x: 115, y: 235 },
-      { id: "sw", label: "スイッチ イ", type: "switch", x: 115, y: 330 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 115, y: 330 },
       { id: "p", label: "電源", type: "power", x: 320, y: 105 },
       { id: "j2", label: "接続点", type: "connector", x: 320, y: 235 },
-      { id: "c", label: "引掛 イ", type: "lamp", x: 320, y: 330 },
-      { id: "eet", label: "EET 2", type: "grounded_receptacle", x: 535, y: 235 },
-      { id: "pl", label: "器具 2", type: "pilot", x: 535, y: 105 },
-      { id: "ed", label: "ED", type: "terminal", x: 535, y: 330 },
+      { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 320, y: 330 },
+      { id: "eet", label: "EET 2", type: "grounded_receptacle", variant: "eet_receptacle", x: 535, y: 235 },
+      { id: "pl", label: "器具 2", type: "pilot", variant: "pilot_lamp", x: 535, y: 105 },
+      { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 535, y: 330 },
     ],
     connections: [
       { from: "r1", to: "j1", color: "black", label: "イ" },
@@ -283,12 +306,12 @@ export const candidateDiagrams: CandidateDiagram[] = [
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: B、引掛シーリング、ランプレセプタクル、確認表示灯、スイッチ"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 105, y: 205 },
-      { id: "b", label: "B", type: "breaker", x: 210, y: 205 },
+      { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", x: 210, y: 205 },
       { id: "j", label: "接続点", type: "connector", x: 365, y: 205 },
-      { id: "c", label: "引掛 イ", type: "lamp", x: 365, y: 90 },
-      { id: "r", label: "R イ", type: "lamp", x: 585, y: 205 },
-      { id: "pl", label: "PL 同時", type: "pilot", x: 365, y: 330 },
-      { id: "sw", label: "スイッチ イ", type: "switch", x: 430, y: 330 },
+      { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 365, y: 90 },
+      { id: "r", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 585, y: 205 },
+      { id: "pl", label: "PL 同時", type: "pilot", variant: "pilot_lamp", x: 365, y: 330 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 430, y: 330 },
     ],
     connections: [
       { from: "p", to: "b", color: "black" },
@@ -307,10 +330,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p", label: "電源", type: "power", x: 85, y: 160 },
       { id: "box", label: "接続箱", type: "box", x: 285, y: 160 },
-      { id: "c", label: "引掛 イ", type: "lamp", x: 560, y: 160 },
-      { id: "r", label: "R ロ", type: "lamp", x: 170, y: 300 },
-      { id: "sw", label: "スイッチ イ", type: "switch", x: 285, y: 325 },
-      { id: "load", label: "器具 ロ", type: "switch", x: 435, y: 265 },
+      { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 560, y: 160 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 170, y: 300 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 285, y: 325 },
+      { id: "load", label: "器具 ロ", type: "switch", variant: "single_pole_switch", x: 435, y: 265 },
     ],
     connections: [
       { from: "p", to: "box", color: "black", label: "VVF 2.0-2C" },
@@ -326,13 +349,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
     theme: `${sourceNote}。IV 1.6（PF16）を含むPF管工事の回路。`,
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（PF16）", "器具: ランプレセプタクル、引掛シーリング、スイッチ"],
     devices: [
-      { id: "r", label: "R ロ", type: "lamp", x: 165, y: 96 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 165, y: 96 },
       { id: "j1", label: "接続点", type: "connector", x: 165, y: 205 },
-      { id: "c1", label: "引掛 イ", type: "lamp", x: 165, y: 330 },
+      { id: "c1", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 165, y: 330 },
       { id: "p", label: "電源", type: "power", x: 375, y: 96 },
       { id: "box", label: "接続箱", type: "box", x: 375, y: 205 },
-      { id: "sw", label: "スイッチ イ", type: "switch", x: 375, y: 330 },
-      { id: "c2", label: "引掛 ロ", type: "lamp", x: 585, y: 205 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 375, y: 330 },
+      { id: "c2", label: "引掛 ロ", type: "lamp", variant: "ceiling_connector", x: 585, y: 205 },
     ],
     connections: [
       { from: "r", to: "j1", color: "black", label: "ロ" },
@@ -351,13 +374,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
     devices: [
       { id: "p", label: "電源", type: "power", x: 90, y: 105 },
       { id: "j1", label: "接続点", type: "connector", x: 90, y: 240 },
-      { id: "sw", label: "スイッチ イ", type: "switch", x: 90, y: 335 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 90, y: 335 },
       { id: "j2", label: "接続点", type: "connector", x: 320, y: 240 },
-      { id: "r", label: "R イ", type: "lamp", x: 320, y: 105 },
-      { id: "e", label: "接地極付 E", type: "grounded_receptacle", x: 320, y: 335 },
-      { id: "a", label: "A（3A）ロ", type: "terminal", x: 560, y: 240 },
-      { id: "ed", label: "ED", type: "terminal", x: 420, y: 350 },
-      { id: "load", label: "器具 ロ", type: "lamp", x: 590, y: 330 },
+      { id: "r", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 320, y: 105 },
+      { id: "e", label: "接地極付 E", type: "grounded_receptacle", variant: "grounded_receptacle", x: 320, y: 335 },
+      { id: "a", label: "A（3A）ロ", type: "terminal", variant: "automatic_switch", x: 560, y: 240 },
+      { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 420, y: 350 },
+      { id: "load", label: "器具 ロ", type: "lamp", variant: "load_device", x: 590, y: 330 },
     ],
     connections: [
       { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C" },

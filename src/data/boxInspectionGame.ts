@@ -1,5 +1,5 @@
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "./candidateDiagrams";
-import type { DefectType } from "./problems";
+import { problems, type DefectType, type Problem } from "./problems";
 
 export type BoxType = "joint" | "outlet";
 export type ConnectionMethod = "ring_sleeve" | "push_connector";
@@ -38,16 +38,15 @@ export type InspectionBox = {
   x: number;
   y: number;
   cableCount: number;
-  hotspot: { x: number; y: number; width: number; height: number };
   parts: BoxInspectionPart[];
 };
 
 export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   sourceDeviceId: string;
   deviceType: CandidateDevice["type"];
+  deviceVariant?: CandidateDevice["variant"];
   x: number;
   y: number;
-  hotspot: { x: number; y: number; width: number; height: number };
 };
 
 export type BoxInspectionRound = {
@@ -123,13 +122,18 @@ export function createBoxInspectionRound(): BoxInspectionRound {
     index,
     specs: createConnectionSpecs(candidate, device, index),
   }));
-  const partKeys = plannedBoxes.flatMap(({ device, specs }) => specs.map((spec) => device.id + "-" + spec.id));
-  const defectCount = Math.min(randomInt(2, 3), partKeys.length);
-  const defectIds = new Set(shuffle(partKeys).slice(0, defectCount));
+  const directDevices = candidate.devices.filter(isDirectInspectionDevice);
+  const boxPartKeys = plannedBoxes.flatMap(({ device, specs }) =>
+    specs.map((spec) => "box:" + device.id + "-" + spec.id),
+  );
+  const directDefectKeys = directDevices
+    .filter((device) => getDirectDefectProblems(device).length > 0)
+    .map((device) => "device:" + device.id);
+  const defectTargets = [...boxPartKeys, ...directDefectKeys];
+  const defectCount = Math.min(randomInt(2, 3), defectTargets.length);
+  const defectIds = new Set(shuffle(defectTargets).slice(0, defectCount));
   const boxes = plannedBoxes.map(({ device, index, specs }) => createBox(candidate, device, index, specs, defectIds));
-  const directParts = candidate.devices
-    .filter((device) => device.type !== "power" && device.type !== "connector" && device.type !== "box")
-    .map(createDirectPart);
+  const directParts = directDevices.map((device) => createDirectPart(device, defectIds.has("device:" + device.id)));
 
   return {
     id: Date.now() + "-" + Math.random().toString(36).slice(2),
@@ -204,15 +208,9 @@ function createBox(
     x: device.x,
     y: device.y,
     cableCount: candidate.connections.filter((connection) => connection.from === device.id || connection.to === device.id).length,
-    hotspot: {
-      x: clamp(device.x - 75, 28, 542),
-      y: clamp(device.y - 50, 60, 260),
-      width: 150,
-      height: 100,
-    },
     parts: specs.map((spec, partIndex) => {
       const template = randomItem(templates.filter((item) => item.method === spec.method));
-      return toPart(template, id, label, spec, partIndex, defectIds.has(device.id + "-" + spec.id));
+      return toPart(template, id, label, spec, partIndex, defectIds.has("box:" + device.id + "-" + spec.id));
     }),
   };
 }
@@ -248,29 +246,53 @@ function summarizeConductors(connection: ConnectionSpec) {
   return connection.wireCount + "芯 " + sizes + " / " + connection.portCount + "本用";
 }
 
-function createDirectPart(device: CandidateDevice): DirectInspectionPart {
-  const width = device.type === "lamp" || device.type === "pilot" ? 112 : 124;
-  const height = 94;
+function isDirectInspectionDevice(device: CandidateDevice) {
+  return device.type !== "power"
+    && device.type !== "connector"
+    && device.type !== "box"
+    && device.variant !== "omitted_work";
+}
+
+function getDirectDefectProblems(device: CandidateDevice): Problem[] {
+  const idsByVariant: Partial<Record<NonNullable<CandidateDevice["variant"]>, string[]>> = {
+    lamp_receptacle: ["lamp-loop-reverse", "lamp-polarity"],
+    ceiling_connector: ["ceiling-connector-polarity"],
+    exposed_receptacle: ["exposed-receptacle-sheath", "receptacle-polarity"],
+    grounded_receptacle: ["receptacle-ground", "receptacle-polarity"],
+    grounded_20a_receptacle: ["receptacle-ground", "receptacle-polarity"],
+    eet_receptacle: ["receptacle-ground", "receptacle-polarity"],
+    circuit_breaker: ["breaker-line-load-reverse"],
+    earth_leakage_breaker: ["breaker-line-load-reverse"],
+    terminal_block: ["terminal-block-wrong-terminal"],
+    timer_switch: ["terminal-block-wrong-terminal"],
+    automatic_switch: ["terminal-block-wrong-terminal"],
+    single_pole_switch: ["switch-wrong-terminal"],
+    three_way_switch: ["switch-wrong-terminal"],
+    four_way_switch: ["switch-wrong-terminal"],
+    switch_group: ["switch-wrong-terminal"],
+  };
+  const ids = device.variant ? idsByVariant[device.variant] ?? [] : [];
+  return problems.filter((problem) => ids.includes(problem.id));
+}
+
+function createDirectPart(device: CandidateDevice, hasDefect: boolean): DirectInspectionPart {
+  const defectProblem = hasDefect ? randomItem(getDirectDefectProblems(device)) : undefined;
   return {
     id: "device-" + device.id,
     boxId: "",
     sourceDeviceId: device.id,
     deviceType: device.type,
+    deviceVariant: device.variant,
     title: device.label,
     location: "複線図上の「" + device.label + "」",
-    defectType: "none",
-    question: device.label + "の施工状態を判定してください。",
-    choices: ["欠陥なし", "接続不良", "取付不良", "極性誤り"],
-    answer: "欠陥なし",
-    explanation: "この器具は正常に施工されています。接続部の欠陥は、ボックス内配線図で判定します。",
+    defectType: defectProblem?.defectType ?? "none",
+    question: defectProblem?.question ?? device.label + "の施工状態を判定してください。",
+    choices: defectProblem?.choices ?? ["欠陥なし", "接続不良", "取付不良", "極性誤り"],
+    answer: defectProblem?.answer ?? "欠陥なし",
+    explanation: defectProblem?.explanation
+      ?? "この器具は正常に施工されています。接続部の欠陥は、ボックス内配線図で判定します。",
     x: device.x,
     y: device.y,
-    hotspot: {
-      x: clamp(device.x - width / 2, 28, 692 - width),
-      y: clamp(device.y - height / 2, 60, 360 - height),
-      width,
-      height,
-    },
   };
 }
 
