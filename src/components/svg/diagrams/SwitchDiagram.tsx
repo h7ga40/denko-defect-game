@@ -1,9 +1,9 @@
-export function SwitchDiagram() {
+export function SwitchDiagram({ title = "単極スイッチ" }: { title?: string }) {
   return (
-    <svg viewBox="0 0 720 390" role="img" aria-label="スイッチの欠陥図">
+    <svg viewBox="0 0 720 390" role="img" aria-label={title + "の欠陥図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="label" x="360" y="62" textAnchor="middle">
-        スイッチ
+        {title}
       </text>
       <rect className="device" x="325" y="110" width="120" height="165" rx="14" />
       <text className="small" x="385" y="143" textAnchor="middle">

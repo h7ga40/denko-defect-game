@@ -20,7 +20,7 @@ export function PushConnectorDiagram({
       <circle className="connector" cx="410" cy="188" r="15" />
       <path className="wire black" d="M 110 150 C 190 150, 230 175, 340 188" />
       <path className="wire white" d="M 110 225 C 190 225, 225 200, 375 188" />
-      <path className="wire red" d="M 110 188 C 165 188, 205 188, 410 188" />
+      {wrongWireCount && <path className="wire red" d="M 110 188 C 165 188, 205 188, 410 188" />}
       {wrongWireCount ? (
         <>
           <path className="wire alert broken" d="M 110 265 C 170 260, 220 248, 292 222" />

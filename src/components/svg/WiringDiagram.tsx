@@ -17,12 +17,13 @@ import { TerminalBlockDiagram } from "./diagrams/TerminalBlockDiagram";
 
 type WiringDiagramProps = {
   defectType: DefectType;
+  deviceName?: string;
 };
 
-export function WiringDiagram({ defectType }: WiringDiagramProps) {
+export function WiringDiagram({ defectType, deviceName }: WiringDiagramProps) {
   switch (defectType) {
     case "missing_ground":
-      return <GroundedReceptacleDiagram />;
+      return <GroundedReceptacleDiagram title={deviceName} />;
     case "sheath_too_short":
       return <OutletBoxDiagram />;
     case "ring_sleeve_wrong_mark":
@@ -33,20 +34,20 @@ export function WiringDiagram({ defectType }: WiringDiagramProps) {
     case "exposed_receptacle_sheath":
       return <ExposedReceptacleDiagram />;
     case "breaker_line_load_reverse":
-      return <BreakerDiagram />;
+      return <BreakerDiagram title={deviceName} />;
     case "push_connector_insufficient_insert":
     case "push_connector_wrong_wire_count":
       return <PushConnectorDiagram defectType={defectType} />;
     case "terminal_block_wrong_terminal":
-      return <TerminalBlockDiagram />;
+      return <TerminalBlockDiagram title={deviceName} />;
     case "ceiling_connector_polarity":
       return <CeilingConnectorDiagram />;
     case "mounting_frame_loose":
       return <MountingFrameDiagram />;
     case "switch_wrong_terminal":
-      return <SwitchDiagram />;
+      return <SwitchDiagram title={deviceName} />;
     case "receptacle_polarity":
-      return <ReceptacleDiagram />;
+      return <ReceptacleDiagram title={deviceName} />;
     case "outlet_box_wrong_hole":
     case "rubber_bushing_missing":
     case "rubber_bushing_wrong_size":

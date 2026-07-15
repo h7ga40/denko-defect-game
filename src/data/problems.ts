@@ -184,13 +184,13 @@ export const problems: Problem[] = [
   },
   {
     id: "exposed-receptacle-sheath",
-    title: "露出コンセント 外装処理不良",
-    circuitName: "露出コンセントの簡略施工図",
+    title: "露出形コンセント 外装処理不良",
+    circuitName: "露出形コンセントの簡略施工図",
     defectType: "exposed_receptacle_sheath",
-    question: "露出コンセントに入るケーブル外装の状態として、欠陥を選んでください。",
+    question: "露出形コンセントに入るケーブル外装の状態として、欠陥を選んでください。",
     choices: ["欠陥なし", "ケーブル外装が器具内に入っていない", "白線と黒線の接続が逆", "接地線の接続忘れ"],
     answer: "ケーブル外装が器具内に入っていない",
-    explanation: "露出コンセントではケーブル外装を器具内まで適切に入れて固定します。図は外装が手前で終わっており、心線が長く露出しています。",
+    explanation: "露出形コンセントではケーブル外装を器具内まで適切に入れて固定します。図は外装が手前で終わっており、心線が長く露出しています。",
   },
   {
     id: "breaker-line-load-reverse",
@@ -335,7 +335,7 @@ export const problems: Problem[] = [
   },
   {
     id: "pf-conduit-insert",
-    title: "PF管 挿入不足",
+    title: "合成樹脂製可とう電線管（PF管） 挿入不足",
     circuitName: "PF管工事の簡略施工図",
     defectType: "pf_conduit_insufficient_insert",
     question: "PF管とボックスコネクタの接続状態として、欠陥を選んでください。",
@@ -345,7 +345,7 @@ export const problems: Problem[] = [
   },
   {
     id: "pf-conduit-locknut",
-    title: "PF管コネクタ ロックナット忘れ",
+    title: "合成樹脂製可とう電線管用ボックスコネクタ ロックナット忘れ",
     circuitName: "PF管工事の簡略施工図",
     defectType: "pf_conduit_missing_locknut",
     question: "PF管用ボックスコネクタの固定状態として、欠陥を選んでください。",

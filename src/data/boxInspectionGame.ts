@@ -162,7 +162,7 @@ const templates: Template[] = [
     defectExplanation: "電線を保護する絶縁ブッシングが金属管端にありません。",
   },
   {
-    title: "E19用ボックスコネクタ",
+    title: "ねじなし電線管E19用ボックスコネクタ",
     method: "metal_conduit",
     defectType: "metal_conduit_missing_locknut",
     question: "ボックスコネクタの固定状態を判定してください。",
@@ -172,7 +172,7 @@ const templates: Template[] = [
     defectExplanation: "ボックス内側に固定用のロックナットがありません。",
   },
   {
-    title: "PF管 PF16",
+    title: "合成樹脂製可とう電線管 PF16",
     method: "pf_conduit",
     defectType: "pf_conduit_insufficient_insert",
     question: "PF管とボックスコネクタの接続状態を判定してください。",
@@ -182,7 +182,7 @@ const templates: Template[] = [
     defectExplanation: "PF管が専用コネクタへ十分に挿入されていません。",
   },
   {
-    title: "PF管用ボックスコネクタ",
+    title: "合成樹脂製可とう電線管用ボックスコネクタ",
     method: "pf_conduit",
     defectType: "pf_conduit_missing_locknut",
     question: "PF管用ボックスコネクタの固定状態を判定してください。",
@@ -381,16 +381,17 @@ function getDirectDefectProblems(device: CandidateDevice): Problem[] {
 
 function createDirectPart(device: CandidateDevice, hasDefect: boolean): DirectInspectionPart {
   const defectProblem = hasDefect ? randomItem(getDirectDefectProblems(device)) : undefined;
+  const deviceName = getInspectionDeviceName(device);
   return {
     id: "device-" + device.id,
     boxId: "",
     sourceDeviceId: device.id,
     deviceType: device.type,
     deviceVariant: device.variant,
-    title: device.label,
-    location: "複線図上の「" + device.label + "」",
+    title: deviceName,
+    location: "複線図上の" + deviceName + "（表示記号「" + device.label + "」）",
     defectType: defectProblem?.defectType ?? "none",
-    question: defectProblem?.question ?? device.label + "の施工状態を判定してください。",
+    question: defectProblem?.question ?? deviceName + "の施工状態を判定してください。",
     choices: defectProblem?.choices ?? ["欠陥なし", "接続不良", "取付不良", "極性誤り"],
     answer: defectProblem?.answer ?? "欠陥なし",
     explanation: defectProblem?.explanation
@@ -400,6 +401,31 @@ function createDirectPart(device: CandidateDevice, hasDefect: boolean): DirectIn
   };
 }
 
+function getInspectionDeviceName(device: CandidateDevice) {
+  const names: Partial<Record<NonNullable<CandidateDevice["variant"]>, string>> = {
+    lamp_receptacle: "ランプレセプタクル",
+    ceiling_connector: "引掛シーリング",
+    pilot_lamp: "パイロットランプ",
+    single_pole_switch: "単極スイッチ",
+    three_way_switch: "3路スイッチ",
+    four_way_switch: "4路スイッチ",
+    switch_group: "連用スイッチ",
+    exposed_receptacle: "露出形コンセント",
+    grounded_receptacle: "接地極付コンセント",
+    grounded_20a_receptacle: "接地極付20A 250Vコンセント",
+    eet_receptacle: "接地極・接地端子付コンセント",
+    circuit_breaker: "配線用遮断器",
+    earth_leakage_breaker: "漏電遮断器",
+    timer_switch: "タイムスイッチ",
+    automatic_switch: "自動点滅器",
+    earth_terminal: "接地端子",
+    terminal_block: "端子台",
+    motor_terminal: "三相誘導電動機",
+    load_device: "負荷器具",
+    omitted_work: "施工省略箇所",
+  };
+  return device.variant ? names[device.variant] ?? device.label : device.label;
+}
 function randomItem<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }

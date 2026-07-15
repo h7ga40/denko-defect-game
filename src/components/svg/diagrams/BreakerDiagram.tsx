@@ -1,9 +1,9 @@
-export function BreakerDiagram() {
+export function BreakerDiagram({ title = "配線用遮断器" }: { title?: string }) {
   return (
-    <svg viewBox="0 0 720 390" role="img" aria-label="配線用遮断器の欠陥図">
+    <svg viewBox="0 0 720 390" role="img" aria-label={title + "の欠陥図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="label" x="360" y="62" textAnchor="middle">
-        配線用遮断器
+        {title}
       </text>
       <rect className="device" x="298" y="105" width="135" height="170" rx="12" />
       <text className="small" x="365" y="135" textAnchor="middle">

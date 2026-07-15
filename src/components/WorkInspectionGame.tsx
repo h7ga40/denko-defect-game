@@ -186,26 +186,29 @@ function InfrastructureDiagram({ part }: { part: BoxInspectionPart }) {
   return <OutletBoxAccessoryDiagram defectType={part.defectType} />;
 }
 function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
+  if (part.defectType !== "none") {
+    return <WiringDiagram defectType={part.defectType} deviceName={part.title} />;
+  }
+
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label={part.title + "の施工図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="label" x="360" y="70" textAnchor="middle">{part.title}</text>
+      <path className="wire black" d="M 90 170 C 180 170, 245 175, 326 175" />
+      <path className="wire white" d="M 90 205 C 180 205, 245 195, 326 195" />
+      <path className="wire black" d="M 394 175 C 475 175, 540 170, 630 170" />
+      <path className="wire white" d="M 394 195 C 475 195, 540 205, 630 205" />
       <CandidateDeviceNode
         device={{
           id: part.sourceDeviceId,
-          label: part.title,
+          label: "",
           type: part.deviceType,
           variant: part.deviceVariant,
           x: 360,
-          y: 180,
+          y: 185,
         }}
       />
-      <text className="small" x="360" y="285" textAnchor="middle">正常施工</text>
-      <path className="wire black" d="M 90 170 C 165 170, 200 175, 260 175" />
-      <path className="wire white" d="M 90 205 C 165 205, 200 195, 260 195" />
-      <path className="wire black" d="M 460 175 C 525 175, 560 170, 630 170" />
-      <path className="wire white" d="M 460 195 C 525 195, 560 205, 630 205" />
-      <text className="small" x="360" y="285" textAnchor="middle">複線図で選択した器具</text>
+      <text className="small" x="360" y="292" textAnchor="middle">端子まで接続された正常施工</text>
     </svg>
   );
 }

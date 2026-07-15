@@ -64,20 +64,26 @@ function Wire({
 }) {
   const targetX = target === "center" ? 424 : 508;
   const targetY = 190;
-  const approachX = reverseLoop ? targetX + 44 : targetX - 44;
+  const approachX = reverseLoop ? targetX + 34 : targetX - 34;
   const loopPath = reverseLoop
-    ? `M ${targetX + 12} ${targetY - 27} C ${targetX + 45} ${targetY - 10}, ${targetX + 45} ${targetY + 27}, ${targetX + 12} ${targetY + 27}`
-    : `M ${targetX - 12} ${targetY - 27} C ${targetX - 45} ${targetY - 10}, ${targetX - 45} ${targetY + 27}, ${targetX - 12} ${targetY + 27}`;
+    ? "M " + approachX + " " + targetY
+      + " C " + (targetX + 34) + " " + (targetY - 24) + ", " + (targetX + 16) + " " + (targetY - 34) + ", " + targetX + " " + (targetY - 34)
+      + " C " + (targetX - 26) + " " + (targetY - 34) + ", " + (targetX - 26) + " " + (targetY + 34) + ", " + targetX + " " + (targetY + 34)
+      + " C " + (targetX + 15) + " " + (targetY + 34) + ", " + (targetX + 34) + " " + (targetY + 24) + ", " + approachX + " " + targetY
+    : "M " + approachX + " " + targetY
+      + " C " + (targetX - 34) + " " + (targetY - 24) + ", " + (targetX - 16) + " " + (targetY - 34) + ", " + targetX + " " + (targetY - 34)
+      + " C " + (targetX + 26) + " " + (targetY - 34) + ", " + (targetX + 26) + " " + (targetY + 34) + ", " + targetX + " " + (targetY + 34)
+      + " C " + (targetX - 15) + " " + (targetY + 34) + ", " + (targetX - 34) + " " + (targetY + 24) + ", " + approachX + " " + targetY;
 
   return (
     <g>
-      <path className={`wire ${colorName}`} d={`M 120 ${y} C 214 ${y}, 286 ${targetY}, ${approachX} ${targetY}`} />
-      <path className={`wire loop ${reverseLoop ? "alert" : colorName}`} d={loopPath} />
-      <rect className={`tag ${colorName}`} x="50" y={y - 21} width="54" height="42" rx="9" />
+      <path className={"wire " + colorName} d={"M 120 " + y + " C 214 " + y + ", 286 " + targetY + ", " + approachX + " " + targetY} />
+      <path className={"wire loop " + (reverseLoop ? "alert" : colorName)} d={loopPath} />
+      <rect className={"tag " + colorName} x="50" y={y - 21} width="54" height="42" rx="9" />
       <text className="tag-text" x="77" y={y + 7} textAnchor="middle">
         {label}
       </text>
-      {reverseLoop && <circle className="warning" cx={targetX + 38} cy={targetY} r="18" />}
+      {reverseLoop && <circle className="warning" cx={targetX + 42} cy={targetY} r="18" />}
     </g>
   );
 }

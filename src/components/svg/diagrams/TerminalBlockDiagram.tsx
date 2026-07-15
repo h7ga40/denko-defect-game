@@ -1,9 +1,9 @@
-export function TerminalBlockDiagram() {
+export function TerminalBlockDiagram({ title = "端子台" }: { title?: string }) {
   return (
-    <svg viewBox="0 0 720 390" role="img" aria-label="端子台の欠陥図">
+    <svg viewBox="0 0 720 390" role="img" aria-label={title + "の欠陥図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="label" x="360" y="62" textAnchor="middle">
-        端子台
+        {title}
       </text>
       <rect className="device" x="250" y="110" width="220" height="150" rx="10" />
       {[0, 1, 2, 3].map((index) => (
