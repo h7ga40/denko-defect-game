@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart } from "../data/boxInspectionGame";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
-import { CandidateDeviceNode, CandidateSvg } from "./CandidateDiagramView";
+import { CandidateSvg } from "./CandidateDiagramView";
 import { CandidateMaterials } from "./CandidateMaterials";
+import { DeviceDetailShape } from "./svg/DeviceDetailShape";
 import { WiringDiagram } from "./svg/WiringDiagram";
 import { MetalConduitDiagram } from "./svg/diagrams/MetalConduitDiagram";
 import { OutletBoxAccessoryDiagram } from "./svg/diagrams/OutletBoxAccessoryDiagram";
@@ -187,28 +188,19 @@ function InfrastructureDiagram({ part }: { part: BoxInspectionPart }) {
 }
 function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   if (part.defectType !== "none") {
-    return <WiringDiagram defectType={part.defectType} deviceName={part.title} />;
+    return <WiringDiagram defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }
 
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label={part.title + "の施工図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="label" x="360" y="70" textAnchor="middle">{part.title}</text>
-      <path className="wire black" d="M 90 170 C 180 170, 245 175, 326 175" />
-      <path className="wire white" d="M 90 205 C 180 205, 245 195, 326 195" />
-      <path className="wire black" d="M 394 175 C 475 175, 540 170, 630 170" />
-      <path className="wire white" d="M 394 195 C 475 195, 540 205, 630 205" />
-      <CandidateDeviceNode
-        device={{
-          id: part.sourceDeviceId,
-          label: "",
-          type: part.deviceType,
-          variant: part.deviceVariant,
-          x: 360,
-          y: 185,
-        }}
-      />
-      <text className="small" x="360" y="292" textAnchor="middle">端子まで接続された正常施工</text>
+      <path className="wire black" d="M 72 170 C 160 170, 225 170, 296 170" />
+      <path className="wire white" d="M 72 210 C 160 210, 225 210, 296 210" />
+      <path className="wire black" d="M 424 170 C 495 170, 560 170, 648 170" />
+      <path className="wire white" d="M 424 210 C 495 210, 560 210, 648 210" />
+      <DeviceDetailShape variant={part.deviceVariant} x={360} y={190} />
+      <text className="small" x="360" y="314" textAnchor="middle">正常施工</text>
     </svg>
   );
 }

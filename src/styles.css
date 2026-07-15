@@ -1043,3 +1043,121 @@ button {
   border-color: #198754;
   color: #176b45;
 }
+.cad-body,
+.cad-face,
+.cad-recess,
+.cad-rocker,
+.cad-mounting-yoke,
+.cad-terminal-strip,
+.cad-breaker-toggle {
+  vector-effect: non-scaling-stroke;
+}
+
+.cad-body {
+  fill: #eef2f4;
+  stroke: #526574;
+  stroke-width: 5;
+}
+
+.cad-body.warm {
+  fill: #fff7d8;
+}
+
+.cad-face {
+  fill: #ffffff;
+  stroke: #8799a6;
+  stroke-width: 3;
+}
+
+.cad-recess {
+  fill: #d9e1e6;
+  stroke: #526574;
+  stroke-width: 3;
+}
+
+.cad-mounting-yoke {
+  fill: #cfd7dc;
+  stroke: #526574;
+  stroke-width: 4;
+}
+
+.cad-rocker {
+  fill: #fffdf5;
+  stroke: #718491;
+  stroke-width: 3;
+}
+
+.cad-terminal,
+.cad-terminal-hole {
+  fill: #d7dde1;
+  stroke: #334653;
+  stroke-width: 3;
+}
+
+.cad-terminal-hole {
+  fill: #253743;
+}
+
+.cad-terminal-strip {
+  fill: #dce3e7;
+  stroke: #718491;
+  stroke-width: 2;
+}
+
+.cad-screw,
+.cad-detail,
+.cad-slot {
+  fill: none;
+  stroke: #526574;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.cad-slot {
+  stroke: #273946;
+  stroke-width: 7;
+}
+
+.cad-breaker-toggle {
+  fill: #394b57;
+  stroke: #1f303a;
+  stroke-width: 3;
+}
+
+.cad-test-button,
+.cad-ground-terminal {
+  fill: #d45d65;
+  stroke: #7f2932;
+  stroke-width: 3;
+}
+
+.cad-ground-terminal {
+  fill: #2eaa71;
+  stroke: #176b45;
+}
+
+.cad-lens {
+  fill: #df4f5d;
+  stroke: #8f2732;
+  stroke-width: 4;
+}
+
+.cad-mark {
+  fill: #334653;
+  font-size: 24px;
+  font-weight: 800;
+}
+.cad-frame-opening {
+  fill: #f8fbfd;
+  stroke: #526574;
+  stroke-width: 3;
+}
+
+.cad-frame-claw {
+  fill: none;
+  stroke: #526574;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}

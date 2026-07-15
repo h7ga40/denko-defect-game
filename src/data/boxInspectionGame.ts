@@ -354,7 +354,9 @@ function isDirectInspectionDevice(device: CandidateDevice) {
   return device.type !== "power"
     && device.type !== "connector"
     && device.type !== "box"
-    && device.variant !== "omitted_work";
+    && device.variant !== "omitted_work"
+    && device.variant !== "motor_terminal"
+    && device.variant !== "load_device";
 }
 
 function getDirectDefectProblems(device: CandidateDevice): Problem[] {

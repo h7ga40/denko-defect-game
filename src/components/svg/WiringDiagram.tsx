@@ -1,3 +1,4 @@
+import type { DeviceVariant } from "../../data/candidateDiagrams";
 import type { DefectType } from "../../data/problems";
 import { BreakerDiagram } from "./diagrams/BreakerDiagram";
 import { CeilingConnectorDiagram } from "./diagrams/CeilingConnectorDiagram";
@@ -18,12 +19,13 @@ import { TerminalBlockDiagram } from "./diagrams/TerminalBlockDiagram";
 type WiringDiagramProps = {
   defectType: DefectType;
   deviceName?: string;
+  deviceVariant?: DeviceVariant;
 };
 
-export function WiringDiagram({ defectType, deviceName }: WiringDiagramProps) {
+export function WiringDiagram({ defectType, deviceName, deviceVariant }: WiringDiagramProps) {
   switch (defectType) {
     case "missing_ground":
-      return <GroundedReceptacleDiagram title={deviceName} />;
+      return <GroundedReceptacleDiagram title={deviceName} variant={deviceVariant} />;
     case "sheath_too_short":
       return <OutletBoxDiagram />;
     case "ring_sleeve_wrong_mark":
@@ -34,7 +36,7 @@ export function WiringDiagram({ defectType, deviceName }: WiringDiagramProps) {
     case "exposed_receptacle_sheath":
       return <ExposedReceptacleDiagram />;
     case "breaker_line_load_reverse":
-      return <BreakerDiagram title={deviceName} />;
+      return <BreakerDiagram title={deviceName} variant={deviceVariant} />;
     case "push_connector_insufficient_insert":
     case "push_connector_wrong_wire_count":
       return <PushConnectorDiagram defectType={defectType} />;
@@ -45,9 +47,9 @@ export function WiringDiagram({ defectType, deviceName }: WiringDiagramProps) {
     case "mounting_frame_loose":
       return <MountingFrameDiagram />;
     case "switch_wrong_terminal":
-      return <SwitchDiagram title={deviceName} />;
+      return <SwitchDiagram title={deviceName} variant={deviceVariant} />;
     case "receptacle_polarity":
-      return <ReceptacleDiagram title={deviceName} />;
+      return <ReceptacleDiagram title={deviceName} variant={deviceVariant} />;
     case "outlet_box_wrong_hole":
     case "rubber_bushing_missing":
     case "rubber_bushing_wrong_size":
