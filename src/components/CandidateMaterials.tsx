@@ -7,10 +7,10 @@ export function CandidateMaterials({ candidateNo }: { candidateNo: number }) {
     <section className="candidate-materials" aria-label={"候補問題No." + candidateNo + "の支給部材"}>
       <div className="candidate-materials-heading">
         <h3>支給部材</h3>
-        <span>使用要否・使用箇所は非表示</span>
+        <span>過去出題を基にした想定値</span>
       </div>
       <p className="candidate-materials-note">
-        公表候補問題図から確認できる部材と規格です。数量・長さ・詳細な施工条件は本試験問題で指定されます。
+        HOZANの過去出題例を参考にした練習用の想定支給部材です。本試験では数量・長さ・接続方法・器具仕様が変わる場合があります。使用要否と使用箇所は表示していません。
       </p>
       <div className="candidate-material-groups">
         {groups.map((group) => (

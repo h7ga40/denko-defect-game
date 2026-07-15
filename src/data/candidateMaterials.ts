@@ -3,73 +3,71 @@ export type CandidateMaterialGroup = {
   items: string[];
 };
 
-const commonConnectionMaterials = ["電線接続材料（リングスリーブ／差込形コネクタの種類・数量は試験問題で指定）"];
-
 export const candidateMaterials: Record<number, CandidateMaterialGroup[]> = {
   1: [
-    { category: "電線", items: ["EM-EEF 2.0mm 2心", "VVF 1.6mm（心数・長さは試験問題で指定）"] },
-    { category: "器具", items: ["ランプレセプタクル", "引掛シーリング", "スイッチ群（表示灯内蔵を含む）"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 900mm ×2", "VVF 1.6mm 3心 350mm", "EM-EEF 2.0mm 2心 250mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "角形引掛シーリング ×1", "埋込連用取付枠 ×1", "単極スイッチ ×2", "位置表示灯内蔵スイッチ ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 2本用 ×2", "差込形コネクタ 3本用 ×1", "リングスリーブ 小 ×5"] },
   ],
   2: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 1.6mm（心数・長さは試験問題で指定）"] },
-    { category: "器具", items: ["ランプレセプタクル", "確認表示灯（常時点灯）", "スイッチ", "施工省略用端子"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 1250mm", "VVF 1.6mm 3心 800mm", "VVF 2.0mm 2心 250mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "埋込連用取付枠 ×1", "単極スイッチ ×1", "埋込コンセント ×1", "パイロットランプ ×1", "ダブルコンセント ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 3本用 ×2", "差込形コネクタ 4本用 ×1", "リングスリーブ 小 ×3"] },
   ],
   3: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 1.6mm", "接地線 E 1.6mm"] },
-    { category: "器具", items: ["タイムスイッチまたは代用端子台", "ランプレセプタクル", "引掛シーリング", "スイッチ", "接地極付器具", "接地端子"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 1650mm", "VVF 1.6mm 3心 350mm", "VVF 2.0mm 2心 250mm", "IV 1.6mm 緑 150mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "角形引掛シーリング ×1", "埋込連用取付枠 ×1", "単極スイッチ ×1", "接地極付コンセント ×1", "6極端子台 ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 2本用 ×1", "差込形コネクタ 3本用 ×1", "差込形コネクタ 4本用 ×1", "リングスリーブ 小 ×3"] },
   ],
   4: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 2.0mm 3心", "接地線 E 1.6mm"] },
-    { category: "器具", items: ["配線用遮断器 B", "漏電遮断器 BE", "電源表示灯", "三相200V電動機用端子または代用端子台", "引掛シーリング", "スイッチ", "接地端子"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 850mm", "VVF 1.6mm 3心 500mm", "VVF 2.0mm 2心 450mm", "VVF 2.0mm 3心 550mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "角形引掛シーリング ×1", "埋込連用取付枠 ×1", "単極スイッチ ×1", "埋込コンセント ×1", "6極端子台 ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 2本用 ×1", "差込形コネクタ 3本用 ×2", "リングスリーブ 小 ×3"] },
   ],
   5: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 2.0mm 3心", "接地線 E 1.6mm"] },
-    { category: "器具", items: ["配線用遮断器 B", "漏電遮断器 BE", "20A 250V 接地極付コンセント", "ランプレセプタクル", "引掛シーリング", "スイッチ", "接地端子"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 1650mm", "VVF 2.0mm 2心 350mm", "VVF 2.0mm 3心（赤・黒・緑）350mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "埋込連用取付枠 ×1", "単極スイッチ ×2", "埋込コンセント ×1", "6極端子台 ×1", "接地極付コンセント 20A 250V ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 4本用 ×1", "リングスリーブ 小 ×3"] },
   ],
   6: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 1.6mm（心数・長さは試験問題で指定）"] },
-    { category: "器具", items: ["引掛シーリング", "露出形コンセント", "3路スイッチ"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 850mm", "VVF 1.6mm 3心 1050mm", "VVF 2.0mm 2心 250mm"] },
+    { category: "器具", items: ["角形引掛シーリング ×1", "埋込連用取付枠 ×2", "露出形コンセント ×1", "3路スイッチ ×2"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 2本用 ×2", "差込形コネクタ 3本用 ×2", "リングスリーブ 小 ×4"] },
   ],
   7: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 1.6mm（心数・長さは試験問題で指定）"] },
-    { category: "器具", items: ["ランプレセプタクル", "3路スイッチ", "4路スイッチ", "ジョイントボックス"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 1400mm", "VVF 1.6mm 3心 1150mm", "VVF 2.0mm 2心 250mm"] },
+    { category: "器具", items: ["アウトレットボックス ×1", "埋込連用取付枠 ×1", "ランプレセプタクル ×1", "3路スイッチ ×2", "4路スイッチ ×1"] },
+    { category: "接続・付属部材", items: ["ゴムブッシング 19mm用 ×3", "ゴムブッシング 25mm用 ×2", "差込形コネクタ 2本用 ×4", "差込形コネクタ 3本用 ×2", "リングスリーブ 小 ×4"] },
   ],
   8: [
-    { category: "電線", items: ["VVR 2.0mm 2心", "VVF 1.6mm（心数・長さは試験問題で指定）"] },
-    { category: "器具", items: ["配線用遮断器 B", "端子台 T", "3路スイッチ", "ランプレセプタクル", "引掛シーリング", "接続箱"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 1100mm ×2", "VVR 2.0mm 2心 300mm"] },
+    { category: "器具", items: ["アウトレットボックス ×1", "ランプレセプタクル ×1", "丸形引掛シーリング ×1", "6極端子台 ×1"] },
+    { category: "接続・付属部材", items: ["ゴムブッシング 19mm用 ×2", "ゴムブッシング 25mm用 ×3", "差込形コネクタ 4本用 ×2", "リングスリーブ 小 ×3"] },
   ],
   9: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 1.6mm", "接地線 E 1.6mm"] },
-    { category: "器具", items: ["ランプレセプタクル", "引掛シーリング", "接地極付接地端子付コンセント EET", "スイッチ", "接地端子"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 1250mm", "VVF 1.6mm 3心 350mm", "VVF 2.0mm 2心 600mm", "IV 1.6mm 緑 150mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "丸形引掛シーリング ×1", "埋込連用取付枠 ×1", "単極スイッチ ×1", "接地極・接地端子付コンセント ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 2本用 ×2", "差込形コネクタ 3本用 ×1", "リングスリーブ 小 ×1", "リングスリーブ 中 ×2"] },
   ],
   10: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVF 1.6mm（心数・長さは試験問題で指定）"] },
-    { category: "器具", items: ["配線用遮断器 B", "引掛シーリング", "ランプレセプタクル", "確認表示灯（同時点滅）", "スイッチ"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 650mm", "VVF 1.6mm 3心 450mm", "VVF 2.0mm 2心 300mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "角形引掛シーリング ×1", "埋込連用取付枠 ×1", "単極スイッチ ×1", "埋込コンセント ×1", "パイロットランプ ×1", "配線用遮断器 ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 3本用 ×1", "リングスリーブ 小 ×1", "リングスリーブ 中 ×1"] },
   ],
   11: [
-    { category: "電線・管", items: ["VVF 2.0mm 2心", "IV 1.6mm", "金属管 E19"] },
-    { category: "器具・付属品", items: ["ランプレセプタクル", "引掛シーリング", "スイッチ", "金属製ボックス", "金属管用付属品", "接地端子"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線・管", items: ["VVF 1.6mm 2心 1200mm", "VVF 2.0mm 2心 250mm", "IV 1.6mm 黒 550mm", "IV 1.6mm 白 450mm", "IV 1.6mm 赤 450mm", "ねじなし電線管 E19 ×1"] },
+    { category: "器具", items: ["アウトレットボックス ×1", "ランプレセプタクル ×1", "角形引掛シーリング ×1", "埋込連用取付枠 ×1", "単極スイッチ ×2", "埋込コンセント ×1"] },
+    { category: "接続・付属部材", items: ["E19用ボックスコネクタ ×1", "絶縁ブッシング ×1", "ゴムブッシング 19mm用 ×2", "ゴムブッシング 25mm用 ×2", "差込形コネクタ 2本用 ×2", "リングスリーブ 小 ×1", "リングスリーブ 中 ×1"] },
   ],
   12: [
-    { category: "電線・管", items: ["VVF 2.0mm 2心", "IV 1.6mm", "合成樹脂製可とう電線管 PF16"] },
-    { category: "器具・付属品", items: ["ランプレセプタクル", "引掛シーリング", "スイッチ", "ボックス", "PF管用付属品"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線・管", items: ["VVF 1.6mm 2心 1000mm", "VVF 1.6mm 3心 350mm", "VVF 2.0mm 2心 250mm", "IV 1.6mm 黒 500mm", "IV 1.6mm 白 400mm", "IV 1.6mm 赤 400mm", "合成樹脂製可とう電線管 PF16 ×1"] },
+    { category: "器具", items: ["アウトレットボックス ×1", "ランプレセプタクル ×1", "角形引掛シーリング ×1", "埋込連用取付枠 ×1", "単極スイッチ ×2", "埋込コンセント ×1"] },
+    { category: "接続・付属部材", items: ["PF管用ボックスコネクタ ×1", "ゴムブッシング 19mm用 ×3", "差込形コネクタ 2本用 ×2", "差込形コネクタ 3本用 ×1", "リングスリーブ 小 ×4"] },
   ],
   13: [
-    { category: "電線", items: ["VVF 2.0mm 2心", "VVR 1.6mm 2心", "接地線 E 1.6mm"] },
-    { category: "器具", items: ["ランプレセプタクル", "自動点滅器 A（3A）または代用端子台", "スイッチ", "接地極付器具", "接地端子"] },
-    { category: "接続材料", items: commonConnectionMaterials },
+    { category: "電線", items: ["VVF 1.6mm 2心 1400mm", "VVF 1.6mm 3心 350mm", "VVF 2.0mm 2心 250mm", "VVR 1.6mm 2心 250mm", "IV 1.6mm 緑 150mm"] },
+    { category: "器具", items: ["ランプレセプタクル ×1", "埋込連用取付枠 ×1", "単極スイッチ ×1", "接地極付コンセント ×1", "6極端子台 ×1"] },
+    { category: "接続・付属部材", items: ["差込形コネクタ 2本用 ×1", "差込形コネクタ 3本用 ×1", "差込形コネクタ 4本用 ×1", "リングスリーブ 小 ×3"] },
   ],
 };
 
