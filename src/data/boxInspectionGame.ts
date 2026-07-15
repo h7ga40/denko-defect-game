@@ -2,7 +2,7 @@ import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "
 import { problems, type DefectType, type Problem } from "./problems";
 
 export type BoxType = "joint" | "outlet";
-export type ConnectionMethod = "ring_sleeve" | "push_connector";
+export type ConnectionMethod = "ring_sleeve" | "push_connector" | "outlet_box" | "metal_conduit" | "pf_conduit";
 export type WireColor = "black" | "white" | "red" | "green" | "blue";
 
 export type ConnectionSpec = {
@@ -111,6 +111,86 @@ const templates: Template[] = [
     normalExplanation: "接続する心線の本数に合う極数のコネクタを使用しています。",
     defectExplanation: "接続する心線の本数とコネクタの極数が合っていません。",
   },
+  {
+    title: "アウトレットボックス",
+    method: "outlet_box",
+    defectType: "outlet_box_wrong_hole",
+    question: "ケーブルを通す穴の位置を判定してください。",
+    choices: ["欠陥なし", "指定と異なる穴へケーブルを通している", "必要なゴムブッシングがない", "穴径とゴムブッシングのサイズが違う"],
+    defectAnswer: "指定と異なる穴へケーブルを通している",
+    normalExplanation: "指定された穴に、適合するゴムブッシングを介してケーブルを通しています。",
+    defectExplanation: "施工条件で指定された穴とは異なる穴へケーブルを通しています。",
+  },
+  {
+    title: "ゴムブッシング",
+    method: "outlet_box",
+    defectType: "rubber_bushing_missing",
+    question: "ケーブル通過穴の保護状態を判定してください。",
+    choices: ["欠陥なし", "必要なゴムブッシングがない", "指定と異なる穴へケーブルを通している", "穴径とゴムブッシングのサイズが違う"],
+    defectAnswer: "必要なゴムブッシングがない",
+    normalExplanation: "ケーブルを通す穴に適合するゴムブッシングが取り付けられています。",
+    defectExplanation: "ケーブルを通す穴に必要なゴムブッシングがありません。",
+  },
+  {
+    title: "ゴムブッシング",
+    method: "outlet_box",
+    defectType: "rubber_bushing_wrong_size",
+    question: "ボックス穴とゴムブッシングの組合せを判定してください。",
+    choices: ["欠陥なし", "穴径とゴムブッシングのサイズが違う", "必要なゴムブッシングがない", "指定と異なる穴へケーブルを通している"],
+    defectAnswer: "穴径とゴムブッシングのサイズが違う",
+    normalExplanation: "穴径に合うゴムブッシングが取り付けられています。",
+    defectExplanation: "19mm用と25mm用の組合せが穴径に合っていません。",
+  },
+  {
+    title: "ねじなし電線管 E19",
+    method: "metal_conduit",
+    defectType: "metal_conduit_insufficient_insert",
+    question: "電線管とボックスコネクタの接続状態を判定してください。",
+    choices: ["欠陥なし", "電線管の挿入が不足している", "絶縁ブッシングがない", "ロックナットがない"],
+    defectAnswer: "電線管の挿入が不足している",
+    normalExplanation: "電線管はボックスコネクタへ十分に挿入され、固定されています。",
+    defectExplanation: "電線管がボックスコネクタへ十分に挿入されていません。",
+  },
+  {
+    title: "絶縁ブッシング E19",
+    method: "metal_conduit",
+    defectType: "metal_conduit_missing_insulation_bushing",
+    question: "金属管端の保護状態を判定してください。",
+    choices: ["欠陥なし", "絶縁ブッシングがない", "ロックナットがない", "電線管の挿入が不足している"],
+    defectAnswer: "絶縁ブッシングがない",
+    normalExplanation: "金属管端に絶縁ブッシングが取り付けられています。",
+    defectExplanation: "電線を保護する絶縁ブッシングが金属管端にありません。",
+  },
+  {
+    title: "E19用ボックスコネクタ",
+    method: "metal_conduit",
+    defectType: "metal_conduit_missing_locknut",
+    question: "ボックスコネクタの固定状態を判定してください。",
+    choices: ["欠陥なし", "ロックナットがない", "絶縁ブッシングがない", "電線管の挿入が不足している"],
+    defectAnswer: "ロックナットがない",
+    normalExplanation: "ボックスコネクタはロックナットで確実に固定されています。",
+    defectExplanation: "ボックス内側に固定用のロックナットがありません。",
+  },
+  {
+    title: "PF管 PF16",
+    method: "pf_conduit",
+    defectType: "pf_conduit_insufficient_insert",
+    question: "PF管とボックスコネクタの接続状態を判定してください。",
+    choices: ["欠陥なし", "PF管の挿入が不足している", "ロックナットがない", "金属管用コネクタを使用している"],
+    defectAnswer: "PF管の挿入が不足している",
+    normalExplanation: "PF管は専用コネクタへ十分に挿入され、固定されています。",
+    defectExplanation: "PF管が専用コネクタへ十分に挿入されていません。",
+  },
+  {
+    title: "PF管用ボックスコネクタ",
+    method: "pf_conduit",
+    defectType: "pf_conduit_missing_locknut",
+    question: "PF管用ボックスコネクタの固定状態を判定してください。",
+    choices: ["欠陥なし", "ロックナットがない", "PF管の挿入が不足している", "絶縁ブッシングがない"],
+    defectAnswer: "ロックナットがない",
+    normalExplanation: "PF管用ボックスコネクタはロックナットで確実に固定されています。",
+    defectExplanation: "ボックス内側に固定用のロックナットがありません。",
+  },
 ];
 
 export function createBoxInspectionRound(): BoxInspectionRound {
@@ -120,7 +200,7 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   const plannedBoxes = sources.map((device, index) => ({
     device,
     index,
-    specs: createConnectionSpecs(candidate, device, index),
+    specs: [...createConnectionSpecs(candidate, device, index), ...createInfrastructureSpecs(candidate, device)],
   }));
   const directDevices = candidate.devices.filter(isDirectInspectionDevice);
   const boxPartKeys = plannedBoxes.flatMap(({ device, specs }) =>
@@ -177,6 +257,23 @@ function createConnectionSpecs(candidate: CandidateDiagram, device: CandidateDev
   });
 }
 
+function createInfrastructureSpecs(candidate: CandidateDiagram, device: CandidateDevice): ConnectionSpec[] {
+  if (device.type !== "box" || ![7, 8, 11, 12].includes(candidate.no)) {
+    return [];
+  }
+
+  const methods: ConnectionMethod[] = ["outlet_box"];
+  if (candidate.no === 11) methods.push("metal_conduit");
+  if (candidate.no === 12) methods.push("pf_conduit");
+
+  return methods.map((method) => ({
+    id: method,
+    method,
+    wireCount: 0,
+    wireSizes: [],
+    wireColors: [],
+  }));
+}
 function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: "small" | "medium"; mark: "○" | "小" | "中" } {
   const equivalent = wireSizes.reduce((total, size) => total + (size === 2.0 ? 2 : 1), 0);
   if (wireSizes.length === 2 && wireSizes.every((size) => size === 1.6)) {
@@ -195,7 +292,9 @@ function createBox(
   specs: ConnectionSpec[],
   defectIds: Set<string>,
 ): InspectionBox {
-  const boxType: BoxType = device.type === "box" ? "joint" : "outlet";
+  const boxType: BoxType = [7, 8, 11, 12].includes(candidate.no) && device.type === "box"
+    ? "outlet"
+    : device.type === "box" ? "joint" : "outlet";
   const label = boxType === "joint" ? "ジョイントボックス" : "アウトレットボックス";
   const id = "candidate-" + candidate.no + "-" + device.id;
 
@@ -243,7 +342,12 @@ function summarizeConductors(connection: ConnectionSpec) {
   if (connection.method === "ring_sleeve") {
     return connection.wireCount + "芯 " + sizes + " / " + (connection.sleeveSize === "medium" ? "中スリーブ" : "小スリーブ") + "・刻印" + connection.mark;
   }
-  return connection.wireCount + "芯 " + sizes + " / " + connection.portCount + "本用";
+  if (connection.method === "push_connector") {
+    return connection.wireCount + "芯 " + sizes + " / " + connection.portCount + "本用";
+  }
+  if (connection.method === "metal_conduit") return "金属管 E19・付属品";
+  if (connection.method === "pf_conduit") return "PF管 PF16・付属品";
+  return "アウトレットボックス・ゴムブッシング";
 }
 
 function isDirectInspectionDevice(device: CandidateDevice) {

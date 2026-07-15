@@ -6,6 +6,9 @@ import { GroundedReceptacleDiagram } from "./diagrams/GroundedReceptacleDiagram"
 import { LampReceptacleDiagram } from "./diagrams/LampReceptacleDiagram";
 import { MountingFrameDiagram } from "./diagrams/MountingFrameDiagram";
 import { OutletBoxDiagram } from "./diagrams/OutletBoxDiagram";
+import { OutletBoxAccessoryDiagram } from "./diagrams/OutletBoxAccessoryDiagram";
+import { MetalConduitDiagram } from "./diagrams/MetalConduitDiagram";
+import { PfConduitDiagram } from "./diagrams/PfConduitDiagram";
 import { PushConnectorDiagram } from "./diagrams/PushConnectorDiagram";
 import { ReceptacleDiagram } from "./diagrams/ReceptacleDiagram";
 import { RingSleeveDiagram } from "./diagrams/RingSleeveDiagram";
@@ -44,6 +47,17 @@ export function WiringDiagram({ defectType }: WiringDiagramProps) {
       return <SwitchDiagram />;
     case "receptacle_polarity":
       return <ReceptacleDiagram />;
+    case "outlet_box_wrong_hole":
+    case "rubber_bushing_missing":
+    case "rubber_bushing_wrong_size":
+      return <OutletBoxAccessoryDiagram defectType={defectType} />;
+    case "metal_conduit_insufficient_insert":
+    case "metal_conduit_missing_insulation_bushing":
+    case "metal_conduit_missing_locknut":
+      return <MetalConduitDiagram defectType={defectType} />;
+    case "pf_conduit_insufficient_insert":
+    case "pf_conduit_missing_locknut":
+      return <PfConduitDiagram defectType={defectType} />;
     default:
       return <LampReceptacleDiagram defectType={defectType} />;
   }

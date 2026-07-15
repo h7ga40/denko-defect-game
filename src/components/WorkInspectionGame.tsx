@@ -4,6 +4,9 @@ import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { CandidateDeviceNode, CandidateSvg } from "./CandidateDiagramView";
 import { CandidateMaterials } from "./CandidateMaterials";
 import { WiringDiagram } from "./svg/WiringDiagram";
+import { MetalConduitDiagram } from "./svg/diagrams/MetalConduitDiagram";
+import { OutletBoxAccessoryDiagram } from "./svg/diagrams/OutletBoxAccessoryDiagram";
+import { PfConduitDiagram } from "./svg/diagrams/PfConduitDiagram";
 
 type InspectionAnswers = Record<string, string>;
 
@@ -18,6 +21,9 @@ export function WorkInspectionGame() {
   const selectedBox = round.boxes.find((box) => box.id === selectedBoxId) ?? round.boxes[0];
   const selectedDirectPart = round.directParts.find((part) => part.id === selectedDirectPartId);
   const selectedPart = selectedDirectPart ?? selectedBox.parts.find((part) => part.id === selectedPartId) ?? selectedBox.parts[0];
+  const infrastructurePart = !selectedDirectPart && "connection" in selectedPart && !["ring_sleeve", "push_connector"].includes(selectedPart.connection.method)
+    ? selectedPart
+    : undefined;
   const answeredCount = Object.keys(answers).length;
   const markedDefects = round.parts.filter((part) => answers[part.id] && answers[part.id] !== "欠陥なし");
   const correctCount = useMemo(() => round.parts.filter((part) => answers[part.id] === part.answer).length, [answers, round.parts]);
@@ -86,6 +92,8 @@ export function WorkInspectionGame() {
         <div className="diagram-wrap focused-diagram">
           {selectedDirectPart ? (
             <DirectDeviceDiagram part={selectedDirectPart} />
+          ) : infrastructurePart ? (
+            <InfrastructureDiagram part={infrastructurePart} />
           ) : (
             <BoxWiringDiagram
               answers={answers}
@@ -96,7 +104,12 @@ export function WorkInspectionGame() {
             />
           )}
         </div>
-        {!selectedDirectPart && <h3 className="connection-title">{selectedPart.title}</h3>}
+        {!selectedDirectPart && (
+          <>
+            <BoxPartSelector answers={answers} box={selectedBox} onSelectPart={setSelectedPartId} selectedPartId={selectedPart.id} />
+            <h3 className="connection-title">{selectedPart.title}</h3>
+          </>
+        )}
         <p className="question">{selectedPart.question}</p>
         <div className="choices" role="list">
           {selectedPart.choices.map((choice) => {
@@ -136,6 +149,42 @@ function InspectionResult({ answers, correctCount, onRestart, parts }: { answers
   );
 }
 
+function BoxPartSelector({
+  answers,
+  box,
+  onSelectPart,
+  selectedPartId,
+}: {
+  answers: InspectionAnswers;
+  box: BoxInspectionRound["boxes"][number];
+  onSelectPart: (partId: string) => void;
+  selectedPartId: string;
+}) {
+  return (
+    <div className="box-part-selector" aria-label="ボックス内の点検部">
+      {box.parts.map((part) => (
+        <button
+          className={["box-part-button", part.id === selectedPartId ? "selected" : "", answers[part.id] ? "answered" : ""].filter(Boolean).join(" ")}
+          key={part.id}
+          onClick={() => onSelectPart(part.id)}
+          type="button"
+        >
+          {part.title.split("（")[0]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function InfrastructureDiagram({ part }: { part: BoxInspectionPart }) {
+  if (part.connection.method === "metal_conduit") {
+    return <MetalConduitDiagram defectType={part.defectType} />;
+  }
+  if (part.connection.method === "pf_conduit") {
+    return <PfConduitDiagram defectType={part.defectType} />;
+  }
+  return <OutletBoxAccessoryDiagram defectType={part.defectType} />;
+}
 function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label={part.title + "の施工図"}>

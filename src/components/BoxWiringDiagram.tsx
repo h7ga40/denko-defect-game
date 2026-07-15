@@ -16,7 +16,7 @@ export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSe
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="label" x="360" y="52" textAnchor="middle">{box.label}内 配線図</text>
       <text className="small" x="360" y="75" textAnchor="middle">
-        ケーブル{box.cableCount}本・接続部{box.parts.length}か所
+        ケーブル{box.cableCount}本・点検部{box.parts.length}か所
       </text>
       <rect className="box" x="72" y="88" width="576" height="258" rx="22" />
       {box.parts.map((part, index) => {
@@ -28,6 +28,7 @@ export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSe
         return (
           <ConnectionPart
             answer={answers[part.id]}
+            hitHeight={Math.min(60, availableHeight / rowCount - 4)}
             key={part.id}
             onSelectPart={onSelectPart}
             part={part}
@@ -46,6 +47,7 @@ function ConnectionPart({
   part,
   x,
   y,
+  hitHeight,
   selected,
   answer,
   submitted,
@@ -54,6 +56,7 @@ function ConnectionPart({
   part: BoxInspectionPart;
   x: number;
   y: number;
+  hitHeight: number;
   selected: boolean;
   answer?: string;
   submitted: boolean;
@@ -70,6 +73,7 @@ function ConnectionPart({
     wrong ? "wrong" : "",
   ].filter(Boolean).join(" ");
   const isRing = part.connection.method === "ring_sleeve";
+  const isPush = part.connection.method === "push_connector";
 
   return (
     <g
@@ -79,18 +83,70 @@ function ConnectionPart({
       role="button"
       tabIndex={0}
     >
-      <rect className="box-connection-hit" x={x - 112} y={y - 30} width="224" height="60" rx="10" />
-      <WireBundle part={part} x={x} y={y} />
-      {isRing ? <RingSleeve part={part} x={x} y={y} /> : <PushConnector part={part} x={x} y={y} />}
-      <text className="small connection-spec-label" x={x} y={y + 24} textAnchor="middle">
-        {isRing
-          ? part.connection.wireCount + "芯 " + sleeveLabel(part) + " / " + displayMark(part)
-          : part.connection.wireCount + "芯 " + displayPortCount(part) + "本用"}
+      <rect className="box-connection-hit" x={x - 112} y={y - hitHeight / 2} width="224" height={hitHeight} rx="10" />
+      {isRing || isPush ? (
+        <>
+          <WireBundle part={part} x={x} y={y - 4} />
+          {isRing ? <RingSleeve part={part} x={x} y={y - 4} /> : <PushConnector part={part} x={x} y={y - 4} />}
+        </>
+      ) : (
+        <InfrastructurePart part={part} x={x} y={y - 5} />
+      )}
+      <text className="small connection-spec-label" x={x} y={y + 21} textAnchor="middle">
+        {connectionLabel(part)}
       </text>
     </g>
   );
 }
 
+function InfrastructurePart({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
+  if (part.connection.method === "outlet_box") {
+    const missing = part.defectType === "rubber_bushing_missing";
+    const wrongSize = part.defectType === "rubber_bushing_wrong_size";
+    const wrongHole = part.defectType === "outlet_box_wrong_hole";
+    const cableX = wrongHole ? x + 38 : x - 38;
+    return (
+      <>
+        <rect className="infra-box" x={x - 64} y={y - 16} width="128" height="32" rx="6" />
+        <circle className={wrongSize ? "infra-hole alert-stroke" : "infra-hole"} cx={x - 38} cy={y} r="10" />
+        {!missing && <circle className={wrongSize ? "infra-bushing alert-stroke" : "infra-bushing"} cx={x - 38} cy={y} r={wrongSize ? "5" : "8"} />}
+        <circle className="infra-hole" cx={x + 38} cy={y} r="10" />
+        <line className={wrongHole ? "infra-cable alert-stroke" : "infra-cable"} x1={cableX} y1={y - 22} x2={cableX} y2={y + 13} />
+      </>
+    );
+  }
+
+  const isMetal = part.connection.method === "metal_conduit";
+  const shortInsert = part.defectType === (isMetal ? "metal_conduit_insufficient_insert" : "pf_conduit_insufficient_insert");
+  const missingLocknut = part.defectType === (isMetal ? "metal_conduit_missing_locknut" : "pf_conduit_missing_locknut");
+  const missingInsulation = part.defectType === "metal_conduit_missing_insulation_bushing";
+  const conduitEnd = shortInsert ? x - 12 : x + 17;
+
+  return (
+    <>
+      <line className={isMetal ? "infra-metal-conduit" : "infra-pf-conduit"} x1={x - 82} y1={y} x2={conduitEnd} y2={y} />
+      {!isMetal && [-66, -50, -34, -18].map((offset) => (
+        <line className="infra-pf-rib" key={offset} x1={x + offset} y1={y - 8} x2={x + offset} y2={y + 8} />
+      ))}
+      <rect className="infra-conduit-connector" x={x + 18} y={y - 14} width="42" height="28" rx="5" />
+      {!missingLocknut && <rect className="infra-locknut" x={x + 48} y={y - 16} width="7" height="32" rx="2" />}
+      {isMetal && !missingInsulation && <circle className="infra-insulation-bushing" cx={x + 64} cy={y} r="10" />}
+      {shortInsert && <line className="missing" x1={x - 8} y1={y - 12} x2={x + 16} y2={y - 12} />}
+    </>
+  );
+}
+
+function connectionLabel(part: BoxInspectionPart) {
+  if (part.connection.method === "ring_sleeve") {
+    return part.connection.wireCount + "芯 " + sleeveLabel(part) + " / " + displayMark(part);
+  }
+  if (part.connection.method === "push_connector") {
+    return part.connection.wireCount + "芯 " + displayPortCount(part) + "本用";
+  }
+  if (part.connection.method === "metal_conduit") return "金属管 E19";
+  if (part.connection.method === "pf_conduit") return "PF管 PF16";
+  return "ボックス・ブッシング";
+}
 function WireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
   const count = part.connection.wireCount;
   return (

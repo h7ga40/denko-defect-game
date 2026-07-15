@@ -16,7 +16,15 @@ export type DefectType =
   | "ceiling_connector_polarity"
   | "mounting_frame_loose"
   | "switch_wrong_terminal"
-  | "receptacle_polarity";
+  | "receptacle_polarity"
+  | "outlet_box_wrong_hole"
+  | "rubber_bushing_missing"
+  | "rubber_bushing_wrong_size"
+  | "metal_conduit_insufficient_insert"
+  | "metal_conduit_missing_insulation_bushing"
+  | "metal_conduit_missing_locknut"
+  | "pf_conduit_insufficient_insert"
+  | "pf_conduit_missing_locknut";
 
 export type Problem = {
   id: string;
@@ -265,4 +273,83 @@ export const problems: Problem[] = [
     answer: "白線と黒線の接続が逆",
     explanation: "コンセントは接地側に白線、非接地側に黒線を接続します。図では左右の極性が逆です。",
   },
-];
+  {
+    id: "outlet-box-wrong-hole",
+    title: "アウトレットボックス 使用穴違い",
+    circuitName: "アウトレットボックスの簡略施工図",
+    defectType: "outlet_box_wrong_hole",
+    question: "アウトレットボックスへのケーブル引込み位置として、欠陥を選んでください。",
+    choices: ["欠陥なし", "指定と異なる穴へケーブルを通している", "ゴムブッシングのサイズが違う", "絶縁ブッシングがない"],
+    answer: "指定と異なる穴へケーブルを通している",
+    explanation: "施工条件で指定された打抜き穴へケーブルを通します。図では指定穴を使わず、別の穴へ通しています。",
+  },
+  {
+    id: "rubber-bushing-missing",
+    title: "ゴムブッシング 取付忘れ",
+    circuitName: "アウトレットボックスの簡略施工図",
+    defectType: "rubber_bushing_missing",
+    question: "ケーブルを通すボックス穴の保護状態として、欠陥を選んでください。",
+    choices: ["欠陥なし", "必要なゴムブッシングがない", "指定と異なる穴へケーブルを通している", "管の挿入が不足している"],
+    answer: "必要なゴムブッシングがない",
+    explanation: "ケーブルを通す金属製ボックスの穴には、穴径に合うゴムブッシングを取り付けます。図では通過穴にブッシングがありません。",
+  },
+  {
+    id: "rubber-bushing-wrong-size",
+    title: "ゴムブッシング サイズ違い",
+    circuitName: "アウトレットボックスの簡略施工図",
+    defectType: "rubber_bushing_wrong_size",
+    question: "ボックス穴とゴムブッシングの組合せとして、欠陥を選んでください。",
+    choices: ["欠陥なし", "穴径とゴムブッシングのサイズが違う", "必要なゴムブッシングがない", "電線管の種類が違う"],
+    answer: "穴径とゴムブッシングのサイズが違う",
+    explanation: "19mm用と25mm用は対応する穴へ取り付けます。図では穴径に合わないブッシングを使用しています。",
+  },
+  {
+    id: "metal-conduit-insert",
+    title: "ねじなし電線管E19 挿入不足",
+    circuitName: "金属管工事の簡略施工図",
+    defectType: "metal_conduit_insufficient_insert",
+    question: "ねじなし電線管とボックスコネクタの接続状態として、欠陥を選んでください。",
+    choices: ["欠陥なし", "電線管の挿入が不足している", "絶縁ブッシングがない", "PF管を使用している"],
+    answer: "電線管の挿入が不足している",
+    explanation: "ねじなし電線管はボックスコネクタへ十分に挿入して固定します。図では管端とコネクタの間に隙間があります。",
+  },
+  {
+    id: "metal-conduit-insulation-bushing",
+    title: "金属管工事 絶縁ブッシング忘れ",
+    circuitName: "金属管工事の簡略施工図",
+    defectType: "metal_conduit_missing_insulation_bushing",
+    question: "ボックス内の金属管端末処理として、欠陥を選んでください。",
+    choices: ["欠陥なし", "絶縁ブッシングがない", "ロックナットがない", "ゴムブッシングのサイズが違う"],
+    answer: "絶縁ブッシングがない",
+    explanation: "金属管の管端には電線を保護する絶縁ブッシングを取り付けます。図では絶縁ブッシングがありません。",
+  },
+  {
+    id: "metal-conduit-locknut",
+    title: "金属管コネクタ ロックナット忘れ",
+    circuitName: "金属管工事の簡略施工図",
+    defectType: "metal_conduit_missing_locknut",
+    question: "ボックスコネクタの固定状態として、欠陥を選んでください。",
+    choices: ["欠陥なし", "ロックナットがない", "絶縁ブッシングがない", "電線管の色が違う"],
+    answer: "ロックナットがない",
+    explanation: "ボックスコネクタはボックス内側からロックナットで固定します。図ではロックナットが取り付けられていません。",
+  },
+  {
+    id: "pf-conduit-insert",
+    title: "PF管 挿入不足",
+    circuitName: "PF管工事の簡略施工図",
+    defectType: "pf_conduit_insufficient_insert",
+    question: "PF管とボックスコネクタの接続状態として、欠陥を選んでください。",
+    choices: ["欠陥なし", "PF管の挿入が不足している", "ロックナットがない", "金属管を使用している"],
+    answer: "PF管の挿入が不足している",
+    explanation: "PF管は専用コネクタへ十分に挿入して固定します。図では管端とコネクタの間に隙間があります。",
+  },
+  {
+    id: "pf-conduit-locknut",
+    title: "PF管コネクタ ロックナット忘れ",
+    circuitName: "PF管工事の簡略施工図",
+    defectType: "pf_conduit_missing_locknut",
+    question: "PF管用ボックスコネクタの固定状態として、欠陥を選んでください。",
+    choices: ["欠陥なし", "ロックナットがない", "絶縁ブッシングがない", "PF管の色が違う"],
+    answer: "ロックナットがない",
+    explanation: "PF管用ボックスコネクタはボックス内側からロックナットで固定します。図ではロックナットがありません。",
+  },];
