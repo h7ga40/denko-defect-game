@@ -41,7 +41,7 @@ export function WiringDiagram({ defectType, deviceName, deviceVariant }: WiringD
     case "push_connector_wrong_wire_count":
       return <PushConnectorDiagram defectType={defectType} />;
     case "terminal_block_wrong_terminal":
-      return <TerminalBlockDiagram title={deviceName} />;
+      return <TerminalBlockDiagram title={deviceName} variant={deviceVariant} />;
     case "ceiling_connector_polarity":
       return <CeilingConnectorDiagram />;
     case "mounting_frame_loose":

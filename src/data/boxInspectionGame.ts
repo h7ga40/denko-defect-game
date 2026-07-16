@@ -1,4 +1,9 @@
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "./candidateDiagrams";
+import {
+  resolveCableRunSpecification,
+  type CableRunSpecification,
+} from "./cableSpecifications";
+import { getDeviceSpecification } from "./deviceSpecifications";
 import { problems, type DefectType, type Problem } from "./problems";
 
 export type BoxType = "joint" | "outlet";
@@ -11,6 +16,7 @@ export type ConnectionSpec = {
   wireCount: number;
   wireSizes: Array<1.6 | 2.0>;
   wireColors: WireColor[];
+  sourceCables: CableRunSpecification[];
   sleeveSize?: "small" | "medium";
   mark?: "○" | "小" | "中";
   portCount?: number;
@@ -228,8 +234,10 @@ export function createBoxInspectionRound(): BoxInspectionRound {
 
 function createConnectionSpecs(candidate: CandidateDiagram, device: CandidateDevice, boxIndex: number): ConnectionSpec[] {
   const incident = candidate.connections.filter((connection) => connection.from === device.id || connection.to === device.id);
+  const sourceCables = incident.map((connection) =>
+    resolveCableRunSpecification(candidate, connection, candidate.connections.indexOf(connection)),
+  );
   const connectionCount = clamp(incident.length, 2, 5);
-  const hasTwoMillimeter = incident.some((connection) => connection.label?.includes("2.0"));
   const incidentColors = incident.map((connection) => connection.color);
   const functionalColors: WireColor[] = ["white", "black", "red", "green", "blue"];
 
@@ -237,7 +245,7 @@ function createConnectionSpecs(candidate: CandidateDiagram, device: CandidateDev
     const method: ConnectionMethod = (candidate.no + boxIndex + index) % 2 === 0 ? "ring_sleeve" : "push_connector";
     const wireCount = clamp(incident.length - (index % 2), 2, 4);
     const wireSizes = Array.from({ length: wireCount }, (_, wireIndex): 1.6 | 2.0 =>
-      hasTwoMillimeter && index < 2 && wireIndex === 0 ? 2.0 : 1.6,
+      sourceCables[(index + wireIndex) % sourceCables.length]?.conductorDiameterMm ?? 1.6,
     );
     const wireColors = Array.from({ length: wireCount }, (_, wireIndex) =>
       incidentColors[wireIndex] ?? functionalColors[(index + wireIndex) % functionalColors.length],
@@ -250,6 +258,7 @@ function createConnectionSpecs(candidate: CandidateDiagram, device: CandidateDev
       wireCount,
       wireSizes,
       wireColors,
+      sourceCables,
       sleeveSize: method === "ring_sleeve" ? ringRating.size : undefined,
       mark: method === "ring_sleeve" ? ringRating.mark : undefined,
       portCount: method === "push_connector" ? wireCount : undefined,
@@ -272,6 +281,7 @@ function createInfrastructureSpecs(candidate: CandidateDiagram, device: Candidat
     wireCount: 0,
     wireSizes: [],
     wireColors: [],
+    sourceCables: [],
   }));
 }
 function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: "small" | "medium"; mark: "○" | "小" | "中" } {
@@ -354,9 +364,7 @@ function isDirectInspectionDevice(device: CandidateDevice) {
   return device.type !== "power"
     && device.type !== "connector"
     && device.type !== "box"
-    && device.variant !== "omitted_work"
-    && device.variant !== "motor_terminal"
-    && device.variant !== "load_device";
+    && getDeviceSpecification(device.variant)?.inspectionSelectable === true;
 }
 
 function getDirectDefectProblems(device: CandidateDevice): Problem[] {

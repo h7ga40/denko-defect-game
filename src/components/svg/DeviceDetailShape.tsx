@@ -1,4 +1,5 @@
 import type { DeviceVariant } from "../../data/candidateDiagrams";
+import { getDeviceSpecification } from "../../data/deviceSpecifications";
 
 type DeviceDetailShapeProps = {
   variant?: DeviceVariant | "receptacle" | "mounting_frame";
@@ -44,17 +45,33 @@ export function DeviceDetailShape({ variant, x, y }: DeviceDetailShapeProps) {
     || variant === "four_way_switch"
     || variant === "switch_group"
   ) {
-    const terminalCount = variant === "single_pole_switch" ? 2 : variant === "three_way_switch" ? 3 : 4;
+    const terminals = getDeviceSpecification(variant)?.terminals ?? [];
     return (
       <g aria-label="埋込スイッチ">
         <rect className="cad-mounting-yoke" x={x - 66} y={y - 78} width="132" height="156" rx="10" />
         <rect className="cad-body" x={x - 48} y={y - 68} width="96" height="136" rx="13" />
         <rect className="cad-rocker" x={x - 35} y={y - 52} width="70" height="104" rx="8" />
         <line className="cad-detail" x1={x - 27} y1={y - 42} x2={x + 27} y2={y - 42} />
-        {Array.from({ length: terminalCount }, (_, index) => {
+        {terminals.map((terminal, index) => {
           const side = index % 2 === 0 ? -1 : 1;
           const row = Math.floor(index / 2);
-          return <circle className="cad-terminal-hole" cx={x + side * 52} cy={y - 22 + row * 44} key={index} r="7" />;
+          const terminalY = y - 34 + row * 34;
+          return (
+            <g key={terminal.id}>
+              {Array.from({ length: terminal.insertionHoles }, (_, holeIndex) => (
+                <circle
+                  className="cad-terminal-hole"
+                  cx={x + side * 52}
+                  cy={terminalY + (holeIndex - (terminal.insertionHoles - 1) / 2) * 12}
+                  key={holeIndex}
+                  r="5"
+                />
+              ))}
+              <text className="cad-mark" x={x + side * 35} y={terminalY + 4} textAnchor="middle">
+                {terminal.label.length <= 2 ? terminal.label : ""}
+              </text>
+            </g>
+          );
         })}
         <text className="cad-mark" x={x} y={y + 8} textAnchor="middle">
           {variant === "three_way_switch" ? "3" : variant === "four_way_switch" ? "4" : ""}
@@ -92,7 +109,7 @@ export function DeviceDetailShape({ variant, x, y }: DeviceDetailShapeProps) {
     || variant === "eet_receptacle"
   ) {
     const exposed = variant === "exposed_receptacle";
-    const grounded = variant !== "exposed_receptacle";
+    const grounded = variant === "grounded_receptacle" || variant === "grounded_20a_receptacle" || variant === "eet_receptacle";
     const twentyAmp = variant === "grounded_20a_receptacle";
     return (
       <g aria-label="コンセント">
@@ -137,16 +154,22 @@ export function DeviceDetailShape({ variant, x, y }: DeviceDetailShapeProps) {
     );
   }
   if (variant === "terminal_block" || variant === "earth_terminal" || variant === "timer_switch" || variant === "automatic_switch") {
+    const terminals = getDeviceSpecification(variant)?.terminals ?? [];
+    const spacing = terminals.length > 1 ? 120 / (terminals.length - 1) : 0;
     return (
       <g aria-label={variant === "earth_terminal" ? "接地端子" : variant === "timer_switch" ? "タイムスイッチ端子台" : variant === "automatic_switch" ? "自動点滅器端子台" : "端子台"}>
-        <rect className="cad-body" x={x - 78} y={y - 45} width="156" height="90" rx="8" />
-        {[-52, -26, 0, 26, 52].map((offset) => (
-          <g key={offset}>
-            <rect className="cad-terminal-strip" x={x + offset - 11} y={y - 31} width="22" height="62" rx="4" />
-            <circle className="cad-terminal" cx={x + offset} cy={y} r="8" />
-            <line className="cad-screw" x1={x + offset - 5} y1={y} x2={x + offset + 5} y2={y} />
-          </g>
-        ))}
+        <rect className="cad-body" x={x - 84} y={y - 45} width="168" height="90" rx="8" />
+        {terminals.map((terminal, index) => {
+          const offset = terminals.length > 1 ? -60 + index * spacing : 0;
+          return (
+            <g key={terminal.id}>
+              <rect className="cad-terminal-strip" x={x + offset - 10} y={y - 31} width="20" height="62" rx="4" />
+              <circle className="cad-terminal" cx={x + offset} cy={y} r="7" />
+              <line className="cad-screw" x1={x + offset - 5} y1={y} x2={x + offset + 5} y2={y} />
+              <text className="cad-mark" x={x + offset} y={y - 34} textAnchor="middle">{terminal.label}</text>
+            </g>
+          );
+        })}
       </g>
     );
   }

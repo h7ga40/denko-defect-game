@@ -1,3 +1,5 @@
+import type { CableRunOverride } from "./cableSpecifications";
+
 export type DeviceType =
   | "power"
   | "switch"
@@ -47,6 +49,7 @@ export type CandidateConnection = {
   to: string;
   color: "black" | "white" | "red" | "green" | "blue";
   label?: string;
+  cable?: CableRunOverride;
 };
 
 export type CandidateDiagram = {
