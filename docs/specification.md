@@ -94,6 +94,8 @@ CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具
 
 ラベルに`VVF 2.0-3C`、`VVR 1.6-2C`、`E1.6`などがある場合は種別・導体径・芯数を推定する。明示ラベルがない区間は暫定値を生成できるが、候補問題ごとの施工条件が判明した時点でCandidateConnectionの`cable`から上書きする。
 
+`StrippedCableEnd.tsx`はケーブル端をシース、絶縁被覆、裸導体の3区間に分けて描画する。シース端は`sheathStripLengthMm`、芯線ごとの裸導体長は`insulationStripLengthsMm`から算出する。未確定値は表示専用の標準寸法へフォールバックするが、元データの`null`は変更しない。
+
 
 ### deviceSpecifications.ts
 
@@ -133,7 +135,8 @@ DefectType、Problem、欠陥判定モードの全26問を管理する。
 - App.tsx: モード切替、欠陥判定の進行、最高得点
 - WorkInspectionGame.tsx: 施工チェックの回答、採点、再出題
 - CandidateDiagramView.tsx / CandidateSvg: 複線図、部品記号、部品本体の選択状態
-- BoxWiringDiagram.tsx: ボックス内の可変接続部、芯線、刻印、コネクタ極数、ボックス・ブッシング・管工事の点検部
+- BoxWiringDiagram.tsx: ボックス内の可変接続部、ケーブル加工長、芯線、刻印、コネクタ極数、ボックス・ブッシング・管工事の点検部
+- StrippedCableEnd.tsx: シース剥ぎ長と芯線ごとのストリップ長を反映するケーブル端SVG
 - ProblemView.tsx / ScoreView.tsx: 欠陥判定と最終得点
 - WiringDiagram.tsx: DefectTypeから個別SVGへのルーター
 - svg/diagrams/: 部品ごとに分割したSVG

@@ -1,4 +1,5 @@
 import type { BoxInspectionPart, InspectionBox, WireColor } from "../data/boxInspectionGame";
+import { StrippedCableEnd } from "./svg/StrippedCableEnd";
 
 type BoxWiringDiagramProps = {
   box: InspectionBox;
@@ -155,9 +156,24 @@ function WireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: num
         const offset = (index - (count - 1) / 2) * 7;
         const shortInsert = part.defectType === "push_connector_insufficient_insert" && index === count - 1;
         const endX = shortInsert ? x - 52 : x - 28;
+        const cableIndex = index % Math.max(1, part.connection.sourceCables.length);
+        const cable = part.connection.sourceCables[cableIndex];
+        const preparation = part.connection.sourceCableEnds[cableIndex];
+        const insulationStripLengthMm = part.defectType === "ring_sleeve_insulation_bite"
+          ? 3
+          : undefined;
         return (
           <g key={color + "-" + index}>
-            <path className={"wire " + wireClass(color)} d={"M " + (x - 94) + " " + (y + offset) + " L " + endX + " " + (y + offset)} />
+            <StrippedCableEnd
+              cable={cable}
+              color={wireClass(color)}
+              coreIndex={index % Math.max(1, cable?.coreCount ?? 1)}
+              insulationStripLengthMm={insulationStripLengthMm}
+              preparation={preparation}
+              x1={x - 94}
+              x2={endX}
+              y={y + offset}
+            />
             <text className="wire-size-label" x={x - 88} y={y + offset - 2}>
               {part.connection.wireSizes[index].toFixed(1)}
             </text>

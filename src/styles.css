@@ -459,6 +459,49 @@ button {
   stroke: #c83349;
 }
 
+.cable-sheath,
+.cable-insulation,
+.cable-conductor {
+  fill: none;
+  pointer-events: none;
+  stroke-linecap: butt;
+}
+
+.cable-sheath {
+  stroke: #65717a;
+  stroke-width: 11;
+}
+
+.cable-insulation {
+  stroke-width: 7;
+}
+
+.cable-insulation.black {
+  stroke: #171717;
+}
+
+.cable-insulation.white {
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 1px #56616b) drop-shadow(0 0 1px #56616b);
+}
+
+.cable-insulation.red {
+  stroke: #c83349;
+}
+
+.cable-insulation.green {
+  stroke: #17945f;
+}
+
+.cable-insulation.blue {
+  stroke: #2f6fbb;
+}
+
+.cable-conductor {
+  stroke: #b87333;
+  stroke-width: 4;
+}
+
 .broken {
   stroke-dasharray: 18 12;
 }

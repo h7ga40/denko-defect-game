@@ -1,6 +1,7 @@
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "./candidateDiagrams";
 import {
   resolveCableRunSpecification,
+  type CableEndPreparation,
   type CableRunSpecification,
 } from "./cableSpecifications";
 import { getDeviceSpecification } from "./deviceSpecifications";
@@ -17,6 +18,7 @@ export type ConnectionSpec = {
   wireSizes: Array<1.6 | 2.0>;
   wireColors: WireColor[];
   sourceCables: CableRunSpecification[];
+  sourceCableEnds: CableEndPreparation[];
   sleeveSize?: "small" | "medium";
   mark?: "○" | "小" | "中";
   portCount?: number;
@@ -237,6 +239,9 @@ function createConnectionSpecs(candidate: CandidateDiagram, device: CandidateDev
   const sourceCables = incident.map((connection) =>
     resolveCableRunSpecification(candidate, connection, candidate.connections.indexOf(connection)),
   );
+  const sourceCableEnds = sourceCables.map((cable) =>
+    cable.fromEnd.endpointId === device.id ? cable.fromEnd : cable.toEnd,
+  );
   const connectionCount = clamp(incident.length, 2, 5);
   const incidentColors = incident.map((connection) => connection.color);
   const functionalColors: WireColor[] = ["white", "black", "red", "green", "blue"];
@@ -259,6 +264,7 @@ function createConnectionSpecs(candidate: CandidateDiagram, device: CandidateDev
       wireSizes,
       wireColors,
       sourceCables,
+      sourceCableEnds,
       sleeveSize: method === "ring_sleeve" ? ringRating.size : undefined,
       mark: method === "ring_sleeve" ? ringRating.mark : undefined,
       portCount: method === "push_connector" ? wireCount : undefined,
@@ -282,6 +288,7 @@ function createInfrastructureSpecs(candidate: CandidateDiagram, device: Candidat
     wireSizes: [],
     wireColors: [],
     sourceCables: [],
+    sourceCableEnds: [],
   }));
 }
 function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: "small" | "medium"; mark: "○" | "小" | "中" } {
