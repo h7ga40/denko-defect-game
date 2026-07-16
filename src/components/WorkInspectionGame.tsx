@@ -65,7 +65,7 @@ export function WorkInspectionGame() {
         </div>
         <h2>{round.title}</h2>
         <p className="candidate-theme">
-          ランプ・スイッチ・コンセントなどは複線図から直接選択し、リングスリーブと差し込みコネクタはボックス内で選択します。欠陥は{round.defectCount}か所です。
+          ランプ・スイッチ・コンセントなどは複線図から直接選択し、リングスリーブと差込形コネクタはボックス内で選択します。欠陥は{round.defectCount}か所です。
         </p>
         <CandidateMaterials candidateNo={round.candidate.no} />
         <div className="diagram-wrap">

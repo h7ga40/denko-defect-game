@@ -67,12 +67,12 @@ export const candidateDiagrams: CandidateDiagram[] = [
   {
     no: 1,
     title: "公式No.1 基本回路",
-    theme: `${sourceNote}。ランプレセプタクル、引掛シーリング、スイッチ群を含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: EM-EEF 2.0-2C", "器具: ランプレセプタクル、引掛シーリング、スイッチ群"],
+    theme: `${sourceNote}。ランプレセプタクル、引掛シーリングローゼット、スイッチ群を含む回路。`,
+    points: ["電源: 1φ2W 100V", "電線: EM-EEF 2.0-2C", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ群"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 92, y: 205 },
       { id: "j1", label: "接続点", type: "connector", x: 240, y: 205 },
-      { id: "c", label: "引掛シーリング イ", type: "lamp", variant: "ceiling_connector", x: 240, y: 96 },
+      { id: "c", label: "引掛シーリングローゼット イ", type: "lamp", variant: "ceiling_connector", x: 240, y: 96 },
       { id: "sw", label: "Hイ/ロ/ハ", type: "switch", variant: "switch_group", x: 240, y: 315 },
       { id: "j2", label: "接続点", type: "connector", x: 435, y: 205 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 435, y: 96 },
@@ -116,7 +116,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 3,
     title: "公式No.3 タイムスイッチ・接地回路",
     theme: `${sourceNote}。タイムスイッチ、ランプレセプタクル、接地を含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、E1.6", "器具: TS、ランプレセプタクル、引掛シーリング、接地極付器具"],
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、E1.6", "器具: TS、ランプレセプタクル、引掛シーリングローゼット、接地極付器具"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 88, y: 200 },
       { id: "j1", label: "接続点", type: "connector", x: 210, y: 248 },
@@ -201,7 +201,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 6,
     title: "公式No.6 露出形コンセント",
     theme: `${sourceNote}。露出形コンセントと2か所の照明器具を含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: 引掛シーリング、露出形コンセント、スイッチ"],
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: 引掛シーリングローゼット、露出形コンセント、スイッチ"],
     devices: [
       { id: "c1", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 185, y: 100 },
       { id: "j1", label: "接続点", type: "connector", x: 300, y: 205 },
@@ -251,7 +251,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 8,
     title: "公式No.8 VVR・三路スイッチ",
     theme: `${sourceNote}。B、T、三路スイッチ、VVR 2.0-2Cを含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVR 2.0-2C", "器具: B、T、3路スイッチ、ランプレセプタクル、引掛シーリング"],
+    points: ["電源: 1φ2W 100V", "電線: VVR 2.0-2C", "器具: B、T、埋込連用タンブラスイッチ（3路）、ランプレセプタクル、引掛シーリングローゼット"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 70, y: 170 },
       { id: "b1", label: "B", type: "breaker", variant: "circuit_breaker", x: 170, y: 140 },
@@ -278,8 +278,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
   {
     no: 9,
     title: "公式No.9 接地端子付コンセント",
-    theme: `${sourceNote}。EET、接地、ランプレセプタクル、引掛シーリングを含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、E1.6", "器具: ランプレセプタクル、引掛シーリング、EET、接地"],
+    theme: `${sourceNote}。EET、接地、ランプレセプタクル、引掛シーリングローゼットを含む回路。`,
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、E1.6", "器具: ランプレセプタクル、引掛シーリングローゼット、EET、接地"],
     devices: [
       { id: "r1", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 115, y: 105 },
       { id: "j1", label: "接続点", type: "connector", x: 115, y: 235 },
@@ -306,7 +306,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 10,
     title: "公式No.10 同時点滅確認表示灯",
     theme: `${sourceNote}。確認表示灯（パイロットランプ）は同時点滅。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: B、引掛シーリング、ランプレセプタクル、確認表示灯、スイッチ"],
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: B、引掛シーリングローゼット、ランプレセプタクル、確認表示灯、スイッチ"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 105, y: 205 },
       { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", x: 210, y: 205 },
@@ -329,7 +329,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 11,
     title: "公式No.11 金属管工事",
     theme: `${sourceNote}。IV 1.6（E19）を含む金属管工事の回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（E19）", "器具: ランプレセプタクル、引掛シーリング、スイッチ、アウトレットボックス"],
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（E19）", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ、アウトレットボックス"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 85, y: 160 },
       { id: "box", label: "アウトレットボックス", type: "box", x: 285, y: 160 },
@@ -350,7 +350,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 12,
     title: "公式No.12 PF管工事",
     theme: `${sourceNote}。IV 1.6（PF16）を含むPF管工事の回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（PF16）", "器具: ランプレセプタクル、引掛シーリング、スイッチ、アウトレットボックス"],
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（PF16）", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ、アウトレットボックス"],
     devices: [
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 165, y: 96 },
       { id: "j1", label: "接続点", type: "connector", x: 165, y: 205 },

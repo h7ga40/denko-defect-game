@@ -88,10 +88,10 @@ export const problems: Problem[] = [
   },
   {
     id: "receptacle-ground",
-    title: "接地極付コンセント 接地線忘れ",
-    circuitName: "接地極付コンセントの簡略配線",
+    title: "埋込コンセント（接地極付）接地線忘れ",
+    circuitName: "埋込コンセント（接地極付）の簡略配線",
     defectType: "missing_ground",
-    question: "接地極付コンセントの図として欠陥を選んでください。",
+    question: "埋込コンセント（接地極付）の図として欠陥を選んでください。",
     choices: [
       "欠陥なし",
       "接地線の接続忘れ",
@@ -100,7 +100,7 @@ export const problems: Problem[] = [
     ],
     answer: "接地線の接続忘れ",
     explanation:
-      "接地極付コンセントでは接地端子へ接地線を接続します。図では緑線が端子へ届いておらず、接地線の接続忘れです。",
+      "埋込コンセント（接地極付）では接地端子へ接地線を接続します。図では緑線が端子へ届いておらず、接地線の接続忘れです。",
   },
   {
     id: "box-sheath",
@@ -160,7 +160,7 @@ export const problems: Problem[] = [
       "欠陥なし",
       "リングスリーブのサイズが不適合",
       "心線の差し込み不足",
-      "差し込みコネクタの接続本数が不適合",
+      "差込形コネクタの接続本数が不適合",
     ],
     answer: "リングスリーブのサイズが不適合",
     explanation:
@@ -204,24 +204,24 @@ export const problems: Problem[] = [
   },
   {
     id: "push-connector-insert",
-    title: "差し込みコネクタ 心線差し込み不足",
-    circuitName: "差し込みコネクタの簡略施工図",
+    title: "差込形コネクタ 心線差し込み不足",
+    circuitName: "差込形コネクタの簡略施工図",
     defectType: "push_connector_insufficient_insert",
-    question: "差し込みコネクタの心線差し込み状態として、欠陥を選んでください。",
+    question: "差込形コネクタの心線差し込み状態として、欠陥を選んでください。",
     choices: ["欠陥なし", "心線の差し込み不足", "外装がボックス内に十分入っていない", "白線と黒線の接続が逆"],
     answer: "心線の差し込み不足",
-    explanation: "差し込みコネクタは心線を奥まで確実に差し込みます。図では片方の心線が確認窓まで届いていません。",
+    explanation: "差込形コネクタは心線を奥まで確実に差し込みます。図では片方の心線が確認窓まで届いていません。",
   },
   {
     id: "push-connector-wire-count",
-    title: "差し込みコネクタ 接続本数不適合",
-    circuitName: "差し込みコネクタの簡略施工図",
+    title: "差込形コネクタ 接続本数不適合",
+    circuitName: "差込形コネクタの簡略施工図",
     defectType: "push_connector_wrong_wire_count",
-    question: "差し込みコネクタの使用状態として、欠陥を選んでください。",
+    question: "差込形コネクタの使用状態として、欠陥を選んでください。",
     choices: ["欠陥なし", "接続本数に合わないコネクタを使用している", "リングスリーブのサイズが不適合", "輪作りの向きが逆"],
     answer: "接続本数に合わないコネクタを使用している",
     explanation:
-      "差し込みコネクタは接続する心線の本数に合うものを使います。図では4本接続が必要な箇所に3本用のコネクタを使っています。",
+      "差込形コネクタは接続する心線の本数に合うものを使います。図では4本接続が必要な箇所に3本用のコネクタを使っています。",
   },
   {
     id: "terminal-block-wrong-terminal",
@@ -235,13 +235,13 @@ export const problems: Problem[] = [
   },
   {
     id: "ceiling-connector-polarity",
-    title: "引掛けシーリング 極性誤り",
-    circuitName: "引掛けシーリングの簡略施工図",
+    title: "引掛シーリングローゼット 極性誤り",
+    circuitName: "引掛シーリングローゼットの簡略施工図",
     defectType: "ceiling_connector_polarity",
-    question: "引掛けシーリングの白線・黒線の接続として、欠陥を選んでください。",
+    question: "引掛シーリングローゼットの白線・黒線の接続として、欠陥を選んでください。",
     choices: ["欠陥なし", "白線と黒線の接続が逆", "心線の差し込み不足", "輪作りの向きが逆"],
     answer: "白線と黒線の接続が逆",
-    explanation: "引掛けシーリングも接地側・非接地側の接続を確認します。図では白線と黒線の接続先が逆です。",
+    explanation: "引掛シーリングローゼットも接地側・非接地側の接続を確認します。図では白線と黒線の接続先が逆です。",
   },
   {
     id: "mounting-frame-loose",

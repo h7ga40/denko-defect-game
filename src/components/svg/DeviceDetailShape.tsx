@@ -27,7 +27,7 @@ export function DeviceDetailShape({ variant, x, y }: DeviceDetailShapeProps) {
 
   if (variant === "ceiling_connector") {
     return (
-      <g aria-label="引掛シーリング">
+      <g aria-label="引掛シーリングローゼット">
         <rect className="cad-body warm" x={x - 76} y={y - 43} width="152" height="86" rx="18" />
         <rect className="cad-face" x={x - 61} y={y - 31} width="122" height="62" rx="14" />
         <circle className="cad-terminal" cx={x - 50} cy={y} r="8" />

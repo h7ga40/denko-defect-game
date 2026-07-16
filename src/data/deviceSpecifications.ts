@@ -34,30 +34,30 @@ export const deviceSpecifications: Record<DeviceVariant, DeviceSpecification> = 
     terminal("center", "中心接点", "line"),
     terminal("shell", "受金", "neutral"),
   ]),
-  ceiling_connector: wired("引掛シーリング", "push_in", [
+  ceiling_connector: wired("引掛シーリングローゼット", "push_in", [
     terminal("line", "非接地側", "line"),
     terminal("neutral", "接地側", "neutral"),
   ]),
-  pilot_lamp: wired("パイロットランプ", "push_in", [
+  pilot_lamp: wired("埋込連用パイロットランプ", "push_in", [
     terminal("line", "非接地側", "line", 2),
     terminal("neutral", "接地側", "neutral", 2),
   ]),
-  single_pole_switch: wired("単極スイッチ", "push_in", [
+  single_pole_switch: wired("埋込連用タンブラスイッチ（片切）", "push_in", [
     terminal("0", "0", "line", 2),
     terminal("1", "1", "load", 2),
   ]),
-  three_way_switch: wired("3路スイッチ", "push_in", [
+  three_way_switch: wired("埋込連用タンブラスイッチ（3路）", "push_in", [
     terminal("0", "0", "line", 2),
     terminal("1", "1", "traveler", 2),
     terminal("3", "3", "traveler", 2),
   ]),
-  four_way_switch: wired("4路スイッチ", "push_in", [
+  four_way_switch: wired("埋込連用タンブラスイッチ（4路）", "push_in", [
     terminal("1", "1", "traveler", 2),
     terminal("2", "2", "traveler", 2),
     terminal("3", "3", "traveler", 2),
     terminal("4", "4", "traveler", 2),
   ]),
-  switch_group: wired("連用スイッチ", "push_in", [
+  switch_group: wired("埋込連用タンブラスイッチ", "push_in", [
     terminal("i-line", "イ電源", "line", 2),
     terminal("i-load", "イ返り", "load", 2),
     terminal("ro-line", "ロ電源", "line", 2),
@@ -69,17 +69,17 @@ export const deviceSpecifications: Record<DeviceVariant, DeviceSpecification> = 
     terminal("line", "非接地側", "line"),
     terminal("neutral", "接地側", "neutral"),
   ]),
-  grounded_receptacle: wired("接地極付コンセント", "push_in", [
+  grounded_receptacle: wired("埋込コンセント（接地極付）", "push_in", [
     terminal("line", "非接地側", "line", 2),
     terminal("neutral", "接地側", "neutral", 2),
     terminal("ground", "接地極", "ground"),
   ]),
-  grounded_20a_receptacle: wired("接地極付20A 250Vコンセント", "push_in", [
+  grounded_20a_receptacle: wired("埋込コンセント（20A 250V 接地極付）", "push_in", [
     terminal("line-1", "極1", "line", 2),
     terminal("line-2", "極2", "line", 2),
     terminal("ground", "接地極", "ground"),
   ]),
-  eet_receptacle: wired("接地極・接地端子付コンセント", "push_in", [
+  eet_receptacle: wired("埋込コンセント（接地極付接地端子付）", "push_in", [
     terminal("line", "非接地側", "line", 2),
     terminal("neutral", "接地側", "neutral", 2),
     terminal("earth", "接地極・接地端子", "ground"),
