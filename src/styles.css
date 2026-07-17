@@ -849,6 +849,168 @@ button {
   stroke: #198754;
 }
 
+.radial-box {
+  fill: #f8fbfd;
+}
+
+.radial-cable,
+.radial-wire,
+.radial-cable-label,
+.radial-joint-id,
+.radial-joint-label,
+.radial-infrastructure-label {
+  pointer-events: none;
+}
+
+.radial-entry {
+  fill: #dfe7ec;
+  stroke: #596a78;
+  stroke-width: 4;
+}
+
+.radial-cable-sheath {
+  fill: none;
+  stroke: #65717a;
+  stroke-linecap: round;
+  stroke-width: 13;
+}
+
+.radial-sheath-end {
+  fill: #27333d;
+  stroke: #f8fbfd;
+  stroke-width: 2;
+}
+
+.radial-insulation,
+.radial-copper {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.radial-insulation {
+  stroke-width: 6;
+}
+
+.radial-insulation.black {
+  stroke: #171717;
+}
+
+.radial-insulation.white {
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 1px #56616b) drop-shadow(0 0 1px #56616b);
+}
+
+.radial-insulation.red {
+  stroke: #c83349;
+}
+
+.radial-insulation.green {
+  stroke: #17945f;
+}
+
+.radial-insulation.blue {
+  stroke: #2f6fbb;
+}
+
+.radial-copper {
+  stroke: #b87333;
+  stroke-width: 4;
+}
+
+.radial-wire.loose .radial-copper {
+  stroke-linecap: butt;
+}
+
+.radial-cable-label,
+.radial-joint-id,
+.radial-joint-label,
+.radial-infrastructure-label {
+  fill: #172033;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3;
+  font-weight: 900;
+}
+
+.radial-cable-label {
+  font-size: 10px;
+}
+
+.radial-cable-spec {
+  fill: #526272;
+  font-size: 8px;
+}
+
+.radial-joint-id {
+  font-size: 10px;
+}
+
+.radial-joint-label,
+.radial-infrastructure-label {
+  font-size: 9px;
+}
+
+.radial-sleeve-text {
+  fill: #172033;
+  font-size: 10px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.radial-connection-hit,
+.radial-infrastructure-hit {
+  fill: rgba(255, 255, 255, 0.72);
+  stroke: #6f8796;
+  stroke-width: 2;
+  pointer-events: all;
+  touch-action: manipulation;
+}
+
+.radial-connection-hit {
+  stroke-dasharray: 5 4;
+}
+
+.radial-connection:hover .radial-connection-hit,
+.radial-connection.selected .radial-connection-hit {
+  fill: rgba(31, 111, 139, 0.18);
+  stroke: #1f6f8b;
+  stroke-dasharray: none;
+  stroke-width: 4;
+}
+
+.radial-connection.answered .radial-connection-hit {
+  fill: rgba(25, 135, 84, 0.13);
+  stroke: #198754;
+}
+
+.radial-connection.correct .radial-connection-hit {
+  fill: rgba(25, 135, 84, 0.2);
+  stroke: #198754;
+}
+
+.radial-connection.wrong .radial-connection-hit {
+  fill: rgba(200, 51, 73, 0.13);
+  stroke: #c83349;
+}
+
+.radial-connection:focus-visible .radial-connection-hit {
+  stroke: #172033;
+  stroke-dasharray: none;
+  stroke-width: 4;
+}
+
+.radial-infrastructure-hit {
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+.radial-connection.selected .radial-infrastructure-hit,
+.radial-connection:hover .radial-infrastructure-hit {
+  fill: rgba(31, 111, 139, 0.15);
+  stroke: #1f6f8b;
+  stroke-width: 3;
+}
+
 .connection-title {
   margin: 0 0 8px;
   color: #27606d;

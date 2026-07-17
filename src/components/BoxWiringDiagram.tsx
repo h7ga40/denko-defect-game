@@ -1,5 +1,6 @@
+import type { KeyboardEvent } from "react";
 import type { BoxInspectionPart, InspectionBox, WireColor } from "../data/boxInspectionGame";
-import { StrippedCableEnd } from "./svg/StrippedCableEnd";
+import type { BoxConductorEndpoint } from "../data/boxWiringSpecifications";
 
 type BoxWiringDiagramProps = {
   box: InspectionBox;
@@ -9,94 +10,224 @@ type BoxWiringDiagramProps = {
   onSelectPart: (partId: string) => void;
 };
 
+type Point = { x: number; y: number };
+type CableLayout = { entry: Point; bend: Point; angle: number };
+
+const center = { x: 360, y: 215 };
+
 export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSelectPart }: BoxWiringDiagramProps) {
-  const rowCount = Math.ceil(box.parts.length / 2);
+  const connectionParts = box.parts.filter(isConnectionPart);
+  const infrastructureParts = box.parts.filter((part) => !isConnectionPart(part));
+  const connectionNodes = layoutConnectionNodes(connectionParts.length);
+  const nodeByConnectionId = new Map(
+    connectionParts.map((part, index) => [part.connection.id, connectionNodes[index]]),
+  );
+  const partByConnectionId = new Map(connectionParts.map((part) => [part.connection.id, part]));
 
   return (
-    <svg viewBox="0 0 720 390" role="img" aria-label={box.label + "内の配線図"}>
+    <svg viewBox="0 0 720 390" role="img" aria-label={box.label + "内の放射状配線図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
-      <text className="label" x="360" y="52" textAnchor="middle">{box.label}内 配線図</text>
-      <text className="small" x="360" y="75" textAnchor="middle">
-        ケーブル{box.cableCount}本・点検部{box.parts.length}か所
+      <text className="label" x="360" y="50" textAnchor="middle">{box.label}内 配線図</text>
+      <text className="small" x="360" y="72" textAnchor="middle">
+        ケーブル{box.cableCount}本・結線{connectionParts.length}か所
       </text>
-      <rect className="box" x="72" y="88" width="576" height="258" rx="22" />
-      {box.parts.map((part, index) => {
-        const column = index % 2;
-        const row = Math.floor(index / 2);
-        const x = column === 0 ? 228 : 492;
-        const availableHeight = 210;
-        const y = 123 + (row + 0.5) * (availableHeight / rowCount);
-        return (
-          <ConnectionPart
-            answer={answers[part.id]}
-            hitHeight={Math.min(60, availableHeight / rowCount - 4)}
-            key={part.id}
-            onSelectPart={onSelectPart}
-            part={part}
-            selected={selectedPartId === part.id}
-            submitted={submitted}
-            x={x}
-            y={y}
-          />
-        );
-      })}
+      <rect className="box radial-box" x="72" y="86" width="576" height="266" rx="22" />
+
+      {box.wiring.cables.map((cable, index) => (
+        <RadialCable
+          box={box}
+          cableId={cable.id}
+          cableIndex={index}
+          cableLayout={layoutCable(index, box.wiring.cables.length, infrastructureParts.length > 0)}
+          key={cable.id}
+          nodeByConnectionId={nodeByConnectionId}
+          partByConnectionId={partByConnectionId}
+        />
+      ))}
+
+      {connectionParts.map((part, index) => (
+        <ConnectionNode
+          answer={answers[part.id]}
+          index={index}
+          key={part.id}
+          onSelectPart={onSelectPart}
+          part={part}
+          position={connectionNodes[index]}
+          selected={selectedPartId === part.id}
+          submitted={submitted}
+        />
+      ))}
+
+      {infrastructureParts.map((part, index) => (
+        <InfrastructureNode
+          answer={answers[part.id]}
+          count={infrastructureParts.length}
+          index={index}
+          key={part.id}
+          onSelectPart={onSelectPart}
+          part={part}
+          selected={selectedPartId === part.id}
+          submitted={submitted}
+        />
+      ))}
     </svg>
   );
 }
 
-function ConnectionPart({
+function RadialCable({
+  box,
+  cableId,
+  cableIndex,
+  cableLayout,
+  nodeByConnectionId,
+  partByConnectionId,
+}: {
+  box: InspectionBox;
+  cableId: string;
+  cableIndex: number;
+  cableLayout: CableLayout;
+  nodeByConnectionId: Map<string, Point>;
+  partByConnectionId: Map<string, BoxInspectionPart>;
+}) {
+  const cable = box.wiring.cables[cableIndex];
+  const conductors = box.wiring.conductors.filter((conductor) => conductor.cableId === cableId);
+  const perpendicular = { x: -Math.sin(cableLayout.angle), y: Math.cos(cableLayout.angle) };
+  const label = conductors[0]?.remoteLabel ?? cableId;
+  const labelPoint = {
+    x: cableLayout.entry.x + Math.cos(cableLayout.angle) * 15,
+    y: cableLayout.entry.y + Math.sin(cableLayout.angle) * 15,
+  };
+  const textAnchor = Math.cos(cableLayout.angle) > 0.3 ? "start" : Math.cos(cableLayout.angle) < -0.3 ? "end" : "middle";
+
+  return (
+    <g className="radial-cable">
+      <circle className="radial-entry" cx={cableLayout.entry.x} cy={cableLayout.entry.y} r="8" />
+      <path
+        className="radial-cable-sheath"
+        d={`M ${cableLayout.entry.x} ${cableLayout.entry.y} L ${cableLayout.bend.x} ${cableLayout.bend.y}`}
+      />
+      <circle className="radial-sheath-end" cx={cableLayout.bend.x} cy={cableLayout.bend.y} r="6" />
+      <text className="radial-cable-label" x={labelPoint.x} y={labelPoint.y} textAnchor={textAnchor}>
+        <tspan x={labelPoint.x}>{shortSourceLabel(label)}</tspan>
+        <tspan className="radial-cable-spec" dy="11" x={labelPoint.x}>{cable.cableType} {cable.coreCount}心</tspan>
+      </text>
+      {conductors.map((conductor, index) => {
+        const offset = (index - (conductors.length - 1) / 2) * 7;
+        const start = {
+          x: cableLayout.bend.x + perpendicular.x * offset,
+          y: cableLayout.bend.y + perpendicular.y * offset,
+        };
+        const actualConnectionId = box.installation.actualConnectionIds[conductor.id];
+        const node = actualConnectionId ? nodeByConnectionId.get(actualConnectionId) : undefined;
+        const part = actualConnectionId ? partByConnectionId.get(actualConnectionId) : undefined;
+        const target = node && part
+          ? connectionPort(node, part, conductor, start)
+          : looseWireTarget(start, cableLayout.angle, offset);
+        return (
+          <ConductorPath
+            color={conductor.color}
+            key={conductor.id}
+            loose={!actualConnectionId}
+            start={start}
+            target={target}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+function ConductorPath({ color, loose, start, target }: { color: WireColor; loose: boolean; start: Point; target: Point }) {
+  const nearTarget = pointBefore(target, start, loose ? 7 : 10);
+  const inward = unitVector(start, center);
+  const elbow = { x: start.x + inward.x * 24, y: start.y + inward.y * 24 };
+  const control = { x: (elbow.x + target.x + center.x) / 3, y: (elbow.y + target.y + center.y) / 3 };
+  return (
+    <g className={loose ? "radial-wire loose" : "radial-wire"}>
+      <path
+        className={`radial-insulation ${wireClass(color)}`}
+        d={`M ${start.x} ${start.y} L ${elbow.x} ${elbow.y} Q ${control.x} ${control.y} ${nearTarget.x} ${nearTarget.y}`}
+      />
+      <path className="radial-copper" d={`M ${nearTarget.x} ${nearTarget.y} L ${target.x} ${target.y}`} />
+    </g>
+  );
+}
+
+function ConnectionNode({
   part,
-  x,
-  y,
-  hitHeight,
+  index,
+  position,
   selected,
   answer,
   submitted,
   onSelectPart,
 }: {
   part: BoxInspectionPart;
-  x: number;
-  y: number;
-  hitHeight: number;
+  index: number;
+  position: Point;
   selected: boolean;
   answer?: string;
   submitted: boolean;
   onSelectPart: (partId: string) => void;
 }) {
-  const answered = Boolean(answer);
-  const correct = submitted && answer === part.answer;
-  const wrong = submitted && answered && answer !== part.answer;
-  const className = [
-    "box-connection",
-    selected ? "selected" : "",
-    answered ? "answered" : "",
-    correct ? "correct" : "",
-    wrong ? "wrong" : "",
-  ].filter(Boolean).join(" ");
-  const isRing = part.connection.method === "ring_sleeve";
-  const isPush = part.connection.method === "push_connector";
-
+  const className = connectionStateClass(part, selected, answer, submitted);
+  const select = () => onSelectPart(part.id);
   return (
     <g
       aria-label={part.title + "を選択"}
       className={className}
-      onClick={() => onSelectPart(part.id)}
+      onClick={select}
+      onKeyDown={(event) => selectWithKeyboard(event, select)}
       role="button"
       tabIndex={0}
     >
-      <rect className="box-connection-hit" x={x - 112} y={y - hitHeight / 2} width="224" height={hitHeight} rx="10" />
-      {isRing || isPush ? (
-        <>
-          <WireBundle part={part} x={x} y={y - 4} />
-          <LooseWireBundle part={part} x={x} y={y - 4} />
-          {isRing ? <RingSleeve part={part} x={x} y={y - 4} /> : <PushConnector part={part} x={x} y={y - 4} />}
-        </>
-      ) : (
-        <InfrastructurePart part={part} x={x} y={y - 5} />
-      )}
-      <text className="small connection-spec-label" x={x} y={y + 21} textAnchor="middle">
-        {connectionLabel(part)}
+      <circle className="radial-connection-hit" cx={position.x} cy={position.y} r="36" />
+      <text className="radial-joint-id" x={position.x} y={position.y - 27} textAnchor="middle">J{index + 1}</text>
+      {part.connection.method === "ring_sleeve"
+        ? <RingSleeve part={part} x={position.x} y={position.y} />
+        : <PushConnector part={part} x={position.x} y={position.y} />}
+      <text className="radial-joint-label" x={position.x} y={position.y + 31} textAnchor="middle">
+        {shortConnectionLabel(part)}
       </text>
+    </g>
+  );
+}
+
+function InfrastructureNode({
+  part,
+  index,
+  count,
+  selected,
+  answer,
+  submitted,
+  onSelectPart,
+}: {
+  part: BoxInspectionPart;
+  index: number;
+  count: number;
+  selected: boolean;
+  answer?: string;
+  submitted: boolean;
+  onSelectPart: (partId: string) => void;
+}) {
+  const x = count === 1 ? 360 : 285 + index * 150;
+  const y = 329;
+  const className = connectionStateClass(part, selected, answer, submitted);
+  const select = () => onSelectPart(part.id);
+  return (
+    <g
+      aria-label={part.title + "を選択"}
+      className={className}
+      onClick={select}
+      onKeyDown={(event) => selectWithKeyboard(event, select)}
+      role="button"
+      tabIndex={0}
+    >
+      <rect className="radial-infrastructure-hit" x={x - 64} y={y - 18} width="128" height="36" rx="9" />
+      <g transform={`translate(${x} ${y}) scale(0.58) translate(${-x} ${-y})`}>
+        <InfrastructurePart part={part} x={x} y={y} />
+      </g>
+      <text className="radial-infrastructure-label" x={x} y={y + 18} textAnchor="middle">{infrastructureLabel(part)}</text>
     </g>
   );
 }
@@ -138,119 +269,124 @@ function InfrastructurePart({ part, x, y }: { part: BoxInspectionPart; x: number
   );
 }
 
-function connectionLabel(part: BoxInspectionPart) {
-  if (part.connection.method === "ring_sleeve") {
-    return part.connection.wireCount + "芯 " + sleeveLabel(part) + " / " + displayMark(part);
-  }
-  if (part.connection.method === "push_connector") {
-    return part.connection.wireCount + "芯 " + displayPortCount(part) + "本用";
-  }
-  if (part.connection.method === "metal_conduit") return "金属管 E19";
-  if (part.connection.method === "pf_conduit") return "PF管 PF16";
-  return "ボックス・ブッシング";
-}
-function WireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
-  const count = part.connection.wireCount + part.connection.looseConductors.length;
-  return (
-    <>
-      {part.connection.wireColors.map((color, index) => {
-        const offset = (index - (count - 1) / 2) * 8;
-        const shortInsert = part.defectType === "push_connector_insufficient_insert" && index === count - 1;
-        const endX = shortInsert ? x - 52 : x - 28;
-        const cableIndex = index % Math.max(1, part.connection.sourceCables.length);
-        const cable = part.connection.sourceCables[cableIndex];
-        const preparation = part.connection.sourceCableEnds[cableIndex];
-        const conductor = part.connection.conductors[index];
-        const insulationStripLengthMm = part.defectType === "ring_sleeve_insulation_bite"
-          ? 3
-          : undefined;
-        return (
-          <g key={color + "-" + index}>
-            <StrippedCableEnd
-              cable={cable}
-              color={wireClass(color)}
-              coreIndex={conductor?.coreIndex ?? index % Math.max(1, cable?.coreCount ?? 1)}
-              insulationStripLengthMm={insulationStripLengthMm}
-              preparation={preparation}
-              x1={x - 94}
-              x2={endX}
-              y={y + offset}
-            />
-            <text className="wire-size-label" x={x - 88} y={y + offset - 2}>
-              {shortSourceLabel(conductor.remoteLabel)} {part.connection.wireSizes[index].toFixed(1)}
-            </text>
-          </g>
-        );
-      })}
-    </>
-  );
-}
-
-function LooseWireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
-  const connectedCount = part.connection.wireCount;
-  const totalCount = connectedCount + part.connection.looseConductors.length;
-  return (
-    <>
-      {part.connection.looseConductors.map((conductor, index) => {
-        const offset = (connectedCount + index - (totalCount - 1) / 2) * 8;
-        const cable = part.connection.looseSourceCables[index];
-        const preparation = part.connection.looseSourceCableEnds[index];
-        return (
-          <g key={"loose-" + conductor.id}>
-            <StrippedCableEnd
-              cable={cable}
-              color={wireClass(conductor.color)}
-              coreIndex={conductor.coreIndex}
-              preparation={preparation}
-              x1={x - 94}
-              x2={x - 56}
-              y={y + offset}
-            />
-            <text className="wire-size-label" x={x - 88} y={y + offset - 2}>
-              {shortSourceLabel(conductor.remoteLabel)} {conductor.conductorDiameterMm.toFixed(1)}
-            </text>
-          </g>
-        );
-      })}
-    </>
-  );
-}
-
 function RingSleeve({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
   const wrongSize = part.defectType === "ring_sleeve_wrong_size";
-  const width = wrongSize ? 48 : part.connection.sleeveSize === "medium" ? 66 : 56;
+  const width = wrongSize ? 38 : part.connection.sleeveSize === "medium" ? 46 : 40;
   return (
     <>
-      <rect className={wrongSize ? "sleeve alert-fill" : "sleeve"} x={x - width / 2} y={y - 18} width={width} height="36" rx="12" />
-      <rect className="sleeve-mark" x={x - 11} y={y - 11} width="22" height="22" rx="4" />
-      <text className="sleeve-text" x={x} y={y + 6} textAnchor="middle">{displayMark(part)}</text>
+      <rect className={wrongSize ? "sleeve alert-fill" : "sleeve"} x={x - width / 2} y={y - 13} width={width} height="26" rx="9" />
+      <rect className="sleeve-mark" x={x - 8} y={y - 8} width="16" height="16" rx="3" />
+      <text className="radial-sleeve-text" x={x} y={y + 4} textAnchor="middle">{displayMark(part)}</text>
     </>
   );
 }
 
 function PushConnector({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
   const ports = displayPortCount(part);
-  const spacing = 16;
-  const width = Math.max(56, ports * spacing + 18);
+  const spacing = 11;
+  const width = Math.max(42, ports * spacing + 12);
   return (
     <>
-      <rect className={part.defectType === "push_connector_wrong_wire_count" ? "device alert-fill" : "device"} x={x - width / 2} y={y - 18} width={width} height="36" rx="9" />
+      <rect className={part.defectType === "push_connector_wrong_wire_count" ? "device alert-fill" : "device"} x={x - width / 2} y={y - 13} width={width} height="26" rx="7" />
       {Array.from({ length: ports }, (_, index) => {
         const portX = x - ((ports - 1) * spacing) / 2 + index * spacing;
-        return <circle className="connector" cx={portX} cy={y} key={index} r="6" />;
+        return <circle className="connector" cx={portX} cy={y} key={index} r="4" />;
       })}
     </>
   );
 }
 
-function sleeveLabel(part: BoxInspectionPart) {
-  return part.connection.sleeveSize === "medium" ? "中スリーブ" : "小スリーブ";
+function layoutCable(index: number, count: number, reserveBottom: boolean): CableLayout {
+  const start = -Math.PI / 2;
+  const span = reserveBottom ? Math.PI * 1.62 : Math.PI * 2;
+  const angle = count === 1 ? -Math.PI / 2 : start + (span * index) / count;
+  return {
+    angle,
+    entry: { x: center.x + Math.cos(angle) * 255, y: center.y + Math.sin(angle) * 104 },
+    bend: { x: center.x + Math.cos(angle) * 157, y: center.y + Math.sin(angle) * 78 },
+  };
+}
+
+function layoutConnectionNodes(count: number): Point[] {
+  if (count === 1) return [{ ...center }];
+  return Array.from({ length: count }, (_, index) => {
+    const angle = -Math.PI / 2 + Math.PI / count + (Math.PI * 2 * index) / count;
+    return { x: center.x + Math.cos(angle) * 90, y: center.y + Math.sin(angle) * 58 };
+  });
+}
+
+function connectionPort(node: Point, part: BoxInspectionPart, conductor: BoxConductorEndpoint, start: Point) {
+  const direction = unitVector(start, node);
+  const perpendicular = { x: -direction.y, y: direction.x };
+  const index = part.connection.conductors.findIndex((item) => item.id === conductor.id);
+  const count = part.connection.conductors.length;
+  const portOffset = part.connection.method === "push_connector" ? (index - (count - 1) / 2) * 5 : 0;
+  const radius = part.connection.method === "push_connector" ? 14 : 12;
+  return {
+    x: node.x - direction.x * radius + perpendicular.x * portOffset,
+    y: node.y - direction.y * radius + perpendicular.y * portOffset,
+  };
+}
+
+function looseWireTarget(start: Point, angle: number, offset: number) {
+  return {
+    x: start.x - Math.cos(angle) * 48 - Math.sin(angle) * offset * 0.15,
+    y: start.y - Math.sin(angle) * 48 + Math.cos(angle) * offset * 0.15,
+  };
+}
+
+function pointBefore(target: Point, start: Point, distance: number) {
+  const direction = unitVector(target, start);
+  return { x: target.x + direction.x * distance, y: target.y + direction.y * distance };
+}
+
+function unitVector(from: Point, to: Point) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy) || 1;
+  return { x: dx / length, y: dy / length };
+}
+
+function connectionStateClass(part: BoxInspectionPart, selected: boolean, answer: string | undefined, submitted: boolean) {
+  const answered = Boolean(answer);
+  const correct = submitted && answer === part.answer;
+  const wrong = submitted && answered && answer !== part.answer;
+  return [
+    "box-connection",
+    "radial-connection",
+    selected ? "selected" : "",
+    answered ? "answered" : "",
+    correct ? "correct" : "",
+    wrong ? "wrong" : "",
+  ].filter(Boolean).join(" ");
+}
+
+function selectWithKeyboard(event: KeyboardEvent<SVGGElement>, select: () => void) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    select();
+  }
+}
+
+function isConnectionPart(part: BoxInspectionPart) {
+  return part.connection.method === "ring_sleeve" || part.connection.method === "push_connector";
+}
+
+function shortConnectionLabel(part: BoxInspectionPart) {
+  if (part.connection.method === "ring_sleeve") {
+    return `${part.connection.wireCount}芯 ${part.connection.sleeveSize === "medium" ? "中" : "小"}/${displayMark(part)}`;
+  }
+  return `${part.connection.wireCount}芯 ${displayPortCount(part)}本用`;
+}
+
+function infrastructureLabel(part: BoxInspectionPart) {
+  if (part.connection.method === "metal_conduit") return "金属管 E19";
+  if (part.connection.method === "pf_conduit") return "PF管 PF16";
+  return "ボックス・ブッシング";
 }
 
 function displayMark(part: BoxInspectionPart) {
-  if (part.defectType !== "ring_sleeve_wrong_mark") {
-    return part.connection.mark;
-  }
+  if (part.defectType !== "ring_sleeve_wrong_mark") return part.connection.mark;
   return part.connection.mark === "○" ? "小" : part.connection.mark === "小" ? "中" : "小";
 }
 
@@ -264,5 +400,5 @@ function wireClass(color: WireColor) {
 }
 
 function shortSourceLabel(label: string) {
-  return label.length > 6 ? label.slice(0, 6) + "…" : label;
+  return label.length > 7 ? label.slice(0, 7) + "…" : label;
 }

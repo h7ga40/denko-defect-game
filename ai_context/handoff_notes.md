@@ -16,7 +16,7 @@
 - boxInspectionGame.tsが施工チェックのランダムラウンドを生成。
 - WorkInspectionGame.tsxが回答、欠陥選択一覧、採点、再出題を管理。
 - CandidateSvgはボックスと直接選択器具のホットスポットを表示。
-- BoxWiringDiagram.tsxは正規化された結線グループごとに2～4芯を表示。
+- BoxWiringDiagram.tsxは外周ケーブル、内周折曲点、中央周辺の結線部を放射状に配置し、施工結果どおりに心線を接続。
 - problems.tsに欠陥判定モードの18問とDefectTypeを定義。
 - WiringDiagram.tsxは欠陥タイプをsvg/diagrams/の個別SVGへ振り分ける。
 - 欠陥判定モードの最高得点だけをlocalStorageへ保存。
@@ -43,8 +43,7 @@
 - 候補問題No.1～No.13について、Android Chromeで各器具と各ボックスをタップ確認する。
 - 直接選択器具へ部品別の欠陥あり／なしテンプレートを割り当てる。
 - 候補問題ごとの正しい結線を公式資料と照合し、CandidateConnectionの`id`と`boxWirings`を入力する。
-- BoxWiringDiagramを外周ケーブル、折曲点、内側結線部による放射状配置へ変更する。
-- 放射状表示で外周ケーブルから結線部までの経路を追えるようにする。
+- 最大5ケーブル・5結線の放射状表示をAndroid Chrome実機で確認する。
 - 条件からリングスリーブのサイズと刻印、差込形コネクタ極数を決定する。
 - 公式材料表を転記し、現在の簡略複線図ベースの算出値を厳密な接続条件へ置き換える。
 - 公式資料との差異を定期的に見直す。
