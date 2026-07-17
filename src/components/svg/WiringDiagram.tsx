@@ -1,4 +1,5 @@
 import type { DeviceVariant } from "../../data/candidateDiagrams";
+import type { CableEntrySide } from "../../data/boxInspectionGame";
 import type { DefectType } from "../../data/problems";
 import { BreakerDiagram } from "./diagrams/BreakerDiagram";
 import { CeilingConnectorDiagram } from "./diagrams/CeilingConnectorDiagram";
@@ -18,14 +19,15 @@ import { TerminalBlockDiagram } from "./diagrams/TerminalBlockDiagram";
 
 type WiringDiagramProps = {
   defectType: DefectType;
+  cableEntrySide?: CableEntrySide;
   deviceName?: string;
   deviceVariant?: DeviceVariant;
 };
 
-export function WiringDiagram({ defectType, deviceName, deviceVariant }: WiringDiagramProps) {
+export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName, deviceVariant }: WiringDiagramProps) {
   switch (defectType) {
     case "missing_ground":
-      return <GroundedReceptacleDiagram title={deviceName} variant={deviceVariant} />;
+      return <GroundedReceptacleDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
     case "sheath_too_short":
       return <OutletBoxDiagram />;
     case "ring_sleeve_wrong_mark":
@@ -34,7 +36,7 @@ export function WiringDiagram({ defectType, deviceName, deviceVariant }: WiringD
     case "ring_sleeve_insulation_bite":
       return <RingSleeveDiagram defectType={defectType} />;
     case "exposed_receptacle_sheath":
-      return <ExposedReceptacleDiagram />;
+      return <ExposedReceptacleDiagram cableEntrySide={cableEntrySide} />;
     case "breaker_line_load_reverse":
       return <BreakerDiagram title={deviceName} variant={deviceVariant} />;
     case "push_connector_insufficient_insert":
@@ -43,13 +45,13 @@ export function WiringDiagram({ defectType, deviceName, deviceVariant }: WiringD
     case "terminal_block_wrong_terminal":
       return <TerminalBlockDiagram title={deviceName} variant={deviceVariant} />;
     case "ceiling_connector_polarity":
-      return <CeilingConnectorDiagram />;
+      return <CeilingConnectorDiagram cableEntrySide={cableEntrySide} />;
     case "mounting_frame_loose":
       return <MountingFrameDiagram />;
     case "switch_wrong_terminal":
-      return <SwitchDiagram title={deviceName} variant={deviceVariant} />;
+      return <SwitchDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
     case "receptacle_polarity":
-      return <ReceptacleDiagram title={deviceName} variant={deviceVariant} />;
+      return <ReceptacleDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
     case "outlet_box_wrong_hole":
     case "rubber_bushing_missing":
     case "rubber_bushing_wrong_size":
@@ -63,8 +65,8 @@ export function WiringDiagram({ defectType, deviceName, deviceVariant }: WiringD
       return <PfConduitDiagram defectType={defectType} />;
     case "box_wrong_connection":
     case "box_conductor_unconnected":
-      return <LampReceptacleDiagram defectType="none" />;
+      return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType="none" />;
     default:
-      return <LampReceptacleDiagram defectType={defectType} />;
+      return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
   }
 }

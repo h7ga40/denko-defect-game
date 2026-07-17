@@ -4,6 +4,7 @@ import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
 import { CandidateMaterials } from "./CandidateMaterials";
 import { DeviceDetailShape } from "./svg/DeviceDetailShape";
+import { DirectionalSheath, DirectionalWire } from "./svg/DirectionalCable";
 import { WiringDiagram } from "./svg/WiringDiagram";
 import { MetalConduitDiagram } from "./svg/diagrams/MetalConduitDiagram";
 import { OutletBoxAccessoryDiagram } from "./svg/diagrams/OutletBoxAccessoryDiagram";
@@ -188,19 +189,50 @@ function InfrastructureDiagram({ part }: { part: BoxInspectionPart }) {
 }
 function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   if (part.defectType !== "none") {
-    return <WiringDiagram defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
+    return <WiringDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }
+
+  const inlineDevice = part.deviceVariant === "circuit_breaker"
+    || part.deviceVariant === "earth_leakage_breaker"
+    || part.deviceVariant === "terminal_block"
+    || part.deviceVariant === "timer_switch"
+    || part.deviceVariant === "automatic_switch";
+  const horizontal = part.cableEntrySide === "left" || part.cableEntrySide === "right";
+  const targetX = part.cableEntrySide === "left" ? 296 : part.cableEntrySide === "right" ? 424 : 360;
+  const targetY = part.cableEntrySide === "top" ? 112 : part.cableEntrySide === "bottom" ? 268 : 190;
 
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label={part.title + "の施工図"}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
-      <text className="label" x="360" y="70" textAnchor="middle">{part.title}</text>
-      <path className="wire black" d="M 72 170 C 160 170, 225 170, 296 170" />
-      <path className="wire white" d="M 72 210 C 160 210, 225 210, 296 210" />
-      <path className="wire black" d="M 424 170 C 495 170, 560 170, 648 170" />
-      <path className="wire white" d="M 424 210 C 495 210, 560 210, 648 210" />
+      <text className="label" x="360" y="55" textAnchor="middle">{part.title}</text>
+      {inlineDevice ? (
+        <>
+          <path className="wire black" d="M 72 170 C 160 170, 225 170, 296 170" />
+          <path className="wire white" d="M 72 210 C 160 210, 225 210, 296 210" />
+          <path className="wire black" d="M 424 170 C 495 170, 560 170, 648 170" />
+          <path className="wire white" d="M 424 210 C 495 210, 560 210, 648 210" />
+        </>
+      ) : (
+        <>
+          <DirectionalSheath side={part.cableEntrySide} />
+          <DirectionalWire
+            className="wire black"
+            lane={-20}
+            side={part.cableEntrySide}
+            targetX={targetX + (horizontal ? 0 : -20)}
+            targetY={targetY + (horizontal ? -20 : 0)}
+          />
+          <DirectionalWire
+            className="wire white"
+            lane={20}
+            side={part.cableEntrySide}
+            targetX={targetX + (horizontal ? 0 : 20)}
+            targetY={targetY + (horizontal ? 20 : 0)}
+          />
+        </>
+      )}
       <DeviceDetailShape variant={part.deviceVariant} x={360} y={190} />
-      <text className="small" x="360" y="314" textAnchor="middle">正常施工</text>
+      <text className="small" x="360" y={part.cableEntrySide === "bottom" ? 88 : 314} textAnchor="middle">正常施工</text>
     </svg>
   );
 }

@@ -20,6 +20,7 @@ import { problems, type DefectType, type Problem } from "./problems";
 export type BoxType = "joint" | "outlet";
 export type ConnectionMethod = BoxConnectionMethod | "outlet_box" | "metal_conduit" | "pf_conduit";
 export type WireColor = "black" | "white" | "red" | "green" | "blue";
+export type CableEntrySide = "left" | "right" | "top" | "bottom";
 
 export type ConnectionSpec = {
   id: string;
@@ -71,6 +72,7 @@ export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   sourceDeviceId: string;
   deviceType: CandidateDevice["type"];
   deviceVariant?: CandidateDevice["variant"];
+  cableEntrySide: CableEntrySide;
   x: number;
   y: number;
 };
@@ -315,7 +317,7 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   const boxes = plannedBoxes.map(({ device, index, wiring, installation, infrastructureSpecs }) =>
     createBox(candidate, device, index, wiring, installation, infrastructureSpecs, defectPlans),
   );
-  const directParts = directDevices.map((device) => createDirectPart(device, defectPlans.has("device:" + device.id)));
+  const directParts = directDevices.map((device) => createDirectPart(candidate, device, defectPlans.has("device:" + device.id)));
   const defectCount = defectPlans.size;
 
   return {
@@ -607,7 +609,7 @@ function getDirectDefectProblems(device: CandidateDevice): Problem[] {
   return problems.filter((problem) => ids.includes(problem.id));
 }
 
-function createDirectPart(device: CandidateDevice, hasDefect: boolean): DirectInspectionPart {
+function createDirectPart(candidate: CandidateDiagram, device: CandidateDevice, hasDefect: boolean): DirectInspectionPart {
   const defectProblem = hasDefect ? randomItem(getDirectDefectProblems(device)) : undefined;
   const deviceName = getInspectionDeviceName(device);
   return {
@@ -616,6 +618,7 @@ function createDirectPart(device: CandidateDevice, hasDefect: boolean): DirectIn
     sourceDeviceId: device.id,
     deviceType: device.type,
     deviceVariant: device.variant,
+    cableEntrySide: getCableEntrySide(candidate, device),
     title: deviceName,
     location: "複線図上の" + deviceName + "（表示記号「" + device.label + "」）",
     defectType: defectProblem?.defectType ?? "none",
@@ -629,6 +632,23 @@ function createDirectPart(device: CandidateDevice, hasDefect: boolean): DirectIn
   };
 }
 
+function getCableEntrySide(candidate: CandidateDiagram, device: CandidateDevice): CableEntrySide {
+  const connectedDevices = candidate.connections.flatMap((connection) => {
+    if (connection.from !== device.id && connection.to !== device.id) return [];
+    const otherId = connection.from === device.id ? connection.to : connection.from;
+    const other = candidate.devices.find((item) => item.id === otherId);
+    return other ? [other] : [];
+  });
+  const source = connectedDevices.find((item) => item.type === "connector" || item.type === "box")
+    ?? connectedDevices.find((item) => item.type === "power")
+    ?? connectedDevices[0];
+  if (!source) return "left";
+
+  const deltaX = source.x - device.x;
+  const deltaY = source.y - device.y;
+  if (Math.abs(deltaX) >= Math.abs(deltaY)) return deltaX < 0 ? "left" : "right";
+  return deltaY < 0 ? "top" : "bottom";
+}
 function getInspectionDeviceName(device: CandidateDevice) {
   const names: Partial<Record<NonNullable<CandidateDevice["variant"]>, string>> = {
     lamp_receptacle: "ランプレセプタクル",
