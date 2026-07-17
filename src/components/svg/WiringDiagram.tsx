@@ -61,6 +61,9 @@ export function WiringDiagram({ defectType, deviceName, deviceVariant }: WiringD
     case "pf_conduit_insufficient_insert":
     case "pf_conduit_missing_locknut":
       return <PfConduitDiagram defectType={defectType} />;
+    case "box_wrong_connection":
+    case "box_conductor_unconnected":
+      return <LampReceptacleDiagram defectType="none" />;
     default:
       return <LampReceptacleDiagram defectType={defectType} />;
   }

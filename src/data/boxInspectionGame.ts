@@ -4,9 +4,14 @@ import {
   type CableRunSpecification,
 } from "./cableSpecifications";
 import {
+  createCorrectBoxWiringInstallation,
+  disconnectConductor,
   resolveBoxWiringSpecification,
+  swapConductorConnections,
+  validateBoxWiringInstallation,
   type BoxConductorEndpoint,
   type BoxConnectionMethod,
+  type BoxWiringInstallation,
   type BoxWiringSpecification,
 } from "./boxWiringSpecifications";
 import { getDeviceSpecification } from "./deviceSpecifications";
@@ -25,6 +30,11 @@ export type ConnectionSpec = {
   sourceCables: CableRunSpecification[];
   sourceCableEnds: CableEndPreparation[];
   conductors: BoxConductorEndpoint[];
+  correctConductors: BoxConductorEndpoint[];
+  correctConductorIds: string[];
+  looseConductors: BoxConductorEndpoint[];
+  looseSourceCables: CableRunSpecification[];
+  looseSourceCableEnds: CableEndPreparation[];
   sleeveSize?: "small" | "medium";
   mark?: "○" | "小" | "中";
   portCount?: number;
@@ -53,6 +63,7 @@ export type InspectionBox = {
   y: number;
   cableCount: number;
   wiring: BoxWiringSpecification;
+  installation: BoxWiringInstallation;
   parts: BoxInspectionPart[];
 };
 
@@ -125,6 +136,46 @@ const templates: Template[] = [
     defectAnswer: "接続本数に合わないコネクタを使用している",
     normalExplanation: "接続する心線の本数に合う極数のコネクタを使用しています。",
     defectExplanation: "接続する心線の本数とコネクタの極数が合っていません。",
+  },
+  {
+    title: "リングスリーブ",
+    method: "ring_sleeve",
+    defectType: "box_wrong_connection",
+    question: "接続されている心線の組合せを判定してください。",
+    choices: ["欠陥なし", "接続する心線の組合せが違う", "接続すべき心線が未接続", "リングスリーブの刻印が不適合"],
+    defectAnswer: "接続する心線の組合せが違う",
+    normalExplanation: "施工条件どおりの心線が同じ結線へ接続されています。",
+    defectExplanation: "別の結線へ接続すべき心線が入れ替わっています。",
+  },
+  {
+    title: "差込形コネクタ",
+    method: "push_connector",
+    defectType: "box_wrong_connection",
+    question: "接続されている心線の組合せを判定してください。",
+    choices: ["欠陥なし", "接続する心線の組合せが違う", "接続すべき心線が未接続", "接続本数に合わないコネクタを使用している"],
+    defectAnswer: "接続する心線の組合せが違う",
+    normalExplanation: "施工条件どおりの心線が同じ結線へ接続されています。",
+    defectExplanation: "別の結線へ接続すべき心線が入れ替わっています。",
+  },
+  {
+    title: "リングスリーブ",
+    method: "ring_sleeve",
+    defectType: "box_conductor_unconnected",
+    question: "接続すべき心線がすべて結線されているか判定してください。",
+    choices: ["欠陥なし", "接続すべき心線が未接続", "接続する心線の組合せが違う", "リングスリーブのサイズが不適合"],
+    defectAnswer: "接続すべき心線が未接続",
+    normalExplanation: "接続すべき心線はすべて結線されています。",
+    defectExplanation: "接続すべき心線の1本が結線されずに残っています。",
+  },
+  {
+    title: "差込形コネクタ",
+    method: "push_connector",
+    defectType: "box_conductor_unconnected",
+    question: "接続すべき心線がすべて結線されているか判定してください。",
+    choices: ["欠陥なし", "接続すべき心線が未接続", "接続する心線の組合せが違う", "心線の差し込み不足"],
+    defectAnswer: "接続すべき心線が未接続",
+    normalExplanation: "接続すべき心線はすべて結線されています。",
+    defectExplanation: "接続すべき心線の1本が結線されずに残っています。",
   },
   {
     title: "アウトレットボックス",
@@ -218,23 +269,54 @@ export function createBoxInspectionRound(): BoxInspectionRound {
       device,
       index,
       wiring,
-      specs: [...createConnectionSpecs(wiring), ...createInfrastructureSpecs(candidate, device)],
+      installation: createCorrectBoxWiringInstallation(wiring),
+      infrastructureSpecs: createInfrastructureSpecs(candidate, device),
     };
   });
   const directDevices = candidate.devices.filter(isDirectInspectionDevice);
-  const boxPartKeys = plannedBoxes.flatMap(({ device, specs }) =>
-    specs.map((spec) => "box:" + device.id + "-" + spec.id),
-  );
+  const defectPlans = new Map<string, DefectType | "random">();
+  const targetDefectCount = randomInt(2, 3);
+  const connectionDefectCandidates = createConnectionDefectCandidates(plannedBoxes);
+  if (connectionDefectCandidates.length === 0) {
+    throw new Error("接続ミスを生成できるボックス内結線がありません。");
+  }
+  const connectionDefect = randomItem(connectionDefectCandidates);
+  const targetBox = plannedBoxes[connectionDefect.boxIndex];
+
+  if (connectionDefect.defectType === "box_wrong_connection") {
+    targetBox.installation = swapConductorConnections(
+      targetBox.installation,
+      connectionDefect.conductorIds[0],
+      connectionDefect.conductorIds[1],
+    );
+  } else {
+    targetBox.installation = disconnectConductor(targetBox.installation, connectionDefect.conductorIds[0]);
+  }
+  for (const groupId of connectionDefect.groupIds) {
+    defectPlans.set(boxPartKey(targetBox.device.id, groupId), connectionDefect.defectType);
+  }
+  const installationErrors = validateBoxWiringInstallation(targetBox.wiring, targetBox.installation);
+  if (installationErrors.length > 0) {
+    throw new Error("接続ミス生成後の施工結果が不正です: " + installationErrors.join(" "));
+  }
+
+  const boxPartKeys = plannedBoxes.flatMap(({ device, wiring, infrastructureSpecs }) => [
+    ...wiring.groups.map((group) => boxPartKey(device.id, group.id)),
+    ...infrastructureSpecs.map((spec) => boxPartKey(device.id, spec.id)),
+  ]);
   const directDefectKeys = directDevices
     .filter((device) => getDirectDefectProblems(device).length > 0)
     .map((device) => "device:" + device.id);
-  const defectTargets = [...boxPartKeys, ...directDefectKeys];
-  const defectCount = Math.min(randomInt(2, 3), defectTargets.length);
-  const defectIds = new Set(shuffle(defectTargets).slice(0, defectCount));
-  const boxes = plannedBoxes.map(({ device, index, wiring, specs }) =>
-    createBox(candidate, device, index, wiring, specs, defectIds),
+  const remainingTargets = shuffle([...boxPartKeys, ...directDefectKeys].filter((key) => !defectPlans.has(key)));
+  for (const key of remainingTargets.slice(0, Math.max(0, targetDefectCount - defectPlans.size))) {
+    defectPlans.set(key, "random");
+  }
+
+  const boxes = plannedBoxes.map(({ device, index, wiring, installation, infrastructureSpecs }) =>
+    createBox(candidate, device, index, wiring, installation, infrastructureSpecs, defectPlans),
   );
-  const directParts = directDevices.map((device) => createDirectPart(device, defectIds.has("device:" + device.id)));
+  const directParts = directDevices.map((device) => createDirectPart(device, defectPlans.has("device:" + device.id)));
+  const defectCount = defectPlans.size;
 
   return {
     id: Date.now() + "-" + Math.random().toString(36).slice(2),
@@ -247,26 +329,64 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   };
 }
 
-function createConnectionSpecs(wiring: BoxWiringSpecification): ConnectionSpec[] {
+type PlannedBox = {
+  device: CandidateDevice;
+  wiring: BoxWiringSpecification;
+  installation: BoxWiringInstallation;
+};
+
+type ConnectionDefectCandidate = {
+  boxIndex: number;
+  defectType: "box_wrong_connection" | "box_conductor_unconnected";
+  groupIds: string[];
+  conductorIds: string[];
+};
+
+function createConnectionDefectCandidates(boxes: PlannedBox[]): ConnectionDefectCandidate[] {
+  return boxes.flatMap((box, boxIndex) => {
+    const disconnected = box.wiring.groups.map((group) => ({
+      boxIndex,
+      defectType: "box_conductor_unconnected" as const,
+      groupIds: [group.id],
+      conductorIds: [randomItem(group.conductorIds)],
+    }));
+    const swapped = box.wiring.groups.flatMap((firstGroup, firstIndex) =>
+      box.wiring.groups.slice(firstIndex + 1).map((secondGroup) => ({
+        boxIndex,
+        defectType: "box_wrong_connection" as const,
+        groupIds: [firstGroup.id, secondGroup.id],
+        conductorIds: [randomItem(firstGroup.conductorIds), randomItem(secondGroup.conductorIds)],
+      })),
+    );
+    return [...disconnected, ...swapped];
+  });
+}
+
+function createConnectionSpecs(
+  wiring: BoxWiringSpecification,
+  installation: BoxWiringInstallation,
+): ConnectionSpec[] {
   const conductorById = new Map(wiring.conductors.map((conductor) => [conductor.id, conductor]));
   const cableById = new Map(wiring.cables.map((cable) => [cable.id, cable]));
 
   return wiring.groups.map((group) => {
-    const conductors = group.conductorIds.flatMap((id) => {
+    const conductors = wiring.conductors.filter(
+      (conductor) => installation.actualConnectionIds[conductor.id] === group.id,
+    );
+    const correctConductors = group.conductorIds.flatMap((id) => {
       const conductor = conductorById.get(id);
       return conductor ? [conductor] : [];
     });
-    const sourceCables = conductors.flatMap((conductor) => {
-      const cable = cableById.get(conductor.cableId);
-      return cable ? [cable] : [];
-    });
-    const sourceCableEnds = conductors.flatMap((conductor) => {
-      const preparation = wiring.cableEnds[conductor.cableId];
-      return preparation ? [preparation] : [];
-    });
+    const looseConductors = correctConductors.filter(
+      (conductor) => installation.actualConnectionIds[conductor.id] === null,
+    );
+    const sourceCables = getConductorCables(conductors, cableById);
+    const sourceCableEnds = getConductorCableEnds(conductors, wiring);
+    const looseSourceCables = getConductorCables(looseConductors, cableById);
+    const looseSourceCableEnds = getConductorCableEnds(looseConductors, wiring);
     const wireSizes = conductors.map((conductor) => conductor.conductorDiameterMm);
     const wireColors = conductors.map((conductor) => conductor.color);
-    const ringRating = getRingRating(wireSizes);
+    const ringRating = getRingRating(correctConductors.map((conductor) => conductor.conductorDiameterMm));
 
     return {
       id: group.id,
@@ -277,11 +397,36 @@ function createConnectionSpecs(wiring: BoxWiringSpecification): ConnectionSpec[]
       sourceCables,
       sourceCableEnds,
       conductors,
+      correctConductors,
+      correctConductorIds: group.conductorIds,
+      looseConductors,
+      looseSourceCables,
+      looseSourceCableEnds,
       sleeveSize: group.method === "ring_sleeve" ? ringRating.size : undefined,
       mark: group.method === "ring_sleeve" ? ringRating.mark : undefined,
-      portCount: group.method === "push_connector" ? conductors.length : undefined,
+      portCount: group.method === "push_connector" ? correctConductors.length : undefined,
     };
   });
+}
+
+function getConductorCables(
+  conductors: BoxConductorEndpoint[],
+  cableById: Map<string, CableRunSpecification>,
+) {
+  return conductors.flatMap((conductor) => {
+      const cable = cableById.get(conductor.cableId);
+      return cable ? [cable] : [];
+    });
+}
+
+function getConductorCableEnds(
+  conductors: BoxConductorEndpoint[],
+  wiring: BoxWiringSpecification,
+) {
+  return conductors.flatMap((conductor) => {
+      const preparation = wiring.cableEnds[conductor.cableId];
+      return preparation ? [preparation] : [];
+    });
 }
 
 function createInfrastructureSpecs(candidate: CandidateDiagram, device: CandidateDevice): ConnectionSpec[] {
@@ -302,6 +447,11 @@ function createInfrastructureSpecs(candidate: CandidateDiagram, device: Candidat
     sourceCables: [],
     sourceCableEnds: [],
     conductors: [],
+    correctConductors: [],
+    correctConductorIds: [],
+    looseConductors: [],
+    looseSourceCables: [],
+    looseSourceCableEnds: [],
   }));
 }
 function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: "small" | "medium"; mark: "○" | "小" | "中" } {
@@ -320,14 +470,16 @@ function createBox(
   device: CandidateDevice,
   index: number,
   wiring: BoxWiringSpecification,
-  specs: ConnectionSpec[],
-  defectIds: Set<string>,
+  installation: BoxWiringInstallation,
+  infrastructureSpecs: ConnectionSpec[],
+  defectPlans: Map<string, DefectType | "random">,
 ): InspectionBox {
   const boxType: BoxType = [7, 8, 11, 12].includes(candidate.no) && device.type === "box"
     ? "outlet"
     : device.type === "box" ? "joint" : "outlet";
   const label = boxType === "joint" ? "ジョイントボックス" : "アウトレットボックス";
   const id = "candidate-" + candidate.no + "-" + device.id;
+  const specs = [...createConnectionSpecs(wiring, installation), ...infrastructureSpecs];
 
   return {
     id,
@@ -339,11 +491,25 @@ function createBox(
     y: device.y,
     cableCount: candidate.connections.filter((connection) => connection.from === device.id || connection.to === device.id).length,
     wiring,
+    installation,
     parts: specs.map((spec, partIndex) => {
-      const template = randomItem(templates.filter((item) => item.method === spec.method));
-      return toPart(template, id, label, spec, partIndex, defectIds.has("box:" + device.id + "-" + spec.id));
+      const defectPlan = defectPlans.get(boxPartKey(device.id, spec.id));
+      const availableTemplates = templates.filter((item) => item.method === spec.method);
+      const template = defectPlan && defectPlan !== "random"
+        ? availableTemplates.find((item) => item.defectType === defectPlan)
+        : randomItem(availableTemplates.filter((item) => !isConnectionDefect(item.defectType)));
+      if (!template) throw new Error(`${spec.method}の欠陥テンプレートがありません。`);
+      return toPart(template, id, label, spec, partIndex, defectPlan !== undefined);
     }),
   };
+}
+
+function boxPartKey(deviceId: string, connectionId: string) {
+  return "box:" + deviceId + "-" + connectionId;
+}
+
+function isConnectionDefect(defectType: DefectType) {
+  return defectType === "box_wrong_connection" || defectType === "box_conductor_unconnected";
 }
 
 function toPart(
@@ -364,9 +530,39 @@ function toPart(
     question: conductorSummary + "の接続です。" + template.question,
     choices: template.choices,
     answer: hasDefect ? template.defectAnswer : "欠陥なし",
-    explanation: (hasDefect ? template.defectExplanation : template.normalExplanation) + " 接続条件: " + conductorSummary + "。",
+    explanation: (hasDefect ? template.defectExplanation : template.normalExplanation)
+      + connectionDefectExplanation(connection, hasDefect ? template.defectType : "none")
+      + " 接続状態: " + conductorSummary + "。",
     connection,
   };
+}
+
+function connectionDefectExplanation(connection: ConnectionSpec, defectType: DefectType) {
+  if (defectType === "box_conductor_unconnected") {
+    const loose = connection.looseConductors.map(conductorLabel).join("、");
+    return loose ? ` 未接続: ${loose}。` : "";
+  }
+  if (defectType === "box_wrong_connection") {
+    const correctIds = new Set(connection.correctConductorIds);
+    const actualIds = new Set(connection.conductors.map((conductor) => conductor.id));
+    const missing = connection.correctConductors.filter((conductor) => !actualIds.has(conductor.id));
+    const foreign = connection.conductors.filter((conductor) => !correctIds.has(conductor.id));
+    if (missing.length > 0 && foreign.length > 0) {
+      return ` 本来の${missing.map(conductorLabel).join("、")}と、${foreign.map(conductorLabel).join("、")}が入れ替わっています。`;
+    }
+  }
+  return "";
+}
+
+function conductorLabel(conductor: BoxConductorEndpoint) {
+  const colors: Record<WireColor, string> = {
+    black: "黒線",
+    white: "白線",
+    red: "赤線",
+    green: "緑線",
+    blue: "青線",
+  };
+  return `${conductor.remoteLabel}側の${colors[conductor.color]}`;
 }
 
 function summarizeConductors(connection: ConnectionSpec) {

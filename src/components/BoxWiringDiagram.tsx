@@ -88,6 +88,7 @@ function ConnectionPart({
       {isRing || isPush ? (
         <>
           <WireBundle part={part} x={x} y={y - 4} />
+          <LooseWireBundle part={part} x={x} y={y - 4} />
           {isRing ? <RingSleeve part={part} x={x} y={y - 4} /> : <PushConnector part={part} x={x} y={y - 4} />}
         </>
       ) : (
@@ -149,11 +150,11 @@ function connectionLabel(part: BoxInspectionPart) {
   return "ボックス・ブッシング";
 }
 function WireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
-  const count = part.connection.wireCount;
+  const count = part.connection.wireCount + part.connection.looseConductors.length;
   return (
     <>
       {part.connection.wireColors.map((color, index) => {
-        const offset = (index - (count - 1) / 2) * 7;
+        const offset = (index - (count - 1) / 2) * 8;
         const shortInsert = part.defectType === "push_connector_insufficient_insert" && index === count - 1;
         const endX = shortInsert ? x - 52 : x - 28;
         const cableIndex = index % Math.max(1, part.connection.sourceCables.length);
@@ -176,7 +177,37 @@ function WireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: num
               y={y + offset}
             />
             <text className="wire-size-label" x={x - 88} y={y + offset - 2}>
-              {part.connection.wireSizes[index].toFixed(1)}
+              {shortSourceLabel(conductor.remoteLabel)} {part.connection.wireSizes[index].toFixed(1)}
+            </text>
+          </g>
+        );
+      })}
+    </>
+  );
+}
+
+function LooseWireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
+  const connectedCount = part.connection.wireCount;
+  const totalCount = connectedCount + part.connection.looseConductors.length;
+  return (
+    <>
+      {part.connection.looseConductors.map((conductor, index) => {
+        const offset = (connectedCount + index - (totalCount - 1) / 2) * 8;
+        const cable = part.connection.looseSourceCables[index];
+        const preparation = part.connection.looseSourceCableEnds[index];
+        return (
+          <g key={"loose-" + conductor.id}>
+            <StrippedCableEnd
+              cable={cable}
+              color={wireClass(conductor.color)}
+              coreIndex={conductor.coreIndex}
+              preparation={preparation}
+              x1={x - 94}
+              x2={x - 56}
+              y={y + offset}
+            />
+            <text className="wire-size-label" x={x - 88} y={y + offset - 2}>
+              {shortSourceLabel(conductor.remoteLabel)} {conductor.conductorDiameterMm.toFixed(1)}
             </text>
           </g>
         );
@@ -230,4 +261,8 @@ function displayPortCount(part: BoxInspectionPart) {
 
 function wireClass(color: WireColor) {
   return color;
+}
+
+function shortSourceLabel(label: string) {
+  return label.length > 6 ? label.slice(0, 6) + "…" : label;
 }

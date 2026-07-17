@@ -12,6 +12,8 @@ export type DefectType =
   | "breaker_line_load_reverse"
   | "push_connector_insufficient_insert"
   | "push_connector_wrong_wire_count"
+  | "box_wrong_connection"
+  | "box_conductor_unconnected"
   | "terminal_block_wrong_terminal"
   | "ceiling_connector_polarity"
   | "mounting_frame_loose"

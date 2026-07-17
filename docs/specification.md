@@ -40,6 +40,9 @@
 - ボックス内接続部と欠陥テンプレートを持つ直接選択器具から、合計2～3件を欠陥としてランダム設定
 - リングスリーブは刻印不適合またはサイズ不適合
 - 差込形コネクタは差し込み不足または接続本数不適合
+- ボックス内接続は、正しい結線とは別に施工結果を保持し、心線の組合せ違いまたは未接続を出題
+- 心線の組合せ違いは2つの結線間で心線を交換し、影響する両方を欠陥箇所として数える
+- 未接続は正しい結線から心線を1本外し、結線手前で止まる遊び線として表示する
 - ボックス・ブッシングは使用穴違い、取付忘れ、サイズ違い
 - 金属管・PF管は管の挿入不足、絶縁ブッシングまたはロックナットの取付忘れ
 - 直接選択器具は部品種別に応じて正常施工または既存の欠陥テンプレートを割り当てる
@@ -126,6 +129,7 @@ boxWirings: [{
 - `BoxConductorEndpoint`: ケーブルID、端部、芯番号、線色、導体径、用途、正しい結線ID
 - `BoxConnectionGroup`: 結線ID、リングスリーブ／差込形コネクタ、所属する心線ID
 - `BoxWiringSpecification`: ボックス内のケーブル、加工寸法、全心線、全結線グループ、データ由来
+- `BoxWiringInstallation`: 心線IDごとの実際の接続先`actualConnectionIds`
 - `correctConnectionId`が`null`の心線は、ボックス内で他の心線と接続しない
 - `source`は候補問題に明示された`specified`か、簡略複線図から生成した`inferred`
 - 接地線と判断できる緑線以外の`role`は、簡略複線図だけで断定せず`unassigned`とする
@@ -133,6 +137,8 @@ boxWirings: [{
 `boxWirings`が未定義の場合は、ボックスへ入るケーブルの同じ芯位置を暫定的に同じ結線グループとして推定する。5本以上になる場合は各グループが2～4本になるよう分割し、1本だけの芯は未接続として保持する。現在の候補問題No.1～No.13はこの推定値であり、公式施工条件の確認後に`boxWirings`へ明示値を入れる。
 
 検証処理は、結線IDの重複、存在しない心線参照、心線の複数結線への重複所属、2～4本以外の接続、`correctConnectionId`との不一致をエラーにする。
+
+施工結果は`createCorrectBoxWiringInstallation()`で正しい状態から生成する。未接続欠陥は`disconnectConductor()`、誤結線は`swapConductorConnections()`で施工結果だけを変更し、正しい結線データは変更しない。採点後の解説では、入れ替わった心線または未接続心線の接続元と線色を表示する。
 
 
 ### deviceSpecifications.ts
@@ -160,12 +166,15 @@ boxWirings: [{
 
 - InspectionBox: 複線図上のボックスと内部接続部
 - InspectionBox.wiring: 未接続心線を含むボックス全体の正しい接続関係
+- InspectionBox.installation: 欠陥を反映した実際の施工結果
 - BoxInspectionPart: ボックス内の設問、選択肢、正解、解説
 - DirectInspectionPart: 複線図から直接選ぶ器具の設問
 - BoxInspectionRound: 候補問題、ボックス、直接選択器具、全採点対象、欠陥数
 - createBoxInspectionRound(): ラウンド生成とランダム化
 
 各BoxInspectionPartのConnectionSpecは、`BoxConnectionGroup`に所属する心線だけを参照する。同じ心線を複数の設問へ重複生成しない。線色、太さ、ケーブル加工寸法、スリーブ・コネクタ仕様は所属心線から導出する。
+
+各ラウンドには接続ミスを最低1件含める。誤結線は移動元・移動先の2件、未接続は1件として扱い、既存欠陥と合わせた欠陥箇所数を2～3件にする。
 
 ### problems.ts
 

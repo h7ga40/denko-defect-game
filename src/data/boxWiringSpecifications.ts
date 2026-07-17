@@ -20,6 +20,8 @@ export type BoxConductorEndpoint = {
   cableId: string;
   cableEnd: "from" | "to";
   endpointId: string;
+  remoteEndpointId: string;
+  remoteLabel: string;
   coreIndex: number;
   color: CableCoreColor;
   conductorDiameterMm: 1.6 | 2.0;
@@ -42,10 +44,16 @@ export type BoxWiringSpecification = {
   groups: BoxConnectionGroup[];
 };
 
+export type BoxWiringInstallation = {
+  actualConnectionIds: Record<string, string | null>;
+};
+
 type IncidentCable = {
   cable: CableRunSpecification;
   cableEnd: "from" | "to";
   preparation: CableEndPreparation;
+  remoteEndpointId: string;
+  remoteLabel: string;
 };
 
 export function resolveBoxWiringSpecification(
@@ -123,15 +131,92 @@ export function validateBoxWiringSpecification(wiring: BoxWiringSpecification) {
   return errors;
 }
 
+export function createCorrectBoxWiringInstallation(
+  wiring: BoxWiringSpecification,
+): BoxWiringInstallation {
+  return {
+    actualConnectionIds: Object.fromEntries(
+      wiring.conductors.map((conductor) => [conductor.id, conductor.correctConnectionId]),
+    ),
+  };
+}
+
+export function disconnectConductor(
+  installation: BoxWiringInstallation,
+  conductorId: string,
+): BoxWiringInstallation {
+  if (!(conductorId in installation.actualConnectionIds)) {
+    throw new Error(`施工結果に存在しない心線${conductorId}を未接続にできません。`);
+  }
+  return {
+    actualConnectionIds: {
+      ...installation.actualConnectionIds,
+      [conductorId]: null,
+    },
+  };
+}
+
+export function swapConductorConnections(
+  installation: BoxWiringInstallation,
+  firstConductorId: string,
+  secondConductorId: string,
+): BoxWiringInstallation {
+  const firstConnectionId = installation.actualConnectionIds[firstConductorId];
+  const secondConnectionId = installation.actualConnectionIds[secondConductorId];
+  if (firstConnectionId === undefined || secondConnectionId === undefined) {
+    throw new Error("施工結果に存在しない心線の接続先は交換できません。");
+  }
+  if (firstConnectionId === null || secondConnectionId === null || firstConnectionId === secondConnectionId) {
+    throw new Error("接続先の異なる接続済み心線を指定してください。");
+  }
+  return {
+    actualConnectionIds: {
+      ...installation.actualConnectionIds,
+      [firstConductorId]: secondConnectionId,
+      [secondConductorId]: firstConnectionId,
+    },
+  };
+}
+
+export function validateBoxWiringInstallation(
+  wiring: BoxWiringSpecification,
+  installation: BoxWiringInstallation,
+) {
+  const errors: string[] = [];
+  const conductorIds = new Set(wiring.conductors.map((conductor) => conductor.id));
+  const groupIds = new Set(wiring.groups.map((group) => group.id));
+
+  for (const conductor of wiring.conductors) {
+    if (!(conductor.id in installation.actualConnectionIds)) {
+      errors.push(`心線${conductor.id}の施工結果がありません。`);
+      continue;
+    }
+    const actualConnectionId = installation.actualConnectionIds[conductor.id];
+    if (actualConnectionId !== null && !groupIds.has(actualConnectionId)) {
+      errors.push(`心線${conductor.id}が存在しない結線${actualConnectionId}へ接続されています。`);
+    }
+  }
+  for (const conductorId of Object.keys(installation.actualConnectionIds)) {
+    if (!conductorIds.has(conductorId)) {
+      errors.push(`施工結果が存在しない心線${conductorId}を参照しています。`);
+    }
+  }
+  return errors;
+}
+
 function getIncidentCables(candidate: CandidateDiagram, device: CandidateDevice): IncidentCable[] {
   return candidate.connections.flatMap((connection, index) => {
     if (connection.from !== device.id && connection.to !== device.id) return [];
     const cable = resolveCableRunSpecification(candidate, connection, index);
     const cableEnd = connection.from === device.id ? "from" : "to";
+    const remoteEndpointId = cableEnd === "from" ? connection.to : connection.from;
+    const remoteLabel = candidate.devices.find((item) => item.id === remoteEndpointId)?.label ?? remoteEndpointId;
     return [{
       cable,
       cableEnd,
       preparation: cableEnd === "from" ? cable.fromEnd : cable.toEnd,
+      remoteEndpointId,
+      remoteLabel,
     }];
   });
 }
@@ -142,6 +227,8 @@ function createConductorEndpoints(incident: IncidentCable): BoxConductorEndpoint
     cableId: incident.cable.id,
     cableEnd: incident.cableEnd,
     endpointId: incident.preparation.endpointId,
+    remoteEndpointId: incident.remoteEndpointId,
+    remoteLabel: incident.remoteLabel,
     coreIndex,
     color,
     conductorDiameterMm: incident.cable.conductorDiameterMm,
