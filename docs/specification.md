@@ -33,7 +33,7 @@
 - candidateDiagrams.ts の connector はアウトレットボックスとして扱う
 - box は原則ジョイントボックスだが、想定支給部材に合わせてNo.7・8・11・12ではアウトレットボックスとして扱う
 
-ボックスを選ぶと右側に内部配線図を表示する。候補問題の簡略複線図でボックスへ接続するケーブル本数から、接続部を2～5件、各接続を2～4芯で生成する。リングスリーブと差込形コネクタの方式、1.6／2.0mm、線色、スリーブサイズ・刻印、コネクタ極数を接続ごとに保持する。No.7・8にはボックス／ブッシング、No.11には金属管E19、No.12にはPF管の点検部を追加する。
+ボックスを選ぶと右側に内部配線図を表示する。ボックス端にある各ケーブルの心線を一意な端点として生成し、正しい結線グループへ2～4芯ずつ割り当てる。リングスリーブと差込形コネクタの方式、1.6／2.0mm、線色、スリーブサイズ・刻印、コネクタ極数を接続ごとに保持する。No.7・8にはボックス／ブッシング、No.11には金属管E19、No.12にはPF管の点検部を追加する。
 
 出題ルール:
 
@@ -82,7 +82,23 @@
 
 ### candidateDiagrams.ts
 
-CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。CandidateDeviceは処理分類のtypeと、記号・欠陥テンプレートを識別するvariantを分けて保持する。CandidateConnectionの`cable`には、候補問題ごとに確定したケーブル寸法を上書きできる。
+CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。CandidateDeviceは処理分類のtypeと、記号・欠陥テンプレートを識別するvariantを分けて保持する。CandidateConnectionの`id`はボックス結線から参照する安定したケーブルID、`cable`は候補問題ごとに確定したケーブル寸法の上書きに使用する。
+
+CandidateDiagramの`boxWirings`には、ボックスごとの正しい結線を明示できる。`deviceId`で対象ボックスを指定し、結線グループごとに接続方法と`cableId`・`coreIndex`の組を列挙する。`coreIndex`は0始まりとする。
+
+```ts
+boxWirings: [{
+  deviceId: "box",
+  groups: [{
+    id: "neutral-1",
+    method: "push_connector",
+    conductors: [
+      { cableId: "power", coreIndex: 1 },
+      { cableId: "lamp", coreIndex: 1 },
+    ],
+  }],
+}]
+```
 
 ### cableSpecifications.ts
 
@@ -102,6 +118,21 @@ CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具
 ラベルに`VVF 2.0-3C`、`VVR 1.6-2C`、`E1.6`などがある場合は種別・導体径・芯数を推定する。明示ラベルがない区間は暫定値を生成できるが、候補問題ごとの施工条件が判明した時点でCandidateConnectionの`cable`から上書きする。
 
 `StrippedCableEnd.tsx`はケーブル端をシース、絶縁被覆、裸導体の3区間に分けて描画する。シース端は`sheathStripLengthMm`、芯線ごとの裸導体長は`insulationStripLengthsMm`から算出する。未確定値は表示専用の標準寸法へフォールバックするが、元データの`null`は変更しない。
+
+### boxWiringSpecifications.ts
+
+ボックス端の物理的な心線と正しい結線関係を管理する。
+
+- `BoxConductorEndpoint`: ケーブルID、端部、芯番号、線色、導体径、用途、正しい結線ID
+- `BoxConnectionGroup`: 結線ID、リングスリーブ／差込形コネクタ、所属する心線ID
+- `BoxWiringSpecification`: ボックス内のケーブル、加工寸法、全心線、全結線グループ、データ由来
+- `correctConnectionId`が`null`の心線は、ボックス内で他の心線と接続しない
+- `source`は候補問題に明示された`specified`か、簡略複線図から生成した`inferred`
+- 接地線と判断できる緑線以外の`role`は、簡略複線図だけで断定せず`unassigned`とする
+
+`boxWirings`が未定義の場合は、ボックスへ入るケーブルの同じ芯位置を暫定的に同じ結線グループとして推定する。5本以上になる場合は各グループが2～4本になるよう分割し、1本だけの芯は未接続として保持する。現在の候補問題No.1～No.13はこの推定値であり、公式施工条件の確認後に`boxWirings`へ明示値を入れる。
+
+検証処理は、結線IDの重複、存在しない心線参照、心線の複数結線への重複所属、2～4本以外の接続、`correctConnectionId`との不一致をエラーにする。
 
 
 ### deviceSpecifications.ts
@@ -128,10 +159,13 @@ CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具
 ### boxInspectionGame.ts
 
 - InspectionBox: 複線図上のボックスと内部接続部
+- InspectionBox.wiring: 未接続心線を含むボックス全体の正しい接続関係
 - BoxInspectionPart: ボックス内の設問、選択肢、正解、解説
 - DirectInspectionPart: 複線図から直接選ぶ器具の設問
 - BoxInspectionRound: 候補問題、ボックス、直接選択器具、全採点対象、欠陥数
 - createBoxInspectionRound(): ラウンド生成とランダム化
+
+各BoxInspectionPartのConnectionSpecは、`BoxConnectionGroup`に所属する心線だけを参照する。同じ心線を複数の設問へ重複生成しない。線色、太さ、ケーブル加工寸法、スリーブ・コネクタ仕様は所属心線から導出する。
 
 ### problems.ts
 

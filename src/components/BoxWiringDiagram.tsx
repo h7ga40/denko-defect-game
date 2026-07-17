@@ -159,6 +159,7 @@ function WireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: num
         const cableIndex = index % Math.max(1, part.connection.sourceCables.length);
         const cable = part.connection.sourceCables[cableIndex];
         const preparation = part.connection.sourceCableEnds[cableIndex];
+        const conductor = part.connection.conductors[index];
         const insulationStripLengthMm = part.defectType === "ring_sleeve_insulation_bite"
           ? 3
           : undefined;
@@ -167,7 +168,7 @@ function WireBundle({ part, x, y }: { part: BoxInspectionPart; x: number; y: num
             <StrippedCableEnd
               cable={cable}
               color={wireClass(color)}
-              coreIndex={index % Math.max(1, cable?.coreCount ?? 1)}
+              coreIndex={conductor?.coreIndex ?? index % Math.max(1, cable?.coreCount ?? 1)}
               insulationStripLengthMm={insulationStripLengthMm}
               preparation={preparation}
               x1={x - 94}

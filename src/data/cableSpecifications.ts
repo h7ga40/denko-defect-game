@@ -68,7 +68,7 @@ export function resolveCableRunSpecification(
   const cableType = override?.cableType ?? inferred.cableType;
 
   return {
-    id: `candidate-${diagram.no}-cable-${index + 1}`,
+    id: connection.id ?? `candidate-${diagram.no}-cable-${index + 1}`,
     cableType,
     hasSheath: cableType !== "IV",
     conductorDiameterMm: override?.conductorDiameterMm ?? inferred.conductorDiameterMm,

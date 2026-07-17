@@ -1,14 +1,19 @@
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "./candidateDiagrams";
 import {
-  resolveCableRunSpecification,
   type CableEndPreparation,
   type CableRunSpecification,
 } from "./cableSpecifications";
+import {
+  resolveBoxWiringSpecification,
+  type BoxConductorEndpoint,
+  type BoxConnectionMethod,
+  type BoxWiringSpecification,
+} from "./boxWiringSpecifications";
 import { getDeviceSpecification } from "./deviceSpecifications";
 import { problems, type DefectType, type Problem } from "./problems";
 
 export type BoxType = "joint" | "outlet";
-export type ConnectionMethod = "ring_sleeve" | "push_connector" | "outlet_box" | "metal_conduit" | "pf_conduit";
+export type ConnectionMethod = BoxConnectionMethod | "outlet_box" | "metal_conduit" | "pf_conduit";
 export type WireColor = "black" | "white" | "red" | "green" | "blue";
 
 export type ConnectionSpec = {
@@ -19,6 +24,7 @@ export type ConnectionSpec = {
   wireColors: WireColor[];
   sourceCables: CableRunSpecification[];
   sourceCableEnds: CableEndPreparation[];
+  conductors: BoxConductorEndpoint[];
   sleeveSize?: "small" | "medium";
   mark?: "○" | "小" | "中";
   portCount?: number;
@@ -46,6 +52,7 @@ export type InspectionBox = {
   x: number;
   y: number;
   cableCount: number;
+  wiring: BoxWiringSpecification;
   parts: BoxInspectionPart[];
 };
 
@@ -205,11 +212,15 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   const candidate = randomItem(candidateDiagrams);
   const devices = candidate.devices.filter((device) => device.type === "connector" || device.type === "box");
   const sources = devices.length ? devices : candidate.devices.filter((device) => device.type !== "power").slice(0, 1);
-  const plannedBoxes = sources.map((device, index) => ({
-    device,
-    index,
-    specs: [...createConnectionSpecs(candidate, device, index), ...createInfrastructureSpecs(candidate, device)],
-  }));
+  const plannedBoxes = sources.map((device, index) => {
+    const wiring = resolveBoxWiringSpecification(candidate, device, index);
+    return {
+      device,
+      index,
+      wiring,
+      specs: [...createConnectionSpecs(wiring), ...createInfrastructureSpecs(candidate, device)],
+    };
+  });
   const directDevices = candidate.devices.filter(isDirectInspectionDevice);
   const boxPartKeys = plannedBoxes.flatMap(({ device, specs }) =>
     specs.map((spec) => "box:" + device.id + "-" + spec.id),
@@ -220,7 +231,9 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   const defectTargets = [...boxPartKeys, ...directDefectKeys];
   const defectCount = Math.min(randomInt(2, 3), defectTargets.length);
   const defectIds = new Set(shuffle(defectTargets).slice(0, defectCount));
-  const boxes = plannedBoxes.map(({ device, index, specs }) => createBox(candidate, device, index, specs, defectIds));
+  const boxes = plannedBoxes.map(({ device, index, wiring, specs }) =>
+    createBox(candidate, device, index, wiring, specs, defectIds),
+  );
   const directParts = directDevices.map((device) => createDirectPart(device, defectIds.has("device:" + device.id)));
 
   return {
@@ -234,40 +247,39 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   };
 }
 
-function createConnectionSpecs(candidate: CandidateDiagram, device: CandidateDevice, boxIndex: number): ConnectionSpec[] {
-  const incident = candidate.connections.filter((connection) => connection.from === device.id || connection.to === device.id);
-  const sourceCables = incident.map((connection) =>
-    resolveCableRunSpecification(candidate, connection, candidate.connections.indexOf(connection)),
-  );
-  const sourceCableEnds = sourceCables.map((cable) =>
-    cable.fromEnd.endpointId === device.id ? cable.fromEnd : cable.toEnd,
-  );
-  const connectionCount = clamp(incident.length, 2, 5);
-  const incidentColors = incident.map((connection) => connection.color);
-  const functionalColors: WireColor[] = ["white", "black", "red", "green", "blue"];
+function createConnectionSpecs(wiring: BoxWiringSpecification): ConnectionSpec[] {
+  const conductorById = new Map(wiring.conductors.map((conductor) => [conductor.id, conductor]));
+  const cableById = new Map(wiring.cables.map((cable) => [cable.id, cable]));
 
-  return Array.from({ length: connectionCount }, (_, index) => {
-    const method: ConnectionMethod = (candidate.no + boxIndex + index) % 2 === 0 ? "ring_sleeve" : "push_connector";
-    const wireCount = clamp(incident.length - (index % 2), 2, 4);
-    const wireSizes = Array.from({ length: wireCount }, (_, wireIndex): 1.6 | 2.0 =>
-      sourceCables[(index + wireIndex) % sourceCables.length]?.conductorDiameterMm ?? 1.6,
-    );
-    const wireColors = Array.from({ length: wireCount }, (_, wireIndex) =>
-      incidentColors[wireIndex] ?? functionalColors[(index + wireIndex) % functionalColors.length],
-    );
+  return wiring.groups.map((group) => {
+    const conductors = group.conductorIds.flatMap((id) => {
+      const conductor = conductorById.get(id);
+      return conductor ? [conductor] : [];
+    });
+    const sourceCables = conductors.flatMap((conductor) => {
+      const cable = cableById.get(conductor.cableId);
+      return cable ? [cable] : [];
+    });
+    const sourceCableEnds = conductors.flatMap((conductor) => {
+      const preparation = wiring.cableEnds[conductor.cableId];
+      return preparation ? [preparation] : [];
+    });
+    const wireSizes = conductors.map((conductor) => conductor.conductorDiameterMm);
+    const wireColors = conductors.map((conductor) => conductor.color);
     const ringRating = getRingRating(wireSizes);
 
     return {
-      id: "connection-" + (index + 1),
-      method,
-      wireCount,
+      id: group.id,
+      method: group.method,
+      wireCount: conductors.length,
       wireSizes,
       wireColors,
       sourceCables,
       sourceCableEnds,
-      sleeveSize: method === "ring_sleeve" ? ringRating.size : undefined,
-      mark: method === "ring_sleeve" ? ringRating.mark : undefined,
-      portCount: method === "push_connector" ? wireCount : undefined,
+      conductors,
+      sleeveSize: group.method === "ring_sleeve" ? ringRating.size : undefined,
+      mark: group.method === "ring_sleeve" ? ringRating.mark : undefined,
+      portCount: group.method === "push_connector" ? conductors.length : undefined,
     };
   });
 }
@@ -289,6 +301,7 @@ function createInfrastructureSpecs(candidate: CandidateDiagram, device: Candidat
     wireColors: [],
     sourceCables: [],
     sourceCableEnds: [],
+    conductors: [],
   }));
 }
 function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: "small" | "medium"; mark: "○" | "小" | "中" } {
@@ -306,6 +319,7 @@ function createBox(
   candidate: CandidateDiagram,
   device: CandidateDevice,
   index: number,
+  wiring: BoxWiringSpecification,
   specs: ConnectionSpec[],
   defectIds: Set<string>,
 ): InspectionBox {
@@ -324,6 +338,7 @@ function createBox(
     x: device.x,
     y: device.y,
     cableCount: candidate.connections.filter((connection) => connection.from === device.id || connection.to === device.id).length,
+    wiring,
     parts: specs.map((spec, partIndex) => {
       const template = randomItem(templates.filter((item) => item.method === spec.method));
       return toPart(template, id, label, spec, partIndex, defectIds.has("box:" + device.id + "-" + spec.id));
@@ -453,8 +468,4 @@ function randomInt(min: number, max: number) {
 
 function shuffle<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5);
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
 }

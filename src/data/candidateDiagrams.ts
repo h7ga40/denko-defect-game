@@ -45,11 +45,28 @@ export type CandidateDevice = {
 };
 
 export type CandidateConnection = {
+  id?: string;
   from: string;
   to: string;
   color: "black" | "white" | "red" | "green" | "blue";
   label?: string;
   cable?: CableRunOverride;
+};
+
+export type CandidateConductorReference = {
+  cableId: string;
+  coreIndex: number;
+};
+
+export type CandidateBoxConnectionGroup = {
+  id: string;
+  method: "ring_sleeve" | "push_connector";
+  conductors: CandidateConductorReference[];
+};
+
+export type CandidateBoxWiring = {
+  deviceId: string;
+  groups: CandidateBoxConnectionGroup[];
 };
 
 export type CandidateDiagram = {
@@ -59,6 +76,7 @@ export type CandidateDiagram = {
   points: string[];
   devices: CandidateDevice[];
   connections: CandidateConnection[];
+  boxWirings?: CandidateBoxWiring[];
 };
 
 const sourceNote = "令和8年度第二種電気工事士技能試験候補問題の公式No.に対応";
