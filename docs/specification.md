@@ -66,6 +66,8 @@
 - 想定値であり、本試験では数量・長さ・接続方法・器具仕様が変わる可能性を明記
 - 使用要否・使用箇所は問題要素として表示しない
 - SVGは学習用に簡略化した独自図
+- ケーブル区間は CableRunSpecification の coreColors を使い、芯線ごとに色付きの平行線として表示
+- 標準色は2芯が黒・白、3芯が黒・白・赤、4芯が黒・白・赤・青。単芯IVは接続色を使用
 - メーカー2D CADは外形寸法と端子・取付部の配置確認に限定し、CADを直接変換・同梱せず独自SVGとして作図
 - 詳細SVGはDeviceDetailShape.tsxへ共通化し、正常施工と欠陥表示で同じ部品形状を使用
 - 電源、器具、接続点、配線色、主要ラベルを表示
@@ -88,7 +90,7 @@
 
 ### candidateDiagrams.ts
 
-CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。CandidateDeviceは処理分類のtypeと、記号・欠陥テンプレートを識別するvariantを分けて保持する。CandidateConnectionの`id`はボックス結線から参照する安定したケーブルID、`cable`は候補問題ごとに確定したケーブル寸法の上書きに使用する。
+CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。CandidateDeviceは処理分類のtypeと、記号・欠陥テンプレートを識別するvariantを分けて保持する。CandidateConnectionのidはボックス結線から参照する安定したケーブルID、cableは候補問題ごとに確定したケーブル種別・芯数・芯線色・寸法の上書きに使用する。
 
 CandidateDiagramの`boxWirings`には、ボックスごとの正しい結線を明示できる。`deviceId`で対象ボックスを指定し、結線グループごとに接続方法と`cableId`・`coreIndex`の組を列挙する。`coreIndex`は0始まりとする。
 
@@ -121,7 +123,7 @@ boxWirings: [{
 
 長さ・剥ぎ取り寸法が公式施工条件や切断計画から確定していない場合は、誤った推測値を入れず`null`とする。支給部材に記載された未加工電線の総延長と、切断後の各ケーブル区間長は別の値として管理する。
 
-ラベルに`VVF 2.0-3C`、`VVR 1.6-2C`、`E1.6`などがある場合は種別・導体径・芯数を推定する。明示ラベルがない区間は暫定値を生成できるが、候補問題ごとの施工条件が判明した時点でCandidateConnectionの`cable`から上書きする。
+ラベルにVVF 2.0-3C、VVR 1.6-2C、E1.6などがある場合は種別・導体径・芯数を推定する。緑指定の接地線は単芯IV、三相電源・電動機を含む経路は3芯として補完する。明示ラベルがない区間は暫定値を生成できるが、候補問題ごとの施工条件が判明した時点でCandidateConnectionの`cable`から上書きする。
 
 `StrippedCableEnd.tsx`はケーブル端をシース、絶縁被覆、裸導体の3区間に分けて描画する。シース端は`sheathStripLengthMm`、芯線ごとの裸導体長は`insulationStripLengthsMm`から算出する。未確定値は表示専用の標準寸法へフォールバックするが、元データの`null`は変更しない。
 

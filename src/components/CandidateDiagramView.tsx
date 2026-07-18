@@ -1,5 +1,6 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "../data/candidateDiagrams";
+import { resolveCableRunSpecification } from "../data/cableSpecifications";
 import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
 import { CandidateMaterials } from "./CandidateMaterials";
 
@@ -94,13 +95,20 @@ export function CandidateSvg({
         if (!from || !to) return null;
 
         const offset = getParallelOffset(index, from, to);
-        const path = makeWirePath(from, to, offset);
+        const cable = resolveCableRunSpecification(diagram, connection, index);
+        const wireOffsets = getCoreOffsets(cable.coreColors.length);
         const labelX = (from.x + to.x) / 2 + offset.x * 1.8;
         const labelY = (from.y + to.y) / 2 + offset.y * 1.8 - 8;
 
         return (
           <g key={connection.from + "-" + connection.to + "-" + connection.color + "-" + index}>
-            <path className={"candidate-wire " + connection.color} d={path} />
+            {cable.coreColors.map((color, coreIndex) => (
+              <path
+                className={"candidate-wire " + color}
+                d={makeWirePath(from, to, addCoreOffset(offset, from, to, wireOffsets[coreIndex]))}
+                key={cable.id + "-core-" + coreIndex}
+              />
+            ))}
             {connection.label && (
               <text className="wire-label" x={labelX} y={labelY} textAnchor="middle">
                 {connection.label}
@@ -149,6 +157,24 @@ export function CandidateSvg({
   );
 }
 
+function getCoreOffsets(coreCount: number) {
+  return Array.from({ length: coreCount }, (_, index) => (index - (coreCount - 1) / 2) * 9);
+}
+
+function addCoreOffset(
+  baseOffset: { x: number; y: number },
+  from: CandidateDevice,
+  to: CandidateDevice,
+  distance: number,
+) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy) || 1;
+  return {
+    x: baseOffset.x + (-dy / length) * distance,
+    y: baseOffset.y + (dx / length) * distance,
+  };
+}
 function getStatus(selected: boolean, answered: boolean, correct: boolean, submitted: boolean): SelectionStatus {
   if (submitted && answered) return correct ? "correct" : "wrong";
   if (selected) return "selected";

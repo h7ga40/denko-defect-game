@@ -123,6 +123,17 @@
 - Verification:
   - npm.cmd run build
   - ChromeヘッドレスのAndroid相当幅で、複線図上の接続点が下側にあるランプレセプタクルの下側片側配線を確認。
+## 2026-07-18
+
+- Work done:
+  - 複線図の各ケーブル区間を CableRunSpecification へ解決し、coreColors の芯数分だけ平行線を描画。
+  - 2芯を黒・白、3芯を黒・白・赤として表示し、明示された coreColors を優先できる構成に変更。
+  - 緑指定の接地線を単芯IV、三相電源・電動機を含む経路を3芯として推定。
+  - 白線は既存の縁取りを維持し、淡色背景でも識別可能にした。
+- Verification:
+  - npm.cmd run build
+  - 全13問・94ケーブル区間を検証し、芯数と芯線色数の不一致がないことを確認。
+  - ChromeヘッドレスでNo.4を表示し、100Vの黒・白、三相200Vの黒・白・赤、接地線の緑を確認。
 ---
 
 ## Entry Template

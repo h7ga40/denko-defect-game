@@ -153,6 +153,10 @@ function inferCableProperties(
   fromDevice?: CandidateDevice,
   toDevice?: CandidateDevice,
 ): Pick<CableRunSpecification, "cableType" | "conductorDiameterMm" | "coreCount"> {
+  if (connection.color === "green") {
+    return { cableType: "IV", conductorDiameterMm: 1.6, coreCount: 1 };
+  }
+
   const explicit = connection.label?.match(/(EM-EEF|VVF|VVR)\s*(1\.6|2\.0)(?:mm)?-(2|3|4)C/i);
   if (explicit) {
     return {
@@ -181,6 +185,8 @@ function inferCoreCount(
 ): CableRunSpecification["coreCount"] {
   if (/3路|イ3|イ4|3A/.test(connection.label ?? "")) return 3;
   const variants = [fromDevice?.variant, toDevice?.variant];
+  if (variants.includes("motor_terminal")) return 3;
+  if ([fromDevice?.label, toDevice?.label].some((label) => /3φ|三相/.test(label ?? ""))) return 3;
   if (variants.includes("three_way_switch") || variants.includes("four_way_switch")) return 3;
   return 2;
 }
