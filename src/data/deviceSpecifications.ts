@@ -1,8 +1,15 @@
-import type { DeviceVariant } from "./candidateDiagrams";
+import type { CandidateDiagram, DeviceVariant } from "./candidateDiagrams";
+import { getCandidateCableRuns } from "./cableSpecifications";
 
 export type TerminalConnectionMethod = "screw" | "push_in" | "terminal_block" | "none";
 export type TerminalRole = "line" | "neutral" | "load" | "traveler" | "ground" | "control" | "other";
-export type TerminalGroup = { id: string; label: string; role: TerminalRole; insertionHoles: number };
+export type TerminalGroup = {
+  id: string;
+  label: string;
+  role: TerminalRole;
+  insertionHoles: number;
+  maxConductors: number;
+};
 export type DeviceSpecification = {
   name: string;
   connectionMethod: TerminalConnectionMethod;
@@ -11,8 +18,14 @@ export type DeviceSpecification = {
   inspectionSelectable: boolean;
 };
 
-const terminal = (id: string, label: string, role: TerminalRole, insertionHoles = 1): TerminalGroup => ({
-  id, label, role, insertionHoles,
+const terminal = (
+  id: string,
+  label: string,
+  role: TerminalRole,
+  insertionHoles = 1,
+  maxConductors = insertionHoles,
+): TerminalGroup => ({
+  id, label, role, insertionHoles, maxConductors,
 });
 const wired = (
   name: string,
@@ -96,7 +109,11 @@ export const deviceSpecifications: Record<DeviceVariant, DeviceSpecification> = 
     terminal("load-l", "負荷側L", "load"),
     terminal("load-n", "負荷側N", "load"),
   ]),
-  timer_switch: sixPoleTerminalBlock("タイムスイッチ（端子台代用）"),
+  timer_switch: wired("タイムスイッチ（端子台代用）", "terminal_block", [
+    terminal("S1", "S1", "line"),
+    terminal("S2", "S2", "neutral", 1, 2),
+    terminal("L1", "L1", "load"),
+  ]),
   automatic_switch: sixPoleTerminalBlock("自動点滅器（端子台代用）"),
   earth_terminal: wired("接地端子", "screw", [terminal("earth", "E", "ground")], false),
   terminal_block: sixPoleTerminalBlock("6P端子台"),
@@ -113,4 +130,58 @@ export function getTerminalCount(variant?: DeviceVariant) {
 }
 export function getInsertionHoleCount(variant?: DeviceVariant) {
   return getDeviceSpecification(variant)?.terminals.reduce((sum, item) => sum + item.insertionHoles, 0) ?? 0;
+}
+export function getTerminalConductorCapacity(variant?: DeviceVariant) {
+  return getDeviceSpecification(variant)?.terminals.reduce((sum, item) => sum + item.maxConductors, 0) ?? 0;
+}
+
+export function validateCandidateDeviceWirings(diagram: CandidateDiagram) {
+  const errors: string[] = [];
+  const cableById = new Map(getCandidateCableRuns(diagram).map((cable) => [cable.id, cable]));
+
+  for (const deviceWiring of diagram.deviceWirings ?? []) {
+    const device = diagram.devices.find((item) => item.id === deviceWiring.deviceId);
+    if (!device) {
+      errors.push(`存在しない器具 ${deviceWiring.deviceId} の端子結線が指定されています。`);
+      continue;
+    }
+    const specification = getDeviceSpecification(device.variant);
+    if (!specification) {
+      errors.push(`${device.id} に端子仕様がありません。`);
+      continue;
+    }
+    const terminalById = new Map(specification.terminals.map((item) => [item.id, item]));
+    const assignedConductors = new Set<string>();
+
+    for (const terminalConnection of deviceWiring.terminals) {
+      const terminalGroup = terminalById.get(terminalConnection.terminalId);
+      if (!terminalGroup) {
+        errors.push(`${device.id} に端子 ${terminalConnection.terminalId} はありません。`);
+        continue;
+      }
+      if (terminalConnection.conductors.length > terminalGroup.maxConductors) {
+        errors.push(`${device.id}の${terminalGroup.label}端子が接続可能本数を超えています。`);
+      }
+      for (const conductor of terminalConnection.conductors) {
+        const cable = cableById.get(conductor.cableId);
+        if (!cable) {
+          errors.push(`${device.id}が存在しないケーブル ${conductor.cableId} を参照しています。`);
+          continue;
+        }
+        if (cable.fromEnd.endpointId !== device.id && cable.toEnd.endpointId !== device.id) {
+          errors.push(`${conductor.cableId} は${device.id}へ接続されていません。`);
+        }
+        if (conductor.coreIndex < 0 || conductor.coreIndex >= cable.coreCount) {
+          errors.push(`${conductor.cableId}の芯番号${conductor.coreIndex}は範囲外です。`);
+        }
+        const conductorId = `${conductor.cableId}:${conductor.coreIndex}`;
+        if (assignedConductors.has(conductorId)) {
+          errors.push(`${device.id}で心線${conductorId}が複数端子へ重複接続されています。`);
+        }
+        assignedConductors.add(conductorId);
+      }
+    }
+  }
+
+  return errors;
 }

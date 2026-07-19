@@ -69,6 +69,16 @@ export type CandidateBoxWiring = {
   groups: CandidateBoxConnectionGroup[];
 };
 
+export type CandidateDeviceTerminalConnection = {
+  terminalId: string;
+  conductors: CandidateConductorReference[];
+};
+
+export type CandidateDeviceWiring = {
+  deviceId: string;
+  terminals: CandidateDeviceTerminalConnection[];
+};
+
 export type CandidateDiagram = {
   no: number;
   title: string;
@@ -77,9 +87,16 @@ export type CandidateDiagram = {
   devices: CandidateDevice[];
   connections: CandidateConnection[];
   boxWirings?: CandidateBoxWiring[];
+  deviceWirings?: CandidateDeviceWiring[];
 };
 
 const sourceNote = "令和8年度第二種電気工事士技能試験候補問題の公式No.に対応";
+
+const hozanCable = (
+  sourceStockId: string,
+  diagramLengthMm: number,
+  override: CableRunOverride = {},
+): CableRunOverride => ({ sourceStockId, diagramLengthMm, ...override });
 
 export const candidateDiagrams: CandidateDiagram[] = [
   {
@@ -97,12 +114,12 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "omit", label: "施工省略 ハ", type: "receptacle", variant: "omitted_work", x: 435, y: 315 },
     ],
     connections: [
-      { from: "p", to: "j1", color: "black", label: "EM-EEF 2.0-2C" },
-      { from: "j1", to: "c", color: "black", label: "イ" },
-      { from: "j1", to: "sw", color: "black", label: "Hイ/ロ/ハ" },
-      { from: "j1", to: "j2", color: "black" },
-      { from: "j2", to: "r", color: "black", label: "ロ" },
-      { from: "j2", to: "omit", color: "black", label: "ハ 施工省略" },
+      { from: "p", to: "j1", color: "black", label: "EM-EEF 2.0-2C", cable: hozanCable("1-em-eef", 150) },
+      { from: "j1", to: "c", color: "black", label: "イ", cable: hozanCable("1-vvf-1", 150, { sourceStockPieceIndex: 0 }) },
+      { from: "j1", to: "sw", color: "black", label: "Hイ/ロ/ハ", cable: hozanCable("1-vvf-1", 150, { sourceStockPieceIndex: 0 }) },
+      { from: "j1", to: "j2", color: "black", cable: hozanCable("1-vvf-2", 150) },
+      { from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("1-vvf-1", 150, { sourceStockPieceIndex: 1 }) },
+      { from: "j2", to: "omit", color: "black", label: "ハ 施工省略", cable: hozanCable("1-vvf-1", 150, { sourceStockPieceIndex: 1 }) },
     ],
   },
   {
@@ -121,25 +138,25 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "omit", label: "施工省略", type: "box", x: 575, y: 310 },
     ],
     connections: [
-      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C" },
-      { from: "j1", to: "r1", color: "black", label: "イ" },
-      { from: "j1", to: "j2", color: "black" },
-      { from: "j2", to: "pl", color: "black", label: "常時点灯" },
-      { from: "j2", to: "r2", color: "black", label: "イ" },
-      { from: "j2", to: "sw", color: "black" },
-      { from: "sw", to: "omit", color: "black", label: "施工省略" },
+      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("2-vvf-3", 150) },
+      { from: "j1", to: "r1", color: "black", label: "イ", cable: hozanCable("2-vvf-1", 150) },
+      { from: "j1", to: "j2", color: "black", cable: hozanCable("2-vvf-2", 150) },
+      { from: "j2", to: "pl", color: "black", label: "常時点灯", cable: hozanCable("2-vvf-1", 150) },
+      { from: "j2", to: "r2", color: "black", label: "イ", cable: hozanCable("2-vvf-1", 100) },
+      { from: "j2", to: "sw", color: "black", cable: hozanCable("2-vvf-2", 150) },
+      { from: "sw", to: "omit", color: "black", label: "施工省略", cable: hozanCable("2-vvf-1", 150) },
     ],
   },
   {
     no: 3,
     title: "公式No.3 タイムスイッチ・接地回路",
     theme: `${sourceNote}。タイムスイッチ、ランプレセプタクル、接地を含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、E1.6", "器具: TS、ランプレセプタクル、引掛シーリングローゼット、接地極付器具"],
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、VVF 1.6-2C、VVF 1.6-3C、E1.6", "器具: TS（S1・S2・L1）、ランプレセプタクル、引掛シーリングローゼット、接地極付器具"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 88, y: 200 },
-      { id: "j1", label: "接続点", type: "connector", x: 210, y: 248 },
+      { id: "j1", label: "アウトレットボックス1", type: "connector", x: 210, y: 248 },
       { id: "sw", label: "スイッチ ロ", type: "switch", variant: "single_pole_switch", x: 210, y: 330 },
-      { id: "j2", label: "接続点", type: "connector", x: 350, y: 248 },
+      { id: "j2", label: "アウトレットボックス2", type: "connector", x: 350, y: 248 },
       { id: "ts", label: "TS イ", type: "terminal", variant: "timer_switch", x: 350, y: 96 },
       { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 540, y: 115 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 540, y: 248 },
@@ -147,15 +164,29 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 560, y: 330 },
     ],
     connections: [
-      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C" },
-      { from: "j1", to: "sw", color: "black", label: "ロ" },
-      { from: "j1", to: "j2", color: "black" },
-      { from: "j2", to: "ts", color: "black", label: "TS" },
-      { from: "ts", to: "c", color: "black", label: "イ" },
-      { from: "j2", to: "r", color: "black", label: "ロ" },
-      { from: "j2", to: "e", color: "black", label: "E" },
-      { from: "e", to: "ed", color: "green", label: "E1.6" },
+      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("3-vvf-3", 150) },
+      { from: "j1", to: "sw", color: "black", label: "ロ", cable: hozanCable("3-vvf-1", 150) },
+      { id: "3-box1-box2", from: "j1", to: "j2", color: "black", label: "VVF 1.6-3C", cable: hozanCable("3-vvf-2", 150) },
+      { id: "3-box2-timer", from: "j2", to: "ts", color: "black", label: "VVF 1.6-2C", cable: hozanCable("3-vvf-1", 150) },
+      { id: "3-timer-ceiling", from: "ts", to: "c", color: "black", label: "VVF 1.6-2C イ", cable: hozanCable("3-vvf-1", 200) },
+      { from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("3-vvf-1", 150) },
+      { from: "j2", to: "e", color: "black", label: "E", cable: hozanCable("3-vvf-1", 150) },
+      { from: "e", to: "ed", color: "green", label: "E1.6", cable: hozanCable("3-iv", 100, { lengthMm: 150 }) },
     ],
+    deviceWirings: [{
+      deviceId: "ts",
+      terminals: [
+        { terminalId: "S1", conductors: [{ cableId: "3-box2-timer", coreIndex: 0 }] },
+        {
+          terminalId: "S2",
+          conductors: [
+            { cableId: "3-box2-timer", coreIndex: 1 },
+            { cableId: "3-timer-ceiling", coreIndex: 1 },
+          ],
+        },
+        { terminalId: "L1", conductors: [{ cableId: "3-timer-ceiling", coreIndex: 0 }] },
+      ],
+    }],
   },
   {
     no: 4,
@@ -178,13 +209,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
     connections: [
       { from: "p100", to: "b", color: "black" },
       { from: "p200", to: "be", color: "black" },
-      { from: "b", to: "j1", color: "black", label: "VVF 2.0-2C" },
-      { from: "be", to: "j2", color: "black", label: "VVF 2.0-3C" },
-      { from: "j1", to: "c", color: "black" },
-      { from: "j2", to: "m", color: "black" },
+      { from: "b", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("4-vvf-3", 300) },
+      { from: "be", to: "j2", color: "black", label: "VVF 2.0-3C", cable: hozanCable("4-vvf-4", 150) },
+      { from: "j1", to: "c", color: "black", cable: hozanCable("4-vvf-1", 250) },
+      { from: "j2", to: "m", color: "black", cable: hozanCable("4-vvf-4", 250, { lengthMm: 300 }) },
       { from: "m", to: "ed", color: "green", label: "ED" },
-      { from: "j1", to: "r", color: "black", label: "電源表示灯" },
-      { from: "c", to: "sw", color: "black", label: "イ" },
+      { from: "j1", to: "r", color: "black", label: "電源表示灯", cable: hozanCable("4-vvf-1", 250) },
+      { from: "c", to: "sw", color: "black", label: "イ", cable: hozanCable("4-vvf-2", 200) },
     ],
   },
   {
@@ -207,12 +238,12 @@ export const candidateDiagrams: CandidateDiagram[] = [
     connections: [
       { from: "p100", to: "b", color: "black" },
       { from: "p200", to: "be", color: "black" },
-      { from: "b", to: "j", color: "black", label: "VVF 2.0-2C" },
-      { from: "be", to: "outlet", color: "black", label: "VVF 2.0-3C" },
+      { from: "b", to: "j", color: "black", label: "VVF 2.0-2C", cable: hozanCable("5-vvf-2", 250) },
+      { from: "be", to: "outlet", color: "black", label: "VVF 2.0-3C", cable: hozanCable("5-vvf-3", 250) },
       { from: "outlet", to: "ed", color: "green", label: "E1.6" },
-      { from: "j", to: "r", color: "black", label: "ロ" },
-      { from: "j", to: "c", color: "black", label: "イ" },
-      { from: "j", to: "sw", color: "black", label: "イ" },
+      { from: "j", to: "r", color: "black", label: "ロ", cable: hozanCable("5-vvf-1", 250) },
+      { from: "j", to: "c", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 100) },
+      { from: "j", to: "sw", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 200) },
     ],
   },
   {
@@ -231,13 +262,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "p", label: "電源", type: "power", x: 645, y: 205 },
     ],
     connections: [
-      { from: "c1", to: "j1", color: "black", label: "施工省略" },
-      { from: "j1", to: "sw1", color: "black", label: "イ3" },
-      { from: "j1", to: "j2", color: "black" },
-      { from: "c2", to: "j2", color: "black", label: "イ" },
-      { from: "j2", to: "outlet", color: "black", label: "露出形" },
-      { from: "j2", to: "sw2", color: "black", label: "イ3" },
-      { from: "j2", to: "p", color: "black", label: "VVF 2.0-2C" },
+      { from: "c1", to: "j1", color: "black", label: "施工省略", cable: hozanCable("6-vvf-1", 100) },
+      { from: "j1", to: "sw1", color: "black", label: "イ3", cable: hozanCable("6-vvf-2", 150) },
+      { from: "j1", to: "j2", color: "black", cable: hozanCable("6-vvf-2", 150) },
+      { from: "c2", to: "j2", color: "black", label: "イ", cable: hozanCable("6-vvf-1", 150) },
+      { from: "j2", to: "outlet", color: "black", label: "露出形", cable: hozanCable("6-vvf-1", 150) },
+      { from: "j2", to: "sw2", color: "black", label: "イ3", cable: hozanCable("6-vvf-2", 150) },
+      { from: "j2", to: "p", color: "black", label: "VVF 2.0-2C", cable: hozanCable("6-vvf-3", 150) },
     ],
   },
   {
@@ -256,13 +287,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "sw3", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 540, y: 335 },
     ],
     connections: [
-      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C" },
-      { from: "j1", to: "sw1", color: "black", label: "イ3" },
-      { from: "j1", to: "box", color: "black" },
-      { from: "box", to: "r1", color: "black", label: "イ" },
-      { from: "box", to: "sw2", color: "black", label: "イ4" },
-      { from: "box", to: "r2", color: "black", label: "イ" },
-      { from: "box", to: "sw3", color: "black", label: "イ3" },
+      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("7-vvf-3", 150) },
+      { from: "j1", to: "sw1", color: "black", label: "イ3", cable: hozanCable("7-vvf-2", 150) },
+      { from: "j1", to: "box", color: "black", cable: hozanCable("7-vvf-1", 150) },
+      { from: "box", to: "r1", color: "black", label: "イ", cable: hozanCable("7-vvf-1", 150) },
+      { from: "box", to: "sw2", color: "black", label: "イ4", cable: hozanCable("7-vvf-2", 250) },
+      { from: "box", to: "r2", color: "black", label: "イ", cable: hozanCable("7-vvf-1", 250) },
+      { from: "box", to: "sw3", color: "black", label: "イ3", cable: hozanCable("7-vvf-2", 150) },
     ],
   },
   {
@@ -284,13 +315,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
     connections: [
       { from: "p", to: "b1", color: "black" },
       { from: "p", to: "b2", color: "black" },
-      { from: "b1", to: "box", color: "black", label: "VVR 2.0-2C" },
+      { from: "b1", to: "box", color: "black", label: "VVR 2.0-2C", cable: hozanCable("8-vvr", 200) },
       { from: "b2", to: "t", color: "black" },
-      { from: "t", to: "s3", color: "black", label: "Rイ/Rロ/Rハ" },
-      { from: "s3", to: "box", color: "black" },
-      { from: "box", to: "c1", color: "black", label: "イ" },
-      { from: "box", to: "r", color: "black", label: "ロ" },
-      { from: "box", to: "c2", color: "black", label: "ハ 施工省略" },
+      { from: "t", to: "s3", color: "black", label: "Rイ/Rロ/Rハ", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
+      { from: "s3", to: "box", color: "black", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
+      { from: "box", to: "c1", color: "black", label: "イ", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 1 }) },
+      { from: "box", to: "r", color: "black", label: "ロ", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 1 }) },
+      { from: "box", to: "c2", color: "black", label: "ハ 施工省略", cable: hozanCable("8-vvf-1", 150, { sourceStockPieceIndex: 1 }) },
     ],
   },
   {
@@ -310,14 +341,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 535, y: 330 },
     ],
     connections: [
-      { from: "r1", to: "j1", color: "black", label: "イ" },
-      { from: "j1", to: "sw", color: "black", label: "イ" },
-      { from: "j1", to: "j2", color: "black", label: "VVF 2.0-2C" },
-      { from: "p", to: "j2", color: "black", label: "電源" },
-      { from: "j2", to: "c", color: "black", label: "イ" },
-      { from: "j2", to: "eet", color: "black" },
+      { from: "r1", to: "j1", color: "black", label: "イ", cable: hozanCable("9-vvf-1", 150) },
+      { from: "j1", to: "sw", color: "black", label: "イ", cable: hozanCable("9-vvf-1", 150) },
+      { from: "j1", to: "j2", color: "black", label: "VVF 2.0-2C", cable: hozanCable("9-vvf-2", 150) },
+      { from: "p", to: "j2", color: "black", label: "電源", cable: hozanCable("9-vvf-3", 150) },
+      { from: "j2", to: "c", color: "black", label: "イ", cable: hozanCable("9-vvf-1", 150) },
+      { from: "j2", to: "eet", color: "black", cable: hozanCable("9-vvf-1", 150) },
       { from: "eet", to: "pl", color: "black", label: "2" },
-      { from: "eet", to: "ed", color: "green", label: "E1.6" },
+      { from: "eet", to: "ed", color: "green", label: "E1.6", cable: hozanCable("9-iv", 100, { lengthMm: 150 }) },
     ],
   },
   {
@@ -336,10 +367,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
     ],
     connections: [
       { from: "p", to: "b", color: "black" },
-      { from: "b", to: "j", color: "black", label: "VVF 2.0-2C" },
-      { from: "j", to: "c", color: "black", label: "イ" },
-      { from: "j", to: "r", color: "black", label: "イ" },
-      { from: "j", to: "pl", color: "black", label: "同時点滅" },
+      { from: "b", to: "j", color: "black", label: "VVF 2.0-2C", cable: hozanCable("10-vvf-3", 150) },
+      { from: "j", to: "c", color: "black", label: "イ", cable: hozanCable("10-vvf-1", 150) },
+      { from: "j", to: "r", color: "black", label: "イ", cable: hozanCable("10-vvf-1", 150) },
+      { from: "j", to: "pl", color: "black", label: "同時点滅", cable: hozanCable("10-vvf-2", 150) },
       { from: "pl", to: "sw", color: "black", label: "イ" },
     ],
   },
@@ -357,11 +388,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "load", label: "器具 ロ", type: "switch", variant: "single_pole_switch", x: 435, y: 265 },
     ],
     connections: [
-      { from: "p", to: "box", color: "black", label: "VVF 2.0-2C" },
-      { from: "box", to: "c", color: "black", label: "イ" },
-      { from: "box", to: "r", color: "black", label: "ロ" },
-      { from: "box", to: "sw", color: "black", label: "IV 1.6（E19）" },
-      { from: "box", to: "load", color: "black", label: "ロ" },
+      { from: "p", to: "box", color: "black", label: "VVF 2.0-2C", cable: hozanCable("11-vvf-2", 150) },
+      { from: "box", to: "c", color: "black", label: "イ", cable: hozanCable("11-vvf-1", 150) },
+      { from: "box", to: "r", color: "black", label: "ロ", cable: hozanCable("11-vvf-1", 150) },
+      { id: "11-e19-black", from: "box", to: "sw", color: "black", label: "IV 1.6（E19）", cable: hozanCable("11-iv-1", 250, { lengthMm: 550 }) },
+      { id: "11-e19-white", from: "box", to: "sw", color: "white", cable: hozanCable("11-iv-2", 250, { lengthMm: 450 }) },
+      { id: "11-e19-red", from: "box", to: "sw", color: "red", cable: hozanCable("11-iv-3", 250, { lengthMm: 450 }) },
+      { from: "box", to: "load", color: "black", label: "ロ", cable: hozanCable("11-vvf-1", 250) },
     ],
   },
   {
@@ -379,12 +412,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "c2", label: "引掛 ロ", type: "lamp", variant: "ceiling_connector", x: 585, y: 205 },
     ],
     connections: [
-      { from: "r", to: "j1", color: "black", label: "ロ" },
-      { from: "j1", to: "c1", color: "black", label: "イ" },
-      { from: "j1", to: "box", color: "black" },
-      { from: "p", to: "box", color: "black", label: "VVF 2.0-2C" },
-      { from: "box", to: "sw", color: "black", label: "イ" },
-      { from: "box", to: "c2", color: "black", label: "IV 1.6（PF16） ロ" },
+      { from: "r", to: "j1", color: "black", label: "ロ", cable: hozanCable("12-vvf-1", 150) },
+      { from: "j1", to: "c1", color: "black", label: "イ", cable: hozanCable("12-vvf-1", 150) },
+      { from: "j1", to: "box", color: "black", cable: hozanCable("12-vvf-2", 150) },
+      { from: "p", to: "box", color: "black", label: "VVF 2.0-2C", cable: hozanCable("12-vvf-3", 150) },
+      { from: "box", to: "sw", color: "black", label: "イ", cable: hozanCable("12-vvf-1", 150) },
+      { id: "12-pf16-black", from: "box", to: "c2", color: "black", label: "IV 1.6（PF16） ロ", cable: hozanCable("12-iv-1", 200, { lengthMm: 500 }) },
+      { id: "12-pf16-white", from: "box", to: "c2", color: "white", cable: hozanCable("12-iv-2", 200, { lengthMm: 400 }) },
+      { id: "12-pf16-red", from: "box", to: "c2", color: "red", cable: hozanCable("12-iv-3", 200, { lengthMm: 400 }) },
     ],
   },
   {
@@ -404,14 +439,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "load", label: "器具 ロ", type: "lamp", variant: "load_device", x: 590, y: 330 },
     ],
     connections: [
-      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C" },
-      { from: "j1", to: "sw", color: "black", label: "イ" },
-      { from: "j1", to: "j2", color: "black" },
-      { from: "j2", to: "r", color: "black", label: "イ" },
-      { from: "j2", to: "e", color: "black", label: "E" },
-      { from: "e", to: "ed", color: "green", label: "E1.6" },
-      { from: "j2", to: "a", color: "black", label: "A（3A）" },
-      { from: "a", to: "load", color: "black", label: "VVR 1.6-2C ロ" },
+      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("13-vvf-3", 150) },
+      { from: "j1", to: "sw", color: "black", label: "イ", cable: hozanCable("13-vvf-1", 150) },
+      { from: "j1", to: "j2", color: "black", cable: hozanCable("13-vvf-2", 150) },
+      { from: "j2", to: "r", color: "black", label: "イ", cable: hozanCable("13-vvf-1", 150) },
+      { from: "j2", to: "e", color: "black", label: "E", cable: hozanCable("13-vvf-1", 150) },
+      { from: "e", to: "ed", color: "green", label: "E1.6", cable: hozanCable("13-iv", 100, { lengthMm: 150 }) },
+      { from: "j2", to: "a", color: "black", label: "A（3A）", cable: hozanCable("13-vvf-1", 200) },
+      { from: "a", to: "load", color: "black", label: "VVR 1.6-2C ロ", cable: hozanCable("13-vvr", 200, { lengthMm: 250 }) },
     ],
   },
 ];

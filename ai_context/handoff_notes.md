@@ -11,7 +11,8 @@
 - Vite 8 + React 19 + TypeScript 7。
 - App.tsxに施工チェック、複線図、欠陥判定の3モード。初期モードは施工チェック。
 - candidateDiagrams.tsに公式番号対応の候補問題No.1～No.13を定義。
-- candidateMaterials.tsに公表図から確認できる支給部材候補を定義。数量・長さ・使用要否は伏せる。
+- candidateCableStocks.tsにHOZAN過去出題例を基にした支給電線、candidateMaterials.tsに支給器具・接続材料を定義。使用要否と使用箇所は画面で伏せる。
+- cableSpecifications.tsで支給電線1件から複数の加工後区間を参照する1対N関係、HOZAN図上寸法、余長込み切断長を管理する。
 - boxWiringSpecifications.tsにボックス端の全心線、正しい結線ID、2～4芯の結線グループを定義。
 - boxInspectionGame.tsが施工チェックのランダムラウンドを生成。candidateとseedのURLクエリーで候補固定と決定的再現が可能。
 - WorkInspectionGame.tsxが回答、欠陥選択一覧、採点、再出題を管理。
@@ -37,6 +38,11 @@
 - 回答直後は答え合わせせず、完了ボタンでまとめて採点する。
 - Android ChromeではSVG内文字がタップを奪うため、装飾のpointer-eventsを無効化し、ホットスポットを操作対象にする。
 - 2026-07-13にdirectPartsの型だけ追加され実行経路へ渡っていない不具合を修正。回答総数がボックス4問だけなら不具合、直接選択器具を含んで4より多ければ正常。
+- HOZANの候補問題No.1～13と施工寸法一覧を参照し、98区間中86区間を支給電線IDへ関連付けた。残りは施工省略側・器具内の論理接続。
+- No.11・12の電線管内は黒・白・赤の単芯IVを独立した物理電線として保持する。
+- `diagramLengthMm`は器具間寸法、`lengthMm`は接続余長を含む切断長。支給長とは別の値として扱う。
+- No.3はアウトレットボックス1～2がVVF 1.6mm 3心、アウトレットボックス2～タイムスイッチがVVF 1.6mm 2心。
+- No.3のdeviceWiringsは、S1=ボックス2側黒、S2=ボックス2側白+引掛シーリングローゼット側白、L1=引掛シーリングローゼット側黒。S2のmaxConductorsは2。
 
 ## 4. 次に取り組むべきタスク（Next Actions）
 
@@ -55,6 +61,7 @@
 - 文字化け時はCP932を再確認する。
 - PowerShellの実行ポリシー対策としてビルドはnpm.cmd run buildを使用できる。
 - 複線図とSVGは学習用簡略図であり公式図そのものではない。ボックス結線も現時点では芯位置からの推定値。
+- HOZAN由来の器具間寸法と切断長も過去出題に基づく練習用想定値であり、当日の施工条件を優先する。
 - 直接選択器具はまだ正常施工のみ。欠陥2～3件はボックス内接続部に設定される。
 - boxInspectionGame.ts変更時は、型だけでなく次の実行経路を確認する。
   - createBoxInspectionRound()の戻り値にdirectPartsがある

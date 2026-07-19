@@ -1,8 +1,9 @@
 import type { CandidateConnection, CandidateDevice, CandidateDiagram } from "./candidateDiagrams";
+import { getCandidateCableStock } from "./candidateCableStocks";
 
 export type CableType = "VVF" | "VVR" | "EM-EEF" | "IV";
 export type CableCoreColor = "black" | "white" | "red" | "green" | "blue";
-export type CableMeasurementSource = "specified" | "inferred";
+export type CableMeasurementSource = "specified" | "hozan_assumed" | "inferred";
 
 export type CableEndPreparation = {
   endpointId: string;
@@ -17,7 +18,10 @@ export type CableRunSpecification = {
   conductorDiameterMm: 1.6 | 2.0;
   coreCount: 1 | 2 | 3 | 4;
   coreColors: CableCoreColor[];
+  diagramLengthMm: number | null;
   lengthMm: number | null;
+  sourceStockId: string | null;
+  sourceStockPieceIndex: number | null;
   fromEnd: CableEndPreparation;
   toEnd: CableEndPreparation;
   measurementSource: CableMeasurementSource;
@@ -41,9 +45,11 @@ export type CableEndPreparationOverride = Partial<
 export type CableRunOverride = Partial<
   Pick<
     CableRunSpecification,
-    "cableType" | "conductorDiameterMm" | "coreCount" | "coreColors" | "lengthMm"
+    "cableType" | "conductorDiameterMm" | "coreCount" | "coreColors" | "diagramLengthMm" | "lengthMm"
   >
 > & {
+  sourceStockId?: string;
+  sourceStockPieceIndex?: number;
   fromEnd?: CableEndPreparationOverride;
   toEnd?: CableEndPreparationOverride;
 };
@@ -64,17 +70,33 @@ export function resolveCableRunSpecification(
   const toDevice = diagram.devices.find((device) => device.id === connection.to);
   const inferred = inferCableProperties(connection, fromDevice, toDevice);
   const override = connection.cable;
-  const coreCount = override?.coreCount ?? inferred.coreCount;
-  const cableType = override?.cableType ?? inferred.cableType;
+  const sourceStock = override?.sourceStockId
+    ? getCandidateCableStock(diagram.no, override.sourceStockId)
+    : undefined;
+  const coreCount = override?.coreCount ?? sourceStock?.coreCount ?? inferred.coreCount;
+  const cableType = override?.cableType ?? sourceStock?.cableType ?? inferred.cableType;
+  const diagramLengthMm = override?.diagramLengthMm ?? null;
+  const calculatedLengthMm = diagramLengthMm === null
+    ? null
+    : diagramLengthMm
+      + getHozanConnectionAllowanceMm(fromDevice)
+      + getHozanConnectionAllowanceMm(toDevice);
 
   return {
     id: connection.id ?? `candidate-${diagram.no}-cable-${index + 1}`,
     cableType,
     hasSheath: cableType !== "IV",
-    conductorDiameterMm: override?.conductorDiameterMm ?? inferred.conductorDiameterMm,
+    conductorDiameterMm: override?.conductorDiameterMm
+      ?? sourceStock?.conductorDiameterMm
+      ?? inferred.conductorDiameterMm,
     coreCount,
-    coreColors: override?.coreColors ?? inferCoreColors(connection, cableType, coreCount),
-    lengthMm: override?.lengthMm ?? null,
+    coreColors: override?.coreColors
+      ?? sourceStock?.coreColors
+      ?? inferCoreColors(connection, cableType, coreCount),
+    diagramLengthMm,
+    lengthMm: override?.lengthMm ?? calculatedLengthMm,
+    sourceStockId: override?.sourceStockId ?? null,
+    sourceStockPieceIndex: override?.sourceStockPieceIndex ?? null,
     fromEnd: {
       endpointId: connection.from,
       sheathStripLengthMm: override?.fromEnd?.sheathStripLengthMm ?? null,
@@ -87,7 +109,7 @@ export function resolveCableRunSpecification(
       insulationStripLengthsMm: override?.toEnd?.insulationStripLengthsMm
         ?? Array.from({ length: coreCount }, () => null),
     },
-    measurementSource: override ? "specified" : "inferred",
+    measurementSource: diagramLengthMm !== null ? "hozan_assumed" : override ? "specified" : "inferred",
   };
 }
 
@@ -105,6 +127,12 @@ export function validateCableRunSpecification(cable: CableRunSpecification) {
   if (cable.lengthMm !== null && cable.lengthMm <= 0) {
     errors.push("ケーブル区間長は0mmより大きい値が必要です。");
   }
+  if (cable.diagramLengthMm !== null && cable.diagramLengthMm <= 0) {
+    errors.push("複線図の器具間寸法は0mmより大きい値が必要です。");
+  }
+  if (cable.sourceStockPieceIndex !== null && cable.sourceStockPieceIndex < 0) {
+    errors.push("支給電線の本数位置に負の値は指定できません。");
+  }
   for (const [label, end] of [["from", cable.fromEnd], ["to", cable.toEnd]] as const) {
     if (end.sheathStripLengthMm !== null && end.sheathStripLengthMm < 0) {
       errors.push(`${label}側のシース剥ぎ長に負の値は指定できません。`);
@@ -119,6 +147,59 @@ export function validateCableRunSpecification(cable: CableRunSpecification) {
       errors.push(`${cable.cableType}にはシース剥ぎ長を指定できません。`);
     }
   }
+  return errors;
+}
+
+export function getCandidateCableStockUsage(diagram: CandidateDiagram) {
+  const runs = getCandidateCableRuns(diagram);
+  return runs.reduce<Record<string, CableRunSpecification[]>>((usage, run) => {
+    if (run.sourceStockId) {
+      (usage[run.sourceStockId] ??= []).push(run);
+    }
+    return usage;
+  }, {});
+}
+
+export function validateCandidateCableStockUsage(diagram: CandidateDiagram) {
+  const errors: string[] = [];
+  const usage = getCandidateCableStockUsage(diagram);
+
+  for (const [stockId, runs] of Object.entries(usage)) {
+    const stock = getCandidateCableStock(diagram.no, stockId);
+    if (!stock) {
+      errors.push(`存在しない支給電線 ${stockId} が参照されています。`);
+      continue;
+    }
+    for (const run of runs) {
+      if (run.cableType !== stock.cableType
+        || run.conductorDiameterMm !== stock.conductorDiameterMm
+        || run.coreCount !== stock.coreCount) {
+        errors.push(`${run.id} の仕様が支給電線 ${stockId} と一致していません。`);
+      }
+      if (run.sourceStockPieceIndex !== null && run.sourceStockPieceIndex >= stock.quantity) {
+        errors.push(`${run.id} が支給数量外の ${stockId} を参照しています。`);
+      }
+    }
+
+    const runsByPiece = new Map<number | null, CableRunSpecification[]>();
+    for (const run of runs) {
+      const pieceIndex = run.sourceStockPieceIndex;
+      const pieceRuns = runsByPiece.get(pieceIndex) ?? [];
+      pieceRuns.push(run);
+      runsByPiece.set(pieceIndex, pieceRuns);
+    }
+    for (const [pieceIndex, pieceRuns] of runsByPiece) {
+      const usedLengthMm = pieceRuns.reduce((total, run) => total + (run.lengthMm ?? 0), 0);
+      const availableLengthMm = pieceIndex === null
+        ? stock.suppliedLengthMm * stock.quantity
+        : stock.suppliedLengthMm;
+      if (usedLengthMm > availableLengthMm) {
+        const pieceLabel = pieceIndex === null ? "合計" : `${pieceIndex + 1}本目`;
+        errors.push(`${stockId} ${pieceLabel}の切断長${usedLengthMm}mmが支給長${availableLengthMm}mmを超えています。`);
+      }
+    }
+  }
+
   return errors;
 }
 
@@ -200,6 +281,28 @@ function inferCoreColors(
     return [connection.color] as CableCoreColor[];
   }
   return [...defaultCoreColors[coreCount]];
+}
+
+function getHozanConnectionAllowanceMm(device?: CandidateDevice) {
+  if (!device) return 0;
+  if (device.type === "connector" || device.type === "box") return 100;
+
+  switch (device.variant) {
+    case "lamp_receptacle":
+      return 50;
+    case "single_pole_switch":
+    case "three_way_switch":
+    case "four_way_switch":
+    case "switch_group":
+    case "pilot_lamp":
+    case "exposed_receptacle":
+    case "grounded_receptacle":
+    case "grounded_20a_receptacle":
+    case "eet_receptacle":
+      return 100;
+    default:
+      return 0;
+  }
 }
 
 function isStandardCoreColorOrder(colors: CableCoreColor[]) {

@@ -99,6 +99,10 @@ export function CandidateSvg({
         const wireOffsets = getCoreOffsets(cable.coreColors.length);
         const labelX = (from.x + to.x) / 2 + offset.x * 1.8;
         const labelY = (from.y + to.y) / 2 + offset.y * 1.8 - 8;
+        const showDimension = cable.diagramLengthMm !== null
+          && !diagram.connections.slice(0, index).some((previous) =>
+            previous.from === connection.from && previous.to === connection.to
+          );
 
         return (
           <g key={connection.from + "-" + connection.to + "-" + connection.color + "-" + index}>
@@ -112,6 +116,16 @@ export function CandidateSvg({
             {connection.label && (
               <text className="wire-label" x={labelX} y={labelY} textAnchor="middle">
                 {connection.label}
+              </text>
+            )}
+            {showDimension && (
+              <text
+                className="wire-dimension"
+                x={labelX}
+                y={labelY + (connection.label ? 13 : 0)}
+                textAnchor="middle"
+              >
+                {cable.diagramLengthMm}mm
               </text>
             )}
           </g>

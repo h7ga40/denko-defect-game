@@ -9,6 +9,7 @@ import { WiringDiagram } from "./svg/WiringDiagram";
 import { MetalConduitDiagram } from "./svg/diagrams/MetalConduitDiagram";
 import { OutletBoxAccessoryDiagram } from "./svg/diagrams/OutletBoxAccessoryDiagram";
 import { PfConduitDiagram } from "./svg/diagrams/PfConduitDiagram";
+import { TerminalBlockDiagram } from "./svg/diagrams/TerminalBlockDiagram";
 
 type InspectionAnswers = Record<string, string>;
 
@@ -193,10 +194,13 @@ function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
     return <WiringDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }
 
+  if (part.deviceVariant === "timer_switch") {
+    return <TerminalBlockDiagram defect={false} title={part.title} variant="timer_switch" />;
+  }
+
   const inlineDevice = part.deviceVariant === "circuit_breaker"
     || part.deviceVariant === "earth_leakage_breaker"
     || part.deviceVariant === "terminal_block"
-    || part.deviceVariant === "timer_switch"
     || part.deviceVariant === "automatic_switch";
   const horizontal = part.cableEntrySide === "left" || part.cableEntrySide === "right";
   const targetX = part.cableEntrySide === "left" ? 296 : part.cableEntrySide === "right" ? 424 : 360;
