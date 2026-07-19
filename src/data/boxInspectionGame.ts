@@ -16,6 +16,7 @@ import {
 } from "./boxWiringSpecifications";
 import { getDeviceSpecification } from "./deviceSpecifications";
 import { problems, type DefectType, type Problem } from "./problems";
+import { createRandomSource, type RandomSource } from "./random";
 
 export type BoxType = "joint" | "outlet";
 export type ConnectionMethod = BoxConnectionMethod | "outlet_box" | "metal_conduit" | "pf_conduit";
@@ -85,6 +86,12 @@ export type BoxInspectionRound = {
   directParts: DirectInspectionPart[];
   parts: Array<BoxInspectionPart | DirectInspectionPart>;
   defectCount: number;
+  seed?: string;
+};
+
+export type BoxInspectionRoundOptions = {
+  candidateNo?: number;
+  seed?: string;
 };
 
 type Template = {
@@ -261,8 +268,10 @@ const templates: Template[] = [
   },
 ];
 
-export function createBoxInspectionRound(): BoxInspectionRound {
-  const candidate = randomItem(candidateDiagrams);
+export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}): BoxInspectionRound {
+  const random = createRandomSource(options.seed);
+  const randomCandidate = randomItem(candidateDiagrams, random);
+  const candidate = candidateDiagrams.find((item) => item.no === options.candidateNo) ?? randomCandidate;
   const devices = candidate.devices.filter((device) => device.type === "connector" || device.type === "box");
   const sources = devices.length ? devices : candidate.devices.filter((device) => device.type !== "power").slice(0, 1);
   const plannedBoxes = sources.map((device, index) => {
@@ -277,12 +286,12 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   });
   const directDevices = candidate.devices.filter(isDirectInspectionDevice);
   const defectPlans = new Map<string, DefectType | "random">();
-  const targetDefectCount = randomInt(2, 3);
-  const connectionDefectCandidates = createConnectionDefectCandidates(plannedBoxes);
+  const targetDefectCount = randomInt(2, 3, random);
+  const connectionDefectCandidates = createConnectionDefectCandidates(plannedBoxes, random);
   if (connectionDefectCandidates.length === 0) {
     throw new Error("接続ミスを生成できるボックス内結線がありません。");
   }
-  const connectionDefect = randomItem(connectionDefectCandidates);
+  const connectionDefect = randomItem(connectionDefectCandidates, random);
   const targetBox = plannedBoxes[connectionDefect.boxIndex];
 
   if (connectionDefect.defectType === "box_wrong_connection") {
@@ -309,25 +318,30 @@ export function createBoxInspectionRound(): BoxInspectionRound {
   const directDefectKeys = directDevices
     .filter((device) => getDirectDefectProblems(device).length > 0)
     .map((device) => "device:" + device.id);
-  const remainingTargets = shuffle([...boxPartKeys, ...directDefectKeys].filter((key) => !defectPlans.has(key)));
+  const remainingTargets = shuffle([...boxPartKeys, ...directDefectKeys].filter((key) => !defectPlans.has(key)), random);
   for (const key of remainingTargets.slice(0, Math.max(0, targetDefectCount - defectPlans.size))) {
     defectPlans.set(key, "random");
   }
 
   const boxes = plannedBoxes.map(({ device, index, wiring, installation, infrastructureSpecs }) =>
-    createBox(candidate, device, index, wiring, installation, infrastructureSpecs, defectPlans),
+    createBox(candidate, device, index, wiring, installation, infrastructureSpecs, defectPlans, random),
   );
-  const directParts = directDevices.map((device) => createDirectPart(candidate, device, defectPlans.has("device:" + device.id)));
+  const directParts = directDevices.map((device) =>
+    createDirectPart(candidate, device, defectPlans.has("device:" + device.id), random),
+  );
   const defectCount = defectPlans.size;
 
   return {
-    id: Date.now() + "-" + Math.random().toString(36).slice(2),
+    id: options.seed === undefined
+      ? Date.now() + "-" + Math.random().toString(36).slice(2)
+      : "seed-" + encodeURIComponent(options.seed) + "-candidate-" + candidate.no,
     title: "候補問題No." + candidate.no + " 施工チェック",
     candidate,
     boxes,
     directParts,
     parts: [...boxes.flatMap((box) => box.parts), ...directParts],
     defectCount,
+    seed: options.seed,
   };
 }
 
@@ -344,20 +358,20 @@ type ConnectionDefectCandidate = {
   conductorIds: string[];
 };
 
-function createConnectionDefectCandidates(boxes: PlannedBox[]): ConnectionDefectCandidate[] {
+function createConnectionDefectCandidates(boxes: PlannedBox[], random: RandomSource): ConnectionDefectCandidate[] {
   return boxes.flatMap((box, boxIndex) => {
     const disconnected = box.wiring.groups.map((group) => ({
       boxIndex,
       defectType: "box_conductor_unconnected" as const,
       groupIds: [group.id],
-      conductorIds: [randomItem(group.conductorIds)],
+      conductorIds: [randomItem(group.conductorIds, random)],
     }));
     const swapped = box.wiring.groups.flatMap((firstGroup, firstIndex) =>
       box.wiring.groups.slice(firstIndex + 1).map((secondGroup) => ({
         boxIndex,
         defectType: "box_wrong_connection" as const,
         groupIds: [firstGroup.id, secondGroup.id],
-        conductorIds: [randomItem(firstGroup.conductorIds), randomItem(secondGroup.conductorIds)],
+        conductorIds: [randomItem(firstGroup.conductorIds, random), randomItem(secondGroup.conductorIds, random)],
       })),
     );
     return [...disconnected, ...swapped];
@@ -475,6 +489,7 @@ function createBox(
   installation: BoxWiringInstallation,
   infrastructureSpecs: ConnectionSpec[],
   defectPlans: Map<string, DefectType | "random">,
+  random: RandomSource,
 ): InspectionBox {
   const boxType: BoxType = [7, 8, 11, 12].includes(candidate.no) && device.type === "box"
     ? "outlet"
@@ -499,7 +514,7 @@ function createBox(
       const availableTemplates = templates.filter((item) => item.method === spec.method);
       const template = defectPlan && defectPlan !== "random"
         ? availableTemplates.find((item) => item.defectType === defectPlan)
-        : randomItem(availableTemplates.filter((item) => !isConnectionDefect(item.defectType)));
+        : randomItem(availableTemplates.filter((item) => !isConnectionDefect(item.defectType)), random);
       if (!template) throw new Error(`${spec.method}の欠陥テンプレートがありません。`);
       return toPart(template, id, label, spec, partIndex, defectPlan !== undefined);
     }),
@@ -609,8 +624,13 @@ function getDirectDefectProblems(device: CandidateDevice): Problem[] {
   return problems.filter((problem) => ids.includes(problem.id));
 }
 
-function createDirectPart(candidate: CandidateDiagram, device: CandidateDevice, hasDefect: boolean): DirectInspectionPart {
-  const defectProblem = hasDefect ? randomItem(getDirectDefectProblems(device)) : undefined;
+function createDirectPart(
+  candidate: CandidateDiagram,
+  device: CandidateDevice,
+  hasDefect: boolean,
+  random: RandomSource,
+): DirectInspectionPart {
+  const defectProblem = hasDefect ? randomItem(getDirectDefectProblems(device), random) : undefined;
   const deviceName = getInspectionDeviceName(device);
   return {
     id: "device-" + device.id,
@@ -674,14 +694,19 @@ function getInspectionDeviceName(device: CandidateDevice) {
   };
   return device.variant ? names[device.variant] ?? device.label : device.label;
 }
-function randomItem<T>(items: T[]) {
-  return items[Math.floor(Math.random() * items.length)];
+function randomItem<T>(items: T[], random: RandomSource) {
+  return items[Math.floor(random() * items.length)];
 }
 
-function randomInt(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function randomInt(min: number, max: number, random: RandomSource) {
+  return Math.floor(random() * (max - min + 1)) + min;
 }
 
-function shuffle<T>(items: T[]) {
-  return [...items].sort(() => Math.random() - 0.5);
+function shuffle<T>(items: T[], random: RandomSource) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+  }
+  return shuffled;
 }

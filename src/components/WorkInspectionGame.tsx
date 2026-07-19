@@ -12,8 +12,8 @@ import { PfConduitDiagram } from "./svg/diagrams/PfConduitDiagram";
 
 type InspectionAnswers = Record<string, string>;
 
-export function WorkInspectionGame() {
-  const [round, setRound] = useState<BoxInspectionRound>(() => createBoxInspectionRound());
+export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number; seed?: string }) {
+  const [round, setRound] = useState<BoxInspectionRound>(() => createBoxInspectionRound({ candidateNo, seed }));
   const [selectedBoxId, setSelectedBoxId] = useState(() => round.boxes[0].id);
   const [selectedPartId, setSelectedPartId] = useState(() => round.boxes[0].parts[0].id);
   const [selectedDirectPartId, setSelectedDirectPartId] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function WorkInspectionGame() {
   }
 
   function restart() {
-    const nextRound = createBoxInspectionRound();
+    const nextRound = createBoxInspectionRound({ candidateNo, seed });
     setRound(nextRound);
     setSelectedBoxId(nextRound.boxes[0].id);
     setSelectedPartId(nextRound.boxes[0].parts[0].id);
@@ -62,6 +62,7 @@ export function WorkInspectionGame() {
       <article className="problem-card inspection-overview">
         <div className="problem-meta">
           <span>候補問題 No.{round.candidate.no}</span>
+          {round.seed && <span title={round.seed}>シード {round.seed.length > 20 ? round.seed.slice(0, 20) + "…" : round.seed}</span>}
           <span>回答 {answeredCount} / {round.parts.length}</span>
         </div>
         <h2>{round.title}</h2>

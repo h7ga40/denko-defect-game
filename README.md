@@ -4,6 +4,18 @@
 
 公開URL: https://h7ga40.github.io/denko-defect-game/
 
+## URLクエリー
+
+公開URLの末尾へクエリーを付けると、候補問題とランダム出題を指定できます。
+
+- ?candidate=5: 候補問題No.5へ固定。欠陥内容は再出題ごとに変化
+- ?seed=sample-2026: 候補番号と欠陥内容をシードから固定
+- ?candidate=5&seed=sample-2026: 候補問題No.5と欠陥内容を固定
+
+例: https://h7ga40.github.io/denko-defect-game/?candidate=5&seed=sample-2026
+
+同じアプリ版、候補番号、シードの組合せでは、欠陥位置・欠陥種類・接続ミスの対象まで再現されます。データや出題アルゴリズムを更新した版では、同じシードでも内容が変わる場合があります。
+
 ## 学習モード
 
 ### 施工チェック

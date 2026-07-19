@@ -25,8 +25,8 @@ type Interaction = {
   onSelect: () => void;
 };
 
-export function CandidateDiagramView() {
-  const [selectedNo, setSelectedNo] = useState(1);
+export function CandidateDiagramView({ initialCandidateNo = 1 }: { initialCandidateNo?: number }) {
+  const [selectedNo, setSelectedNo] = useState(initialCandidateNo);
   const selected = useMemo(
     () => candidateDiagrams.find((diagram) => diagram.no === selectedNo) ?? candidateDiagrams[0],
     [selectedNo],

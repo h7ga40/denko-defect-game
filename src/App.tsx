@@ -4,6 +4,7 @@ import { ProblemView } from "./components/ProblemView";
 import { ScoreView } from "./components/ScoreView";
 import { WorkInspectionGame } from "./components/WorkInspectionGame";
 import { problems } from "./data/problems";
+import { parseGameQueryOptions } from "./data/gameQueryOptions";
 
 const STORAGE_KEY = "denko-defect-game-best-score";
 
@@ -13,6 +14,7 @@ function getStoredBestScore() {
 }
 
 export default function App() {
+  const queryOptions = useMemo(() => parseGameQueryOptions(window.location.search), []);
   const [mode, setMode] = useState<"quiz" | "diagrams" | "inspection">("inspection");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
@@ -95,9 +97,9 @@ export default function App() {
       </nav>
 
       {mode === "inspection" ? (
-        <WorkInspectionGame />
+        <WorkInspectionGame candidateNo={queryOptions.candidateNo} seed={queryOptions.seed} />
       ) : mode === "diagrams" ? (
-        <CandidateDiagramView />
+        <CandidateDiagramView initialCandidateNo={queryOptions.candidateNo} />
       ) : completed ? (
         <ScoreView bestScore={bestScore} correctCount={correctCount} onRestart={restart} total={problems.length} />
       ) : (
