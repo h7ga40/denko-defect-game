@@ -239,8 +239,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
   {
     no: 4,
     title: "公式No.4 100V・三相200V混在",
-    theme: `${sourceNote}。100V回路、三相200V電動機、電源表示灯を含む回路。`,
-    points: ["電源: 1φ2W 100V、3φ3W 200V", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: B、BE、電源表示灯、3φ200V電動機"],
+    theme: `${sourceNote}。100V回路、三相200V電動機、ランプレセプタクルを含む回路。`,
+    points: ["電源: 1φ2W 100V、3φ3W 200V", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: B、BE、ランプレセプタクル、3φ200V電動機"],
     devices: [
       { id: "p100", label: "100V電源", type: "power", x: 65, y: 95 },
       { id: "p200", label: "3φ200V電源", type: "power", x: 65, y: 185 },
@@ -248,7 +248,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", x: 165, y: 185 },
       { id: "j1", label: "接続点", type: "connector", x: 455, y: 145 },
       { id: "j2", label: "接続点", type: "connector", x: 300, y: 185 },
-      { id: "r", label: "R 電源表示灯", type: "pilot", variant: "pilot_lamp", x: 205, y: 305 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 205, y: 305 },
       { id: "m", label: "M 3φ200V", type: "motor", variant: "motor_terminal", x: 300, y: 305 },
       { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 360, y: 340 },
       { id: "c", label: "引掛 イ 施工省略", type: "lamp", variant: "omitted_work", x: 610, y: 205 },
@@ -262,7 +262,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j1", to: "c", color: "black", cable: hozanCable("4-vvf-1", 250) },
       { from: "j2", to: "m", color: "black", cable: hozanCable("4-vvf-4", 250, { lengthMm: 300 }) },
       { from: "m", to: "ed", color: "green", label: "ED" },
-      { from: "j1", to: "r", color: "black", label: "電源表示灯", cable: hozanCable("4-vvf-1", 250) },
+      { from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("4-vvf-1", 250) },
       { from: "j1", to: "sw", color: "black", label: "イ", cable: hozanCable("4-vvf-2", 200) },
     ],
     mountingFrames: [{
@@ -284,11 +284,11 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", x: 170, y: 95 },
       { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", x: 170, y: 185 },
       { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 120, y: 305 },
-      { id: "j", label: "接続点", type: "connector", x: 410, y: 165 },
-      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 260, y: 265 },
+      { id: "j", label: "接続点", type: "connector", x: 430, y: 95 },
+      { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 300, y: 195 },
       { id: "outlet", label: "20A 250V E", type: "grounded_receptacle", variant: "grounded_20a_receptacle", x: 315, y: 325 },
-      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 472, y: 300 },
-      { id: "c", label: "R イ 施工省略", type: "lamp", variant: "omitted_work", x: 610, y: 210 },
+      { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 492, y: 230 },
+      { id: "c", label: "R イ 施工省略", type: "lamp", variant: "omitted_work", x: 630, y: 95 },
     ],
     connections: [
       { from: "p100", to: "b", color: "black" },
@@ -301,7 +301,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j", to: "sw", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 200) },
     ],
     mountingFrames: [{
-      id: "frame-1", label: "埋込連用取付枠", x: 472, y: 300,
+      id: "frame-1", label: "埋込連用取付枠", x: 492, y: 230,
       members: [
         { id: "switch-i", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
         { id: "switch-ro", label: "ロ", variant: "single_pole_switch", position: "middle" },
