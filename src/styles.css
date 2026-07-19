@@ -697,6 +697,34 @@ button {
   fill: #ffffff;
 }
 
+.candidate-frame-jumper,
+.mounting-frame-jumper {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.candidate-frame-jumper {
+  stroke-width: 4;
+}
+
+.mounting-frame-jumper {
+  stroke-width: 7;
+}
+
+.candidate-frame-jumper.black,
+.mounting-frame-jumper.black {
+  stroke: #172033;
+}
+
+.candidate-frame-jumper.white,
+.mounting-frame-jumper.white {
+  stroke: #ffffff;
+  paint-order: stroke;
+  stroke-width: 7;
+  filter: drop-shadow(0 0 1px #596a78);
+}
+
 .candidate-device.pilot {
   fill: #eaf7fb;
 }

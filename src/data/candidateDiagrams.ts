@@ -57,6 +57,14 @@ export type CandidateConnection = {
   cable?: CableRunOverride;
 };
 
+export type CandidateMountingFrameJumper = {
+  id: string;
+  fromMemberId: string;
+  toMemberId: string;
+  color: "black" | "white";
+  allowedColors: Array<"black" | "white">;
+};
+
 export type CandidateConductorReference = {
   cableId: string;
   coreIndex: number;
@@ -99,6 +107,7 @@ export type CandidateMountingFrame = {
   x: number;
   y: number;
   members: CandidateMountingFrameMember[];
+  jumpers?: CandidateMountingFrameJumper[];
 };
 
 export type CandidateDiagram = {
@@ -290,6 +299,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 300, y: 195 },
       { id: "outlet", label: "20A 250V E", type: "grounded_receptacle", variant: "grounded_20a_receptacle", x: 315, y: 325 },
       { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 492, y: 230 },
+      { id: "frame-outlet", label: "埋込連用コンセント", type: "receptacle", variant: "embedded_receptacle", x: 492, y: 255 },
       { id: "c", label: "蛍光灯 イ 施工省略", type: "lamp", variant: "fluorescent_lamp", x: 630, y: 95 },
     ],
     connections: [
@@ -300,15 +310,23 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "outlet", to: "ed", color: "green", label: "E1.6" },
       { from: "j", to: "r", color: "black", label: "ロ", cable: hozanCable("5-vvf-1", 250) },
       { from: "j", to: "c", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 100) },
-      { from: "j", to: "sw", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 200) },
+      { id: "5-box1-switches", from: "j", to: "sw", color: "black", label: "VVF 1.6-2C ×2", cable: hozanCable("5-vvf-1", 200) },
+      { id: "5-box1-receptacle", from: "j", to: "frame-outlet", color: "black", cable: hozanCable("5-vvf-1", 200) },
     ],
     mountingFrames: [{
       id: "frame-1", label: "埋込連用取付枠", x: 492, y: 230,
       members: [
         { id: "switch-i", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
         { id: "switch-ro", label: "ロ", variant: "single_pole_switch", position: "middle" },
-        { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom" },
+        { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom", sourceDeviceId: "frame-outlet" },
       ],
+      jumpers: [{
+        id: "switch-i-ro",
+        fromMemberId: "switch-i",
+        toMemberId: "switch-ro",
+        color: "black",
+        allowedColors: ["black", "white"],
+      }],
     }],
   },
   {

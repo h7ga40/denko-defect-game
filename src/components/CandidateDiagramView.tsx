@@ -243,6 +243,20 @@ function MountingFrameNode({
           取付枠
         </text>
       </SelectableGroup>
+      {(frame.jumpers ?? []).map((jumper) => {
+        const from = frame.members.find((member) => member.id === jumper.fromMemberId);
+        const to = frame.members.find((member) => member.id === jumper.toMemberId);
+        if (!from || !to) return null;
+        const fromY = frame.y + mountingFrameOffsets[from.position];
+        const toY = frame.y + mountingFrameOffsets[to.position];
+        return (
+          <path
+            className={"candidate-frame-jumper " + jumper.color}
+            d={`M ${frame.x - 27} ${fromY} C ${frame.x - 38} ${fromY}, ${frame.x - 38} ${toY}, ${frame.x - 27} ${toY}`}
+            key={jumper.id}
+          />
+        );
+      })}
       {frame.members.map((member) => (
         <MountingFrameMemberNode frame={frame} interaction={memberInteractions.get(member.id)} member={member} key={member.id} />
       ))}

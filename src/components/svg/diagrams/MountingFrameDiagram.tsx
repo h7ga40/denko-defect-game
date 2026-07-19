@@ -23,6 +23,20 @@ export function MountingFrameDiagram({ frame, defectType = "mounting_frame_loose
       <rect className="device-detail" x="310" y="96" width="100" height="188" rx="7" />
       <circle className="device-detail" cx="360" cy="94" r="6" />
       <circle className="device-detail" cx="360" cy="286" r="6" />
+      {(frame?.jumpers ?? []).map((jumper) => {
+        const from = members.find((member) => member.id === jumper.fromMemberId);
+        const to = members.find((member) => member.id === jumper.toMemberId);
+        if (!from || !to) return null;
+        const fromY = slotY[from.position];
+        const toY = slotY[to.position];
+        return (
+          <path
+            className={"mounting-frame-jumper " + jumper.color}
+            d={`M 320 ${fromY} C 298 ${fromY}, 298 ${toY}, 320 ${toY}`}
+            key={jumper.id}
+          />
+        );
+      })}
       {members.map((member) => <FrameMember member={member} key={member.id} />)}
       {defectType === "mounting_frame_loose" && (
         <>
