@@ -66,6 +66,8 @@
 - 想定値であり、本試験では数量・長さ・接続方法・器具仕様が変わる可能性を明記
 - 使用要否・使用箇所は問題要素として表示しない
 - SVGは学習用に簡略化した独自図
+- 器具座標はHOZAN候補問題No.1～No.13の複線図を配置基準とし、電源、接続点、器具、取付枠、施工省略部の上下左右とまとまりを保つ
+- 原図画像の複製ではなく、選択操作とモバイル表示に必要な間隔を確保した独自SVGとする
 - ケーブル区間は CableRunSpecification の coreColors を使い、芯線ごとに色付きの平行線として表示
 - ケーブル区間にはHOZANの過去出題例を基にした器具間寸法をmm単位で表示
 - 標準色は2芯が黒・白、3芯が黒・白・赤、4芯が黒・白・赤・青。単芯IVは接続色を使用
@@ -92,6 +94,8 @@
 ### candidateDiagrams.ts
 
 CandidateDiagram、CandidateDevice、CandidateConnectionで候補問題、器具座標、接続を管理する。CandidateDeviceは処理分類のtypeと、記号・欠陥テンプレートを識別するvariantを分けて保持する。CandidateConnectionのidはボックス結線から参照する安定したケーブルID、cableは候補問題ごとに確定したケーブル種別・芯数・芯線色・寸法の上書きに使用する。
+
+CandidateDeviceの`x`・`y`は720×390のviewBox上の座標とし、HOZAN複線図における相対配置を基準にする。埋込連用取付枠の構成器具は`mountingFrames`内へまとめ、施工省略器具は実器具に対応する記号で表示する。
 
 CandidateDiagramの`boxWirings`には、ボックスごとの正しい結線を明示できる。`deviceId`で対象ボックスを指定し、結線グループごとに接続方法と`cableId`・`coreIndex`の組を列挙する。`coreIndex`は0始まりとする。
 

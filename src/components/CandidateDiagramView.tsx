@@ -238,7 +238,7 @@ function MountingFrameNode({
         <circle className="device-detail" cx={frame.x} cy={frame.y - 43} r="4" />
         <circle className="device-detail" cx={frame.x} cy={frame.y + 43} r="4" />
         <text className="candidate-label small-label" x={frame.x} y={frame.y > 290 ? frame.y - 62 : frame.y + 68} textAnchor="middle">
-          {frame.label}
+          取付枠
         </text>
       </SelectableGroup>
       {frame.members.map((member) => (
@@ -382,7 +382,7 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
     );
   }
 
-  if (device.variant === "lamp_receptacle") {
+  if (device.variant === "lamp_receptacle" || (device.variant === "omitted_work" && device.type === "lamp" && device.label.startsWith("R"))) {
     return (
       <SelectableGroup height={104} interaction={interaction} width={98} x={device.x} y={device.y}>
         <circle className="candidate-device lamp" cx={device.x} cy={device.y} r="34" />
@@ -394,7 +394,7 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
     );
   }
 
-  if (device.variant === "ceiling_connector") {
+  if (device.variant === "ceiling_connector" || (device.variant === "omitted_work" && device.type === "lamp" && device.label.includes("引掛"))) {
     return (
       <SelectableGroup height={102} interaction={interaction} width={108} x={device.x} y={device.y}>
         <rect className="candidate-device ceiling-connector" x={device.x - 40} y={device.y - 27} width="80" height="54" rx="18" />
@@ -421,6 +421,7 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
     || device.variant === "three_way_switch"
     || device.variant === "four_way_switch"
     || device.variant === "switch_group"
+    || (device.variant === "omitted_work" && device.type === "switch")
   ) {
     const switchMark = device.variant === "three_way_switch"
       ? "3"
