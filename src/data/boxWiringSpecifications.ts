@@ -3,6 +3,8 @@ import type {
   CandidateConnection,
   CandidateDevice,
   CandidateDiagram,
+  RingSleeveMark,
+  RingSleeveSize,
 } from "./candidateDiagrams";
 import {
   resolveCableRunSpecification,
@@ -34,8 +36,8 @@ export type BoxConductorEndpoint = {
 export type BoxConnectionGroup = {
   id: string;
   method: BoxConnectionMethod;
-  sleeveSize?: "small" | "medium";
-  mark?: "○" | "小" | "中";
+  sleeveSize?: RingSleeveSize;
+  mark?: RingSleeveMark;
   conductorIds: string[];
 };
 

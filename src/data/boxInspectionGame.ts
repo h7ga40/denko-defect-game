@@ -5,6 +5,8 @@ import {
   type CandidateMountingFrame,
   type CandidateMountingFrameMember,
   type CandidateOutletBoxOpening,
+  type RingSleeveMark,
+  type RingSleeveSize,
 } from "./candidateDiagrams";
 import {
   getCandidateCableRuns,
@@ -45,8 +47,8 @@ export type ConnectionSpec = {
   looseConductors: BoxConductorEndpoint[];
   looseSourceCables: CableRunSpecification[];
   looseSourceCableEnds: CableEndPreparation[];
-  sleeveSize?: "small" | "medium";
-  mark?: "○" | "小" | "中";
+  sleeveSize?: RingSleeveSize;
+  mark?: RingSleeveMark;
   portCount?: number;
 };
 
@@ -522,15 +524,18 @@ function validateOutletBoxOpenings(candidate: CandidateDiagram, device: Candidat
   }
 }
 
-function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: "small" | "medium"; mark: "○" | "小" | "中" } {
+export function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: RingSleeveSize; mark: RingSleeveMark } {
   const equivalent = wireSizes.reduce((total, size) => total + (size === 2.0 ? 2 : 1), 0);
   if (wireSizes.length === 2 && wireSizes.every((size) => size === 1.6)) {
     return { size: "small", mark: "○" };
   }
-  if (equivalent <= 5) {
+  if (equivalent <= 4) {
     return { size: "small", mark: "小" };
   }
-  return { size: "medium", mark: "中" };
+  if (equivalent <= 6) {
+    return { size: "medium", mark: "中" };
+  }
+  return { size: "large", mark: "大" };
 }
 
 function createBox(
@@ -636,7 +641,8 @@ function conductorLabel(conductor: BoxConductorEndpoint) {
 function summarizeConductors(connection: ConnectionSpec) {
   const sizes = connection.wireSizes.map((size) => size.toFixed(1) + "mm").join("・");
   if (connection.method === "ring_sleeve") {
-    return connection.wireCount + "芯 " + sizes + " / " + (connection.sleeveSize === "medium" ? "中スリーブ" : "小スリーブ") + "・刻印" + connection.mark;
+    const sleeveLabel = connection.sleeveSize === "large" ? "大" : connection.sleeveSize === "medium" ? "中" : "小";
+    return connection.wireCount + "芯 " + sizes + " / " + sleeveLabel + "スリーブ・刻印" + connection.mark;
   }
   if (connection.method === "push_connector") {
     return connection.wireCount + "芯 " + sizes + " / " + connection.portCount + "本用";

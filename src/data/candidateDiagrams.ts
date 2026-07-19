@@ -96,11 +96,14 @@ export type CandidateConductorReference = {
   coreIndex: number;
 };
 
+export type RingSleeveSize = "small" | "medium" | "large";
+export type RingSleeveMark = "○" | "小" | "中" | "大";
+
 export type CandidateBoxConnectionGroup = {
   id: string;
   method: "ring_sleeve" | "push_connector";
-  sleeveSize?: "small" | "medium";
-  mark?: "○" | "小" | "中";
+  sleeveSize?: RingSleeveSize;
+  mark?: RingSleeveMark;
   conductors: CandidateConductorReference[];
 };
 
@@ -735,7 +738,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     boxWirings: [{
       deviceId: "j",
       groups: [
-        { id: "neutral", method: "ring_sleeve", sleeveSize: "medium", mark: "中", conductors: [{ cableId: "10-breaker-box", coreIndex: 1 }, { cableId: "10-box-ceiling", coreIndex: 1 }, { cableId: "10-box-receptacle", coreIndex: 1 }, { cableId: "10-box-frame", coreIndex: 1 }] },
+        { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "10-breaker-box", coreIndex: 1 }, { cableId: "10-box-ceiling", coreIndex: 1 }, { cableId: "10-box-receptacle", coreIndex: 1 }, { cableId: "10-box-frame", coreIndex: 1 }] },
         { id: "line", method: "ring_sleeve", conductors: [{ cableId: "10-breaker-box", coreIndex: 0 }, { cableId: "10-box-frame", coreIndex: 0 }] },
         { id: "switch-i", method: "push_connector", conductors: [{ cableId: "10-box-ceiling", coreIndex: 0 }, { cableId: "10-box-receptacle", coreIndex: 0 }, { cableId: "10-box-frame", coreIndex: 2 }] },
       ],

@@ -351,7 +351,7 @@ function InfrastructurePart({ part, x, y }: { part: BoxInspectionPart; x: number
 
 function RingSleeve({ part, x, y }: { part: BoxInspectionPart; x: number; y: number }) {
   const wrongSize = part.defectType === "ring_sleeve_wrong_size";
-  const width = wrongSize ? 38 : part.connection.sleeveSize === "medium" ? 46 : 40;
+  const width = wrongSize ? 38 : part.connection.sleeveSize === "large" ? 52 : part.connection.sleeveSize === "medium" ? 46 : 40;
   return (
     <>
       <rect className={wrongSize ? "sleeve alert-fill" : "sleeve"} x={x - width / 2} y={y - 13} width={width} height="26" rx="9" />
@@ -516,7 +516,8 @@ function isConnectionPart(part: BoxInspectionPart) {
 
 function shortConnectionLabel(part: BoxInspectionPart) {
   if (part.connection.method === "ring_sleeve") {
-    return `${part.connection.wireCount}芯 ${part.connection.sleeveSize === "medium" ? "中" : "小"}/${displayMark(part)}`;
+    const sleeveLabel = part.connection.sleeveSize === "large" ? "大" : part.connection.sleeveSize === "medium" ? "中" : "小";
+    return `${part.connection.wireCount}芯 ${sleeveLabel}/${displayMark(part)}`;
   }
   return `${part.connection.wireCount}芯 ${displayPortCount(part)}本用`;
 }
@@ -529,7 +530,7 @@ function infrastructureLabel(part: BoxInspectionPart) {
 
 function displayMark(part: BoxInspectionPart) {
   if (part.defectType !== "ring_sleeve_wrong_mark") return part.connection.mark;
-  return part.connection.mark === "○" ? "小" : part.connection.mark === "小" ? "中" : "小";
+  return part.connection.mark === "○" ? "小" : part.connection.mark === "小" ? "中" : part.connection.mark === "中" ? "小" : "中";
 }
 
 function displayPortCount(part: BoxInspectionPart) {
