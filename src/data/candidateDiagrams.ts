@@ -463,13 +463,33 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "p", label: "電源", type: "power", x: 650, y: 205 },
     ],
     connections: [
-      { from: "c1", to: "j1", color: "black", label: "施工省略", cable: hozanCable("6-vvf-1", 100) },
-      { from: "j1", to: "sw1", color: "black", label: "イ3", cable: hozanCable("6-vvf-2", 150) },
-      { from: "j1", to: "j2", color: "black", cable: hozanCable("6-vvf-2", 150) },
-      { from: "c2", to: "j1", color: "black", label: "イ", cable: hozanCable("6-vvf-1", 150) },
-      { from: "j2", to: "outlet", color: "black", label: "露出形", cable: hozanCable("6-vvf-1", 150) },
-      { from: "j2", to: "sw2", color: "black", label: "イ3", cable: hozanCable("6-vvf-2", 150) },
-      { from: "j2", to: "p", color: "black", label: "VVF 2.0-2C", cable: hozanCable("6-vvf-3", 150) },
+      { id: "6-omitted-box1", from: "c1", to: "j1", color: "black", label: "施工省略", cable: hozanCable("6-vvf-1", 100) },
+      { id: "6-box1-switch", from: "j1", to: "sw1", color: "black", label: "イ3", cable: hozanCable("6-vvf-2", 150) },
+      { id: "6-box1-box2", from: "j1", to: "j2", color: "black", cable: hozanCable("6-vvf-2", 150) },
+      { id: "6-ceiling-box1", from: "c2", to: "j1", color: "black", label: "イ", cable: hozanCable("6-vvf-1", 150) },
+      { id: "6-box2-outlet", from: "j2", to: "outlet", color: "black", label: "露出形", cable: hozanCable("6-vvf-1", 150) },
+      { id: "6-box2-switch", from: "j2", to: "sw2", color: "black", label: "イ3", cable: hozanCable("6-vvf-2", 150) },
+      { id: "6-box2-power", from: "j2", to: "p", color: "black", label: "VVF 2.0-2C", cable: hozanCable("6-vvf-3", 150) },
+    ],
+    boxWirings: [
+      {
+        deviceId: "j1",
+        groups: [
+          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "6-omitted-box1", coreIndex: 1 }, { cableId: "6-ceiling-box1", coreIndex: 1 }, { cableId: "6-box1-box2", coreIndex: 1 }] },
+          { id: "lamp-i", method: "ring_sleeve", conductors: [{ cableId: "6-omitted-box1", coreIndex: 0 }, { cableId: "6-ceiling-box1", coreIndex: 0 }, { cableId: "6-box1-switch", coreIndex: 0 }] },
+          { id: "traveler-1", method: "ring_sleeve", conductors: [{ cableId: "6-box1-switch", coreIndex: 1 }, { cableId: "6-box1-box2", coreIndex: 0 }] },
+          { id: "traveler-2", method: "ring_sleeve", conductors: [{ cableId: "6-box1-switch", coreIndex: 2 }, { cableId: "6-box1-box2", coreIndex: 2 }] },
+        ],
+      },
+      {
+        deviceId: "j2",
+        groups: [
+          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "6-box1-box2", coreIndex: 1 }, { cableId: "6-box2-outlet", coreIndex: 1 }, { cableId: "6-box2-power", coreIndex: 1 }] },
+          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "6-box2-outlet", coreIndex: 0 }, { cableId: "6-box2-switch", coreIndex: 0 }, { cableId: "6-box2-power", coreIndex: 0 }] },
+          { id: "traveler-1", method: "ring_sleeve", conductors: [{ cableId: "6-box1-box2", coreIndex: 0 }, { cableId: "6-box2-switch", coreIndex: 1 }] },
+          { id: "traveler-2", method: "ring_sleeve", conductors: [{ cableId: "6-box1-box2", coreIndex: 2 }, { cableId: "6-box2-switch", coreIndex: 2 }] },
+        ],
+      },
     ],
     mountingFrames: [
       { id: "frame-1", label: "埋込連用取付枠1", x: 250, y: 320, members: [{ id: "switch", label: "イ 3路", variant: "three_way_switch", position: "middle", sourceDeviceId: "sw1" }] },
@@ -501,14 +521,36 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "sw3", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 590, y: 325 },
     ],
     connections: [
-      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("7-vvf-3", 150) },
-      { from: "j1", to: "sw1", color: "black", label: "イ3", cable: hozanCable("7-vvf-2", 150) },
+      { id: "7-power-box1", from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("7-vvf-3", 150) },
+      { id: "7-box1-switch", from: "j1", to: "sw1", color: "black", label: "イ3", cable: hozanCable("7-vvf-2", 150) },
       { id: "7-box1-box2", from: "j1", to: "box", color: "black", label: "VVF 1.6-3C", cable: hozanCable("7-vvf-2", 150) },
-      { from: "box", to: "r1", color: "black", label: "イ", cable: hozanCable("7-vvf-1", 150) },
+      { id: "7-box2-receptacle", from: "box", to: "r1", color: "black", label: "イ", cable: hozanCable("7-vvf-1", 150) },
       { id: "7-box2-four-way-a", from: "box", to: "sw2", color: "black", label: "イ4", cable: hozanCable("7-vvf-1", 150) },
       { id: "7-box2-four-way-b", from: "box", to: "sw2", color: "black", cable: hozanCable("7-vvf-1", 150) },
-      { from: "box", to: "r2", color: "black", label: "イ 施工省略", cable: hozanCable("7-vvf-1", 250) },
-      { from: "box", to: "sw3", color: "black", label: "イ3", cable: hozanCable("7-vvf-2", 250) },
+      { id: "7-box2-omitted", from: "box", to: "r2", color: "black", label: "イ 施工省略", cable: hozanCable("7-vvf-1", 250) },
+      { id: "7-box2-switch3", from: "box", to: "sw3", color: "black", label: "イ3", cable: hozanCable("7-vvf-2", 250) },
+    ],
+    boxWirings: [
+      {
+        deviceId: "j1",
+        groups: [
+          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "7-power-box1", coreIndex: 1 }, { cableId: "7-box1-box2", coreIndex: 1 }] },
+          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "7-power-box1", coreIndex: 0 }, { cableId: "7-box1-switch", coreIndex: 0 }] },
+          { id: "traveler-1", method: "ring_sleeve", conductors: [{ cableId: "7-box1-switch", coreIndex: 1 }, { cableId: "7-box1-box2", coreIndex: 0 }] },
+          { id: "traveler-2", method: "ring_sleeve", conductors: [{ cableId: "7-box1-switch", coreIndex: 2 }, { cableId: "7-box1-box2", coreIndex: 2 }] },
+        ],
+      },
+      {
+        deviceId: "box",
+        groups: [
+          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "7-box1-box2", coreIndex: 1 }, { cableId: "7-box2-receptacle", coreIndex: 1 }, { cableId: "7-box2-omitted", coreIndex: 1 }] },
+          { id: "lamp-i", method: "ring_sleeve", conductors: [{ cableId: "7-box2-receptacle", coreIndex: 0 }, { cableId: "7-box2-omitted", coreIndex: 0 }, { cableId: "7-box2-switch3", coreIndex: 0 }] },
+          { id: "traveler-in-1", method: "ring_sleeve", conductors: [{ cableId: "7-box1-box2", coreIndex: 0 }, { cableId: "7-box2-four-way-a", coreIndex: 0 }] },
+          { id: "traveler-in-2", method: "ring_sleeve", conductors: [{ cableId: "7-box1-box2", coreIndex: 2 }, { cableId: "7-box2-four-way-a", coreIndex: 1 }] },
+          { id: "traveler-out-1", method: "ring_sleeve", conductors: [{ cableId: "7-box2-four-way-b", coreIndex: 0 }, { cableId: "7-box2-switch3", coreIndex: 1 }] },
+          { id: "traveler-out-2", method: "ring_sleeve", conductors: [{ cableId: "7-box2-four-way-b", coreIndex: 1 }, { cableId: "7-box2-switch3", coreIndex: 2 }] },
+        ],
+      },
     ],
     mountingFrames: [{
       id: "frame-1", label: "埋込連用取付枠", x: 390, y: 325,
@@ -542,10 +584,20 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "8-breaker-1", from: "t", to: "box", color: "black", label: "VVF 1.6-2C ×3", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
       { id: "8-breaker-2", from: "t", to: "box", color: "black", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
       { id: "8-breaker-3", from: "t", to: "box", color: "black", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
-      { from: "box", to: "c1", color: "black", label: "イ", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 1 }) },
-      { from: "box", to: "r", color: "black", label: "ロ", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 1 }) },
-      { from: "box", to: "c2", color: "black", label: "ハ 施工省略", cable: hozanCable("8-vvf-1", 150, { sourceStockPieceIndex: 1 }) },
+      { id: "8-box-ceiling", from: "box", to: "c1", color: "black", label: "イ", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 1 }) },
+      { id: "8-box-receptacle", from: "box", to: "r", color: "black", label: "ロ", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 1 }) },
+      { id: "8-box-omitted", from: "box", to: "c2", color: "black", label: "ハ 施工省略", cable: hozanCable("8-vvf-1", 150, { sourceStockPieceIndex: 1 }) },
     ],
+    boxWirings: [{
+      deviceId: "box",
+      groups: [
+        { id: "line", method: "ring_sleeve", conductors: [{ cableId: "8-power-box1", coreIndex: 0 }, { cableId: "8-breaker-1", coreIndex: 0 }, { cableId: "8-breaker-2", coreIndex: 0 }, { cableId: "8-breaker-3", coreIndex: 0 }] },
+        { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "8-power-box1", coreIndex: 1 }, { cableId: "8-box-ceiling", coreIndex: 1 }, { cableId: "8-box-receptacle", coreIndex: 1 }, { cableId: "8-box-omitted", coreIndex: 1 }] },
+        { id: "branch-i", method: "ring_sleeve", conductors: [{ cableId: "8-breaker-1", coreIndex: 1 }, { cableId: "8-box-ceiling", coreIndex: 0 }] },
+        { id: "branch-ro", method: "ring_sleeve", conductors: [{ cableId: "8-breaker-2", coreIndex: 1 }, { cableId: "8-box-receptacle", coreIndex: 0 }] },
+        { id: "branch-ha", method: "ring_sleeve", conductors: [{ cableId: "8-breaker-3", coreIndex: 1 }, { cableId: "8-box-omitted", coreIndex: 0 }] },
+      ],
+    }],
     deviceWirings: [{
       deviceId: "t",
       terminals: [
