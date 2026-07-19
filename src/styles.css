@@ -693,6 +693,10 @@ button {
   fill: #ffffff;
 }
 
+.candidate-device.outdoor-light {
+  fill: #ffffff;
+}
+
 .candidate-device.pilot {
   fill: #eaf7fb;
 }

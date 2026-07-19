@@ -16,6 +16,7 @@ export type DeviceType =
 export type DeviceVariant =
   | "lamp_receptacle"
   | "fluorescent_lamp"
+  | "outdoor_light"
   | "ceiling_connector"
   | "pilot_lamp"
   | "single_pole_switch"
@@ -524,8 +525,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
   {
     no: 13,
     title: "公式No.13 VVR・自動点滅器・接地",
-    theme: `${sourceNote}。VVR 1.6-2C、自動点滅器、接地を含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、VVR 1.6-2C、E1.6", "器具: ランプレセプタクル、自動点滅器、接地極付器具"],
+    theme: `${sourceNote}。VVR 1.6-2C、自動点滅器、接地、施工省略の屋外灯を含む回路。`,
+    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、VVR 1.6-2C、E1.6", "器具: ランプレセプタクル、自動点滅器、接地極付器具、屋外灯（施工省略）"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 150, y: 85 },
       { id: "j1", label: "接続点", type: "connector", x: 150, y: 200 },
@@ -535,7 +536,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "e", label: "接地極付 E", type: "grounded_receptacle", variant: "grounded_receptacle", x: 360, y: 325 },
       { id: "a", label: "A（3A）ロ", type: "terminal", variant: "automatic_switch", x: 590, y: 180 },
       { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 460, y: 340 },
-      { id: "load", label: "器具 ロ 施工省略", type: "lamp", variant: "load_device", x: 590, y: 315 },
+      { id: "load", label: "屋外灯 ロ 施工省略", type: "lamp", variant: "outdoor_light", x: 590, y: 315 },
     ],
     connections: [
       { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("13-vvf-3", 150) },

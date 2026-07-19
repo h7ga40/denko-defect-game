@@ -211,6 +211,14 @@
   - `npm.cmd run build`
   - PC幅でNo.1・No.5の記号を確認し、蛍光灯を選択するボタンが生成されないことを確認。
 
+- Work done:
+  - 屋外灯の参照記号を基に、外円・内円・斜め4方向の接続線を分離した`OutdoorLightSymbol`を追加。
+  - No.13の施工省略負荷を`outdoor_light`へ変更し、名称を屋外灯へ修正。
+  - 屋外灯を支給部材・選択・結線・採点の対象外のまま複線図へ表示。
+- Verification:
+  - `npm.cmd run build`
+  - PC幅でNo.13の記号とラベルを確認し、屋外灯を選択するボタンが生成されないことを確認。
+
 ## Entry Template
 
 - Date: YYYY-MM-DD

@@ -11,6 +11,7 @@ import { resolveCableRunSpecification } from "../data/cableSpecifications";
 import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
 import { CandidateMaterials } from "./CandidateMaterials";
 import { FluorescentLampSymbol } from "./svg/FluorescentLampSymbol";
+import { OutdoorLightSymbol } from "./svg/OutdoorLightSymbol";
 
 type InspectionAnswers = Record<string, string>;
 type SelectionStatus = "idle" | "selected" | "answered" | "correct" | "wrong";
@@ -388,6 +389,17 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
       <SelectableGroup height={88} interaction={interaction} width={112} x={device.x} y={device.y}>
         <FluorescentLampSymbol x={device.x} y={device.y} />
         <text className="candidate-label small-label" x={device.x} y={device.y + (device.y > 300 ? 48 : 54)} textAnchor="middle">
+          {device.label}
+        </text>
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "outdoor_light") {
+    return (
+      <SelectableGroup height={100} interaction={interaction} width={108} x={device.x} y={device.y}>
+        <OutdoorLightSymbol x={device.x} y={device.y} />
+        <text className="candidate-label small-label" x={device.x} y={device.y + 48} textAnchor="middle">
           {device.label}
         </text>
       </SelectableGroup>
