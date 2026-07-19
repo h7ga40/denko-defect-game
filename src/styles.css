@@ -689,6 +689,10 @@ button {
   fill: #fff8d6;
 }
 
+.candidate-device.fluorescent-lamp {
+  fill: #ffffff;
+}
+
 .candidate-device.pilot {
   fill: #eaf7fb;
 }

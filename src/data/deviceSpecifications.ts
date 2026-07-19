@@ -47,6 +47,7 @@ export const deviceSpecifications: Record<DeviceVariant, DeviceSpecification> = 
     terminal("center", "中心接点", "line"),
     terminal("shell", "受金", "neutral"),
   ]),
+  fluorescent_lamp: unwired("蛍光灯（施工省略）"),
   ceiling_connector: wired("引掛シーリングローゼット", "push_in", [
     terminal("line", "非接地側", "line"),
     terminal("neutral", "接地側", "neutral"),

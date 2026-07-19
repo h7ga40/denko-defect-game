@@ -203,6 +203,14 @@
   - 13問をPC幅で一覧比較し、各SVGが720×390のviewBox内に収まることを確認。
   - PlaywrightのAndroid相当412px幅でNo.12を確認し、`innerWidth`、`scrollWidth`、`bodyWidth`がすべて412pxで横スクロールがないことを確認。
 
+- Work done:
+  - HOZANの蛍光灯記号を参考に、中央円と左右端子を分離した`FluorescentLampSymbol`を追加。
+  - No.1・No.5の施工省略器具を`fluorescent_lamp`へ変更し、支給部材・選択・結線・採点の対象外のまま複線図へ表示。
+  - No.1では配線寸法と重ならないよう、蛍光灯の器具名を記号下側へ配置。
+- Verification:
+  - `npm.cmd run build`
+  - PC幅でNo.1・No.5の記号を確認し、蛍光灯を選択するボタンが生成されないことを確認。
+
 ## Entry Template
 
 - Date: YYYY-MM-DD

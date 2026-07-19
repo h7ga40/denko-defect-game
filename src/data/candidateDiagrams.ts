@@ -15,6 +15,7 @@ export type DeviceType =
 
 export type DeviceVariant =
   | "lamp_receptacle"
+  | "fluorescent_lamp"
   | "ceiling_connector"
   | "pilot_lamp"
   | "single_pole_switch"
@@ -123,8 +124,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
   {
     no: 1,
     title: "公式No.1 基本回路",
-    theme: `${sourceNote}。ランプレセプタクル、引掛シーリングローゼット、スイッチ群を含む回路。`,
-    points: ["電源: 1φ2W 100V", "電線: EM-EEF 2.0-2C", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ群"],
+    theme: `${sourceNote}。ランプレセプタクル、引掛シーリングローゼット、スイッチ群、施工省略の蛍光灯を含む回路。`,
+    points: ["電源: 1φ2W 100V", "電線: EM-EEF 2.0-2C", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ群、蛍光灯（施工省略）"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 92, y: 205 },
       { id: "j1", label: "接続点", type: "connector", x: 240, y: 205 },
@@ -132,7 +133,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "sw", label: "Hイ/ロ/ハ", type: "switch", variant: "switch_group", x: 240, y: 315 },
       { id: "j2", label: "接続点", type: "connector", x: 435, y: 205 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 435, y: 96 },
-      { id: "omit", label: "施工省略 ハ", type: "receptacle", variant: "omitted_work", x: 435, y: 315 },
+      { id: "omit", label: "蛍光灯 ハ 施工省略", type: "lamp", variant: "fluorescent_lamp", x: 435, y: 315 },
     ],
     connections: [
       { from: "p", to: "j1", color: "black", label: "EM-EEF 2.0-2C", cable: hozanCable("1-em-eef", 150) },
@@ -276,8 +277,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
   {
     no: 5,
     title: "公式No.5 200Vコンセント・接地",
-    theme: `${sourceNote}。100V/200V電源、20A 250Vコンセント、接地を含む回路。`,
-    points: ["電源: 100V、200V（対地電圧150V以下）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: B、BE、20A 250Vコンセント、ランプレセプタクル"],
+    theme: `${sourceNote}。100V/200V電源、20A 250Vコンセント、接地、施工省略の蛍光灯を含む回路。`,
+    points: ["電源: 100V、200V（対地電圧150V以下）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: B、BE、20A 250Vコンセント、ランプレセプタクル、蛍光灯（施工省略）"],
     devices: [
       { id: "p100", label: "100V電源", type: "power", x: 70, y: 95 },
       { id: "p200", label: "200V電源", type: "power", x: 70, y: 185 },
@@ -288,7 +289,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 300, y: 195 },
       { id: "outlet", label: "20A 250V E", type: "grounded_receptacle", variant: "grounded_20a_receptacle", x: 315, y: 325 },
       { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 492, y: 230 },
-      { id: "c", label: "R イ 施工省略", type: "lamp", variant: "omitted_work", x: 630, y: 95 },
+      { id: "c", label: "蛍光灯 イ 施工省略", type: "lamp", variant: "fluorescent_lamp", x: 630, y: 95 },
     ],
     connections: [
       { from: "p100", to: "b", color: "black" },

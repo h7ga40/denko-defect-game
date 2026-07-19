@@ -10,6 +10,7 @@ import {
 import { resolveCableRunSpecification } from "../data/cableSpecifications";
 import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
 import { CandidateMaterials } from "./CandidateMaterials";
+import { FluorescentLampSymbol } from "./svg/FluorescentLampSymbol";
 
 type InspectionAnswers = Record<string, string>;
 type SelectionStatus = "idle" | "selected" | "answered" | "correct" | "wrong";
@@ -378,6 +379,17 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
       <SelectableGroup height={64} interaction={interaction} width={72} x={device.x} y={device.y}>
         <circle className="candidate-connector candidate-device" cx={device.x} cy={device.y} r="18" />
         <text className="candidate-label small-label" x={device.x} y={device.y + 38} textAnchor="middle">{device.label}</text>
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "fluorescent_lamp") {
+    return (
+      <SelectableGroup height={88} interaction={interaction} width={112} x={device.x} y={device.y}>
+        <FluorescentLampSymbol x={device.x} y={device.y} />
+        <text className="candidate-label small-label" x={device.x} y={device.y + (device.y > 300 ? 48 : 54)} textAnchor="middle">
+          {device.label}
+        </text>
       </SelectableGroup>
     );
   }
