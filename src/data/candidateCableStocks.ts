@@ -38,7 +38,7 @@ export const candidateCableStocks: Record<number, CableStockSpecification[]> = {
   5: [stock("5-vvf-1", "VVF", 1.6, 2, 1650), stock("5-vvf-2", "VVF", 2.0, 2, 350), stock("5-vvf-3", "VVF", 2.0, 3, 350, 1, ["red", "black", "green"])],
   6: [stock("6-vvf-1", "VVF", 1.6, 2, 850), stock("6-vvf-2", "VVF", 1.6, 3, 1050), stock("6-vvf-3", "VVF", 2.0, 2, 250)],
   7: [stock("7-vvf-1", "VVF", 1.6, 2, 1400), stock("7-vvf-2", "VVF", 1.6, 3, 1150), stock("7-vvf-3", "VVF", 2.0, 2, 250)],
-  8: [stock("8-vvf-1", "VVF", 1.6, 2, 1100, 2), stock("8-vvf-2", "VVF", 2.0, 2, 300)],
+  8: [stock("8-vvf-1", "VVF", 1.6, 2, 1100, 2), stock("8-vvr", "VVR", 2.0, 2, 300)],
   9: [stock("9-vvf-1", "VVF", 1.6, 2, 1250), stock("9-vvf-2", "VVF", 1.6, 3, 350), stock("9-vvf-3", "VVF", 2.0, 2, 600), stock("9-iv", "IV", 1.6, 1, 150, 1, ["green"])],
   10: [stock("10-vvf-1", "VVF", 1.6, 2, 650), stock("10-vvf-2", "VVF", 1.6, 3, 450), stock("10-vvf-3", "VVF", 2.0, 2, 300)],
   11: [stock("11-vvf-1", "VVF", 1.6, 2, 1200), stock("11-vvf-2", "VVF", 2.0, 2, 250), stock("11-iv-1", "IV", 1.6, 1, 550, 1, ["black"]), stock("11-iv-2", "IV", 1.6, 1, 450, 1, ["white"]), stock("11-iv-3", "IV", 1.6, 1, 450, 1, ["red"])],

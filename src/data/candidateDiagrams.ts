@@ -39,6 +39,17 @@ export type DeviceVariant =
   | "load_device"
   | "omitted_work";
 
+export type OutletBoxSide = "top" | "right" | "bottom" | "left";
+export type OutletBoxHoleSize = 19 | 25;
+export type OutletBoxFitting = "rubber_bushing" | "metal_conduit_connector" | "pf_conduit_connector";
+
+export type CandidateOutletBoxOpening = {
+  side: OutletBoxSide;
+  size: OutletBoxHoleSize;
+  remoteDeviceId: string;
+  fitting: OutletBoxFitting;
+};
+
 export type CandidateDevice = {
   id: string;
   label: string;
@@ -46,6 +57,7 @@ export type CandidateDevice = {
   variant?: DeviceVariant;
   x: number;
   y: number;
+  outletBoxOpenings?: CandidateOutletBoxOpening[];
 };
 
 export type CandidateConnection = {
@@ -367,7 +379,16 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "p", label: "電源", type: "power", x: 150, y: 85 },
       { id: "j1", label: "アウトレットボックス1", type: "connector", x: 150, y: 210 },
       { id: "sw1", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 150, y: 325 },
-      { id: "box", label: "アウトレットボックス2", type: "box", x: 390, y: 210 },
+      {
+        id: "box", label: "アウトレットボックス2", type: "box", x: 390, y: 210,
+        outletBoxOpenings: [
+          { side: "top", size: 19, remoteDeviceId: "r1", fitting: "rubber_bushing" },
+          { side: "right", size: 19, remoteDeviceId: "r2", fitting: "rubber_bushing" },
+          { side: "right", size: 25, remoteDeviceId: "sw3", fitting: "rubber_bushing" },
+          { side: "bottom", size: 25, remoteDeviceId: "sw2", fitting: "rubber_bushing" },
+          { side: "left", size: 19, remoteDeviceId: "j1", fitting: "rubber_bushing" },
+        ],
+      },
       { id: "r1", label: "R イ 施工省略", type: "lamp", variant: "omitted_work", x: 390, y: 85 },
       { id: "sw2", label: "スイッチ イ4", type: "switch", variant: "four_way_switch", x: 390, y: 325 },
       { id: "r2", label: "R イ 施工省略", type: "lamp", variant: "omitted_work", x: 590, y: 85 },
@@ -392,17 +413,26 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 8,
     title: "公式No.8 端子台代用遮断器",
     theme: `${sourceNote}。3台の配線用遮断器を6極端子台で代用する回路。`,
-    points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、VVF 1.6-2C", "器具: 配線用遮断器3台（6極端子台代用）、ランプレセプタクル、引掛シーリングローゼット"],
+    points: ["電源: 1φ2W 100V", "電線: VVR 2.0-2C、VVF 1.6-2C", "器具: 配線用遮断器3台（6極端子台代用）、ランプレセプタクル、引掛シーリングローゼット"],
     devices: [
       { id: "p", label: "電源 施工省略", type: "power", x: 70, y: 180 },
       { id: "t", label: "B×3 端子台代用", type: "terminal", variant: "terminal_block", x: 235, y: 280 },
-      { id: "box", label: "アウトレットボックス", type: "box", x: 455, y: 180 },
+      {
+        id: "box", label: "アウトレットボックス", type: "box", x: 455, y: 180,
+        outletBoxOpenings: [
+          { side: "right", size: 19, remoteDeviceId: "c1", fitting: "rubber_bushing" },
+          { side: "right", size: 25, remoteDeviceId: "r", fitting: "rubber_bushing" },
+          { side: "bottom", size: 19, remoteDeviceId: "c2", fitting: "rubber_bushing" },
+          { side: "bottom", size: 25, remoteDeviceId: "t", fitting: "rubber_bushing" },
+          { side: "left", size: 25, remoteDeviceId: "p", fitting: "rubber_bushing" },
+        ],
+      },
       { id: "c1", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 620, y: 90 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 620, y: 220 },
       { id: "c2", label: "引掛 ハ 施工省略", type: "lamp", variant: "omitted_work", x: 470, y: 325 },
     ],
     connections: [
-      { id: "8-power-box1", from: "p", to: "box", color: "black", label: "VVF 2.0-2C", cable: hozanCable("8-vvf-2", 200) },
+      { id: "8-power-box1", from: "p", to: "box", color: "black", label: "VVR 2.0-2C", cable: hozanCable("8-vvr", 200) },
       { id: "8-breaker-1", from: "t", to: "box", color: "black", label: "VVF 1.6-2C ×3", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
       { id: "8-breaker-2", from: "t", to: "box", color: "black", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
       { id: "8-breaker-3", from: "t", to: "box", color: "black", cable: hozanCable("8-vvf-1", 250, { sourceStockPieceIndex: 0 }) },
@@ -491,7 +521,16 @@ export const candidateDiagrams: CandidateDiagram[] = [
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（E19）", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ、アウトレットボックス"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 80, y: 125 },
-      { id: "box", label: "アウトレットボックス", type: "box", x: 350, y: 150 },
+      {
+        id: "box", label: "アウトレットボックス", type: "box", x: 350, y: 150,
+        outletBoxOpenings: [
+          { side: "right", size: 19, remoteDeviceId: "c", fitting: "rubber_bushing" },
+          { side: "right", size: 25, remoteDeviceId: "load", fitting: "rubber_bushing" },
+          { side: "bottom", size: 19, remoteDeviceId: "sw", fitting: "metal_conduit_connector" },
+          { side: "left", size: 19, remoteDeviceId: "r", fitting: "rubber_bushing" },
+          { side: "left", size: 25, remoteDeviceId: "p", fitting: "rubber_bushing" },
+        ],
+      },
       { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 600, y: 100 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 205, y: 285 },
       { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 360, y: 315 },
@@ -524,7 +563,15 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "j1", label: "接続点", type: "connector", x: 180, y: 190 },
       { id: "c1", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 180, y: 320 },
       { id: "p", label: "電源", type: "power", x: 380, y: 90 },
-      { id: "box", label: "アウトレットボックス", type: "box", x: 380, y: 190 },
+      {
+        id: "box", label: "アウトレットボックス", type: "box", x: 380, y: 190,
+        outletBoxOpenings: [
+          { side: "top", size: 19, remoteDeviceId: "p", fitting: "rubber_bushing" },
+          { side: "right", size: 19, remoteDeviceId: "c2", fitting: "pf_conduit_connector" },
+          { side: "bottom", size: 19, remoteDeviceId: "sw", fitting: "rubber_bushing" },
+          { side: "left", size: 19, remoteDeviceId: "j1", fitting: "rubber_bushing" },
+        ],
+      },
       { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 380, y: 320 },
       { id: "c2", label: "スイッチ ロ", type: "switch", variant: "single_pole_switch", x: 590, y: 190 },
     ],

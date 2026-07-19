@@ -4,6 +4,7 @@ import {
   type CandidateDiagram,
   type CandidateMountingFrame,
   type CandidateMountingFrameMember,
+  type CandidateOutletBoxOpening,
 } from "./candidateDiagrams";
 import {
   type CableEndPreparation,
@@ -70,6 +71,7 @@ export type InspectionBox = {
   x: number;
   y: number;
   cableCount: number;
+  outletBoxOpenings: CandidateOutletBoxOpening[];
   wiring: BoxWiringSpecification;
   installation: BoxWiringInstallation;
   parts: BoxInspectionPart[];
@@ -199,28 +201,28 @@ const templates: Template[] = [
     title: "アウトレットボックス",
     method: "outlet_box",
     defectType: "outlet_box_wrong_hole",
-    question: "ケーブルを通す穴の位置を判定してください。",
-    choices: ["欠陥なし", "指定と異なる穴へケーブルを通している", "必要なゴムブッシングがない", "穴径とゴムブッシングのサイズが違う"],
-    defectAnswer: "指定と異なる穴へケーブルを通している",
-    normalExplanation: "指定された穴に、適合するゴムブッシングを介してケーブルを通しています。",
-    defectExplanation: "施工条件で指定された穴とは異なる穴へケーブルを通しています。",
+    question: "ボックス全体の開口位置とケーブルの侵入方向を判定してください。",
+    choices: ["欠陥なし", "ケーブルの侵入位置が指定と違う", "ゴムブッシングが全数使われていない", "穴径とゴムブッシングのサイズが違う"],
+    defectAnswer: "ケーブルの侵入位置が指定と違う",
+    normalExplanation: "すべてのケーブルが指定された面と穴からボックス内へ入っています。",
+    defectExplanation: "ケーブルのうち1系統が、指定とは異なる面または穴からボックス内へ入っています。",
   },
   {
     title: "ゴムブッシング",
     method: "outlet_box",
     defectType: "rubber_bushing_missing",
-    question: "ケーブル通過穴の保護状態を判定してください。",
-    choices: ["欠陥なし", "必要なゴムブッシングがない", "指定と異なる穴へケーブルを通している", "穴径とゴムブッシングのサイズが違う"],
-    defectAnswer: "必要なゴムブッシングがない",
-    normalExplanation: "ケーブルを通す穴に適合するゴムブッシングが取り付けられています。",
-    defectExplanation: "ケーブルを通す穴に必要なゴムブッシングがありません。",
+    question: "支給されたゴムブッシングが全数使われているか判定してください。",
+    choices: ["欠陥なし", "ゴムブッシングが全数使われていない", "ケーブルの侵入位置が指定と違う", "穴径とゴムブッシングのサイズが違う"],
+    defectAnswer: "ゴムブッシングが全数使われていない",
+    normalExplanation: "開口したすべてのケーブル通過穴に、支給されたゴムブッシングが取り付けられています。",
+    defectExplanation: "開口した穴の1か所にゴムブッシングがなく、支給品が全数使われていません。",
   },
   {
     title: "ゴムブッシング",
     method: "outlet_box",
     defectType: "rubber_bushing_wrong_size",
-    question: "ボックス穴とゴムブッシングの組合せを判定してください。",
-    choices: ["欠陥なし", "穴径とゴムブッシングのサイズが違う", "必要なゴムブッシングがない", "指定と異なる穴へケーブルを通している"],
+    question: "ボックス全体の穴径とゴムブッシングの使用数を判定してください。",
+    choices: ["欠陥なし", "穴径とゴムブッシングのサイズが違う", "ゴムブッシングが全数使われていない", "ケーブルの侵入位置が指定と違う"],
     defectAnswer: "穴径とゴムブッシングのサイズが違う",
     normalExplanation: "穴径に合うゴムブッシングが取り付けられています。",
     defectExplanation: "19mm用と25mm用の組合せが穴径に合っていません。",
@@ -472,13 +474,14 @@ function getConductorCableEnds(
 }
 
 function createInfrastructureSpecs(candidate: CandidateDiagram, device: CandidateDevice): ConnectionSpec[] {
-  if (device.type !== "box" || ![7, 8, 11, 12].includes(candidate.no)) {
+  if (device.type !== "box" || !device.outletBoxOpenings?.length) {
     return [];
   }
 
+  validateOutletBoxOpenings(candidate, device);
   const methods: ConnectionMethod[] = ["outlet_box"];
-  if (candidate.no === 11) methods.push("metal_conduit");
-  if (candidate.no === 12) methods.push("pf_conduit");
+  if (device.outletBoxOpenings.some((opening) => opening.fitting === "metal_conduit_connector")) methods.push("metal_conduit");
+  if (device.outletBoxOpenings.some((opening) => opening.fitting === "pf_conduit_connector")) methods.push("pf_conduit");
 
   return methods.map((method) => ({
     id: method,
@@ -496,6 +499,24 @@ function createInfrastructureSpecs(candidate: CandidateDiagram, device: Candidat
     looseSourceCableEnds: [],
   }));
 }
+function validateOutletBoxOpenings(candidate: CandidateDiagram, device: CandidateDevice) {
+  const openings = device.outletBoxOpenings ?? [];
+  const positions = new Set<string>();
+  for (const opening of openings) {
+    const position = `${opening.side}:${opening.size}`;
+    if (positions.has(position)) {
+      throw new Error(`候補問題No.${candidate.no} ${device.id}の${position}開口が重複しています。`);
+    }
+    positions.add(position);
+    const connected = candidate.connections.some((connection) =>
+      (connection.from === device.id && connection.to === opening.remoteDeviceId)
+      || (connection.to === device.id && connection.from === opening.remoteDeviceId));
+    if (!connected) {
+      throw new Error(`候補問題No.${candidate.no} ${device.id}の開口先${opening.remoteDeviceId}に接続がありません。`);
+    }
+  }
+}
+
 function getRingRating(wireSizes: Array<1.6 | 2.0>): { size: "small" | "medium"; mark: "○" | "小" | "中" } {
   const equivalent = wireSizes.reduce((total, size) => total + (size === 2.0 ? 2 : 1), 0);
   if (wireSizes.length === 2 && wireSizes.every((size) => size === 1.6)) {
@@ -533,6 +554,7 @@ function createBox(
     x: device.x,
     y: device.y,
     cableCount: candidate.connections.filter((connection) => connection.from === device.id || connection.to === device.id).length,
+    outletBoxOpenings: device.outletBoxOpenings ?? [],
     wiring,
     installation,
     parts: specs.map((spec, partIndex) => {

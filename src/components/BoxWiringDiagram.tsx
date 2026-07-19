@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import type { BoxInspectionPart, InspectionBox, WireColor } from "../data/boxInspectionGame";
 import type { BoxConductorEndpoint } from "../data/boxWiringSpecifications";
+import type { CandidateOutletBoxOpening, OutletBoxHoleSize, OutletBoxSide } from "../data/candidateDiagrams";
 
 type BoxWiringDiagramProps = {
   box: InspectionBox;
@@ -13,11 +14,14 @@ type BoxWiringDiagramProps = {
 type Point = { x: number; y: number };
 type CableLayout = { entry: Point; bend: Point; angle: number };
 
-const center = { x: 360, y: 215 };
+const center = { x: 360, y: 280 };
+const outletBoxBounds = { x: 170, y: 90, size: 380 };
 
 export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSelectPart }: BoxWiringDiagramProps) {
   const connectionParts = box.parts.filter(isConnectionPart);
   const infrastructureParts = box.parts.filter((part) => !isConnectionPart(part));
+  const outletBoxPart = infrastructureParts.find((part) => part.connection.method === "outlet_box");
+  const auxiliaryParts = infrastructureParts.filter((part) => part.connection.method !== "outlet_box");
   const connectionNodes = layoutConnectionNodes(connectionParts.length);
   const nodeByConnectionId = new Map(
     connectionParts.map((part, index) => [part.connection.id, connectionNodes[index]]),
@@ -25,20 +29,29 @@ export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSe
   const partByConnectionId = new Map(connectionParts.map((part) => [part.connection.id, part]));
 
   return (
-    <svg viewBox="0 0 720 390" role="img" aria-label={box.label + "内の放射状配線図"}>
-      <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
+    <svg viewBox="0 0 720 500" role="img" aria-label={box.label + "内の放射状配線図"}>
+      <rect className="panel" x="18" y="18" width="684" height="464" rx="18" />
       <text className="label" x="360" y="50" textAnchor="middle">{box.label}内 配線図</text>
       <text className="small" x="360" y="72" textAnchor="middle">
         ケーブル{box.cableCount}本・結線{connectionParts.length}か所
       </text>
-      <rect className="box radial-box" x="72" y="86" width="576" height="266" rx="22" />
+      {outletBoxPart
+        ? <OutletBoxShell
+            answer={answers[outletBoxPart.id]}
+            onSelectPart={onSelectPart}
+            openings={box.outletBoxOpenings}
+            part={outletBoxPart}
+            selected={selectedPartId === outletBoxPart.id}
+            submitted={submitted}
+          />
+        : <rect className="box radial-box" x={outletBoxBounds.x} y={outletBoxBounds.y} width={outletBoxBounds.size} height={outletBoxBounds.size} rx="18" />}
 
       {box.wiring.cables.map((cable, index) => (
         <RadialCable
           box={box}
           cableId={cable.id}
           cableIndex={index}
-          cableLayout={layoutCable(index, box.wiring.cables.length, infrastructureParts.length > 0)}
+          cableLayout={layoutCable(box, cable.id, index, outletBoxPart?.defectType)}
           key={cable.id}
           nodeByConnectionId={nodeByConnectionId}
           partByConnectionId={partByConnectionId}
@@ -58,10 +71,10 @@ export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSe
         />
       ))}
 
-      {infrastructureParts.map((part, index) => (
+      {auxiliaryParts.map((part, index) => (
         <InfrastructureNode
           answer={answers[part.id]}
-          count={infrastructureParts.length}
+          count={auxiliaryParts.length}
           index={index}
           key={part.id}
           onSelectPart={onSelectPart}
@@ -71,6 +84,70 @@ export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSe
         />
       ))}
     </svg>
+  );
+}
+
+function OutletBoxShell({
+  part,
+  openings,
+  selected,
+  answer,
+  submitted,
+  onSelectPart,
+}: {
+  part: BoxInspectionPart;
+  openings: CandidateOutletBoxOpening[];
+  selected: boolean;
+  answer?: string;
+  submitted: boolean;
+  onSelectPart: (partId: string) => void;
+}) {
+  const className = connectionStateClass(part, selected, answer, submitted);
+  const select = () => onSelectPart(part.id);
+  const rubberOpenings = openings.filter((opening) => opening.fitting === "rubber_bushing");
+  const affectedOpening = rubberOpenings[0];
+
+  return (
+    <g
+      aria-label="アウトレットボックス全体を選択"
+      className={className}
+      onClick={select}
+      onKeyDown={(event) => selectWithKeyboard(event, select)}
+      role="button"
+      tabIndex={0}
+    >
+      <rect
+        className="outlet-box-shell-hit"
+        x={outletBoxBounds.x}
+        y={outletBoxBounds.y}
+        width={outletBoxBounds.size}
+        height={outletBoxBounds.size}
+        rx="10"
+      />
+      {allOutletHolePositions().map(({ side, size }) => {
+        const opening = openings.find((item) => item.side === side && item.size === size);
+        const point = outletOpeningPoint({ side, size });
+        const missing = part.defectType === "rubber_bushing_missing" && opening === affectedOpening;
+        const wrongSize = part.defectType === "rubber_bushing_wrong_size" && opening === affectedOpening;
+        return (
+          <g key={`${side}-${size}`}>
+            <circle className={opening ? "outlet-knockout open" : "outlet-knockout"} cx={point.x} cy={point.y} r={size === 19 ? 12 : 17} />
+            {opening?.fitting === "rubber_bushing" && !missing && (
+              <circle
+                className={wrongSize ? "outlet-bushing alert-stroke" : "outlet-bushing"}
+                cx={point.x}
+                cy={point.y}
+                r={wrongSize ? (size === 19 ? 15 : 10) : (size === 19 ? 9 : 13)}
+              />
+            )}
+            {opening?.fitting !== undefined && opening.fitting !== "rubber_bushing" && (
+              <rect className="outlet-conduit-fitting" x={point.x - 14} y={point.y - 14} width="28" height="28" rx="5" />
+            )}
+            <text className="outlet-hole-size" x={point.x} y={point.y + 3} textAnchor="middle">{size}</text>
+          </g>
+        );
+      })}
+    </g>
   );
 }
 
@@ -101,7 +178,7 @@ function RadialCable({
 
   return (
     <g className="radial-cable">
-      <circle className="radial-entry" cx={cableLayout.entry.x} cy={cableLayout.entry.y} r="8" />
+
       <path
         className="radial-cable-sheath"
         d={`M ${cableLayout.entry.x} ${cableLayout.entry.y} L ${cableLayout.bend.x} ${cableLayout.bend.y}`}
@@ -211,7 +288,7 @@ function InfrastructureNode({
   onSelectPart: (partId: string) => void;
 }) {
   const x = count === 1 ? 360 : 285 + index * 150;
-  const y = 329;
+  const y = 440;
   const className = connectionStateClass(part, selected, answer, submitted);
   const select = () => onSelectPart(part.id);
   return (
@@ -296,15 +373,56 @@ function PushConnector({ part, x, y }: { part: BoxInspectionPart; x: number; y: 
   );
 }
 
-function layoutCable(index: number, count: number, reserveBottom: boolean): CableLayout {
-  const start = -Math.PI / 2;
-  const span = reserveBottom ? Math.PI * 1.62 : Math.PI * 2;
-  const angle = count === 1 ? -Math.PI / 2 : start + (span * index) / count;
+function layoutCable(box: InspectionBox, cableId: string, index: number, defectType?: string): CableLayout {
+  const conductor = box.wiring.conductors.find((item) => item.cableId === cableId);
+  let opening = box.outletBoxOpenings.find((item) => item.remoteDeviceId === conductor?.remoteEndpointId);
+  if (defectType === "outlet_box_wrong_hole" && index === 0) {
+    opening = allOutletHolePositions()
+      .filter((position) => !box.outletBoxOpenings.some((item) => item.side === position.side && item.size === position.size))
+      .map((position) => ({ ...position, remoteDeviceId: "defect", fitting: "rubber_bushing" as const }))[0] ?? opening;
+  }
+
+  if (opening) {
+    const base = outletOpeningPoint(opening);
+    const cableIdsAtOpening = box.wiring.cables
+      .filter((cable) => box.wiring.conductors.some((item) => item.cableId === cable.id && item.remoteEndpointId === conductor?.remoteEndpointId))
+      .map((cable) => cable.id);
+    const cableIndex = cableIdsAtOpening.indexOf(cableId);
+    const laneOffset = (cableIndex - (cableIdsAtOpening.length - 1) / 2) * 8;
+    const tangent = opening.side === "top" || opening.side === "bottom" ? { x: 1, y: 0 } : { x: 0, y: 1 };
+    const entry = { x: base.x + tangent.x * laneOffset, y: base.y + tangent.y * laneOffset };
+    const inward = unitVector(entry, center);
+    const angle = Math.atan2(entry.y - center.y, entry.x - center.x);
+    return {
+      angle,
+      entry,
+      bend: { x: entry.x + inward.x * 94 + tangent.x * laneOffset * 0.35, y: entry.y + inward.y * 94 + tangent.y * laneOffset * 0.35 },
+    };
+  }
+
+  const count = box.wiring.cables.length;
+  const angle = count === 1 ? -Math.PI / 2 : -Math.PI / 2 + (Math.PI * 2 * index) / count;
   return {
     angle,
-    entry: { x: center.x + Math.cos(angle) * 255, y: center.y + Math.sin(angle) * 104 },
-    bend: { x: center.x + Math.cos(angle) * 157, y: center.y + Math.sin(angle) * 78 },
+    entry: { x: center.x + Math.cos(angle) * 190, y: center.y + Math.sin(angle) * 190 },
+    bend: { x: center.x + Math.cos(angle) * 125, y: center.y + Math.sin(angle) * 125 },
   };
+}
+
+function outletOpeningPoint(opening: Pick<CandidateOutletBoxOpening, "side" | "size">): Point {
+  const offset = opening.size === 19 ? -55 : 55;
+  const { x, y, size } = outletBoxBounds;
+  if (opening.side === "top") return { x: center.x + offset, y };
+  if (opening.side === "right") return { x: x + size, y: center.y + offset };
+  if (opening.side === "bottom") return { x: center.x - offset, y: y + size };
+  return { x, y: center.y - offset };
+}
+
+function allOutletHolePositions(): Array<{ side: OutletBoxSide; size: OutletBoxHoleSize }> {
+  return (["top", "right", "bottom", "left"] as const).flatMap((side) => [
+    { side, size: 19 as const },
+    { side, size: 25 as const },
+  ]);
 }
 
 function layoutConnectionNodes(count: number): Point[] {
