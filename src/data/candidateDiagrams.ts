@@ -209,8 +209,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
       x: 430,
       y: 125,
       members: [
-        { id: "switch", label: "片切", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
-        { id: "pilot", label: "常時点灯", variant: "pilot_lamp", position: "bottom", sourceDeviceId: "pl" },
+        { id: "pilot", label: "常時点灯", variant: "pilot_lamp", position: "top", sourceDeviceId: "pl" },
+        { id: "switch", label: "片切", variant: "single_pole_switch", position: "bottom", sourceDeviceId: "sw" },
       ],
     }],
   },
@@ -255,8 +255,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
       ],
     }],
     mountingFrames: [{
-      id: "frame-1", label: "埋込連用取付枠", x: 175, y: 325,
-      members: [{ id: "switch", label: "ロ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "sw" }],
+      id: "frame-1", label: "埋込連用取付枠", x: 390, y: 325,
+      members: [{ id: "receptacle", label: "接地極付コンセント", variant: "grounded_receptacle", position: "middle", sourceDeviceId: "e" }],
     }],
   },
   {
@@ -332,13 +332,22 @@ export const candidateDiagrams: CandidateDiagram[] = [
         { id: "switch-ro", label: "ロ", variant: "single_pole_switch", position: "middle" },
         { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom", sourceDeviceId: "frame-outlet" },
       ],
-      jumpers: [{
-        id: "switch-i-ro",
-        fromMemberId: "switch-i",
-        toMemberId: "switch-ro",
-        color: "black",
-        allowedColors: ["black", "white"],
-      }],
+      jumpers: [
+        {
+          id: "switch-i-ro",
+          fromMemberId: "switch-i",
+          toMemberId: "switch-ro",
+          color: "black",
+          allowedColors: ["black", "white"],
+        },
+        {
+          id: "switch-ro-receptacle",
+          fromMemberId: "switch-ro",
+          toMemberId: "receptacle",
+          color: "black",
+          allowedColors: ["black"],
+        },
+      ],
     }],
   },
   {
@@ -508,8 +517,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
     mountingFrames: [{
       id: "frame-1", label: "埋込連用取付枠", x: 420, y: 315,
       members: [
-        { id: "switch", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
-        { id: "pilot", label: "同時点滅", variant: "pilot_lamp", position: "middle", sourceDeviceId: "pl" },
+        { id: "pilot", label: "同時点滅", variant: "pilot_lamp", position: "top", sourceDeviceId: "pl" },
+        { id: "switch", label: "イ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "sw" },
         { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom" },
       ],
     }],
@@ -634,8 +643,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
       ],
     }],
     mountingFrames: [{
-      id: "frame-1", label: "埋込連用取付枠", x: 150, y: 325,
-      members: [{ id: "switch", label: "イ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "sw" }],
+      id: "frame-1", label: "埋込連用取付枠", x: 360, y: 325,
+      members: [{ id: "receptacle", label: "接地極付コンセント", variant: "grounded_receptacle", position: "middle", sourceDeviceId: "e" }],
     }],
   },
 ];

@@ -58,7 +58,7 @@ export function MountingFrameDiagram({ frame, defectType = "mounting_frame_loose
 
 function FrameMember({ member }: { member: CandidateMountingFrameMember }) {
   const y = slotY[member.position];
-  const receptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle";
+  const receptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle" || member.variant === "grounded_receptacle" || member.variant === "grounded_20a_receptacle" || member.variant === "eet_receptacle";
   const pilot = member.variant === "pilot_lamp";
   return (
     <g>

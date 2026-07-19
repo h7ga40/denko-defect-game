@@ -266,7 +266,7 @@ function MountingFrameNode({
 
 function MountingFrameMemberNode({ frame, interaction, member }: { frame: CandidateMountingFrame; interaction?: Interaction; member: CandidateMountingFrameMember }) {
   const y = frame.y + mountingFrameOffsets[member.position];
-  const isReceptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle";
+  const isReceptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle" || member.variant === "grounded_receptacle" || member.variant === "grounded_20a_receptacle" || member.variant === "eet_receptacle";
   const isPilot = member.variant === "pilot_lamp";
   return (
     <SelectableGroup height={22} interaction={interaction} width={68} x={frame.x} y={y}>

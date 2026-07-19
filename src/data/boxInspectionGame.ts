@@ -680,7 +680,7 @@ function frameMemberPartKey(frame: CandidateMountingFrame, member: CandidateMoun
 }
 
 function createFrameMemberDevice(member: CandidateMountingFrameMember): CandidateDevice {
-  const receptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle";
+  const receptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle" || member.variant === "grounded_receptacle" || member.variant === "grounded_20a_receptacle" || member.variant === "eet_receptacle";
   const pilot = member.variant === "pilot_lamp";
   return {
     id: member.sourceDeviceId ?? member.id,
