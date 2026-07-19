@@ -89,7 +89,11 @@ export function CandidateSvg({
 }: CandidateSvgProps) {
   const devicesById = new Map(diagram.devices.map((device) => [device.id, device]));
   const boxesByDeviceId = new Map(inspectionBoxes.map((box) => [box.sourceDeviceId, box]));
-  const partsByDeviceId = new Map(directParts.map((part) => [part.sourceDeviceId, part]));
+  const partsByDeviceId = new Map(
+    directParts.flatMap((part) =>
+      (part.sourceDeviceIds ?? [part.sourceDeviceId]).map((deviceId) => [deviceId, part] as const),
+    ),
+  );
   const framedDeviceIds = new Set(
     (diagram.mountingFrames ?? []).flatMap((frame) => frame.members.flatMap((member) => member.sourceDeviceId ? [member.sourceDeviceId] : [])),
   );
@@ -147,7 +151,7 @@ export function CandidateSvg({
       })}
 
       {diagram.devices.map((device) => {
-        if (framedDeviceIds.has(device.id)) return null;
+        if (device.diagramHidden || framedDeviceIds.has(device.id)) return null;
         const box = boxesByDeviceId.get(device.id);
         if (box) {
           const answered = box.parts.every((part) => Boolean(answers[part.id]));

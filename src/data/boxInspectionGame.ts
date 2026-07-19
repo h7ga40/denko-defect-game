@@ -80,6 +80,7 @@ export type InspectionBox = {
 
 export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   sourceDeviceId: string;
+  sourceDeviceIds?: string[];
   deviceType: CandidateDevice["type"];
   deviceVariant?: CandidateDevice["variant"];
   cableEntrySide: CableEntrySide;
@@ -302,6 +303,7 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
     (candidate.mountingFrames ?? []).flatMap((frame) => frame.members.flatMap((member) => member.sourceDeviceId ? [member.sourceDeviceId] : [])),
   );
   const directDevices = candidate.devices.filter((device) => isDirectInspectionDevice(device) && !framedDeviceIds.has(device.id));
+  const directDeviceGroups = groupDirectInspectionDevices(candidate, directDevices);
   const mountingFrames = candidate.mountingFrames ?? [];
   const mountingFrameMembers = mountingFrames.flatMap((frame) => frame.members.map((member) => ({ frame, member })));
   const defectPlans = new Map<string, DefectType | "random">();
@@ -334,9 +336,9 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
     ...wiring.groups.map((group) => boxPartKey(device.id, group.id)),
     ...infrastructureSpecs.map((spec) => boxPartKey(device.id, spec.id)),
   ]);
-  const directDefectKeys = directDevices
-    .filter((device) => getDirectDefectProblems(device).length > 0)
-    .map((device) => "device:" + device.id);
+  const directDefectKeys = directDeviceGroups
+    .filter((group) => getDirectDefectProblems(group.detailDevice).length > 0)
+    .map((group) => "device:" + group.key);
   const frameDefectKeys = mountingFrames.map((frame) => "frame:" + frame.id);
   const frameMemberDefectKeys = mountingFrameMembers
     .filter(({ member }) => getDirectDefectProblems(createFrameMemberDevice(member)).length > 0)
@@ -350,8 +352,8 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
     createBox(candidate, device, index, wiring, installation, infrastructureSpecs, defectPlans, random),
   );
   const directParts = [
-    ...directDevices.map((device) =>
-      createDirectPart(candidate, device, defectPlans.has("device:" + device.id), random),
+    ...directDeviceGroups.map((group) =>
+      createDirectPart(candidate, group, defectPlans.has("device:" + group.key), random),
     ),
     ...mountingFrames.map((frame) =>
       createMountingFramePart(candidate, frame, defectPlans.has("frame:" + frame.id), random),
@@ -645,10 +647,34 @@ function summarizeConductors(connection: ConnectionSpec) {
 }
 
 function isDirectInspectionDevice(device: CandidateDevice) {
-  return device.type !== "power"
+  return !device.diagramHidden
+    && device.type !== "power"
     && device.type !== "connector"
     && device.type !== "box"
     && getDeviceSpecification(device.variant)?.inspectionSelectable === true;
+}
+
+type DirectInspectionDeviceGroup = {
+  key: string;
+  devices: CandidateDevice[];
+  detailDevice: CandidateDevice;
+};
+
+function groupDirectInspectionDevices(
+  candidate: CandidateDiagram,
+  devices: CandidateDevice[],
+): DirectInspectionDeviceGroup[] {
+  const groups = new Map<string, CandidateDevice[]>();
+  for (const device of devices) {
+    const key = device.detailDeviceId ?? device.id;
+    groups.set(key, [...(groups.get(key) ?? []), device]);
+  }
+
+  return [...groups.entries()].map(([key, groupedDevices]) => ({
+    key,
+    devices: groupedDevices,
+    detailDevice: candidate.devices.find((device) => device.id === key) ?? groupedDevices[0],
+  }));
 }
 
 function getDirectDefectProblems(device: CandidateDevice): Problem[] {
@@ -707,12 +733,17 @@ function createMountingFrameMemberPart(
   const device = sourceDevice
     ? { ...memberDevice, id: sourceDevice.id, x: sourceDevice.x, y: sourceDevice.y }
     : memberDevice;
-  const part = createDirectPart(candidate, device, hasDefect, random);
+  const part = createDirectPart(candidate, {
+    key: device.id,
+    devices: [device],
+    detailDevice: device,
+  }, hasDefect, random);
   const positionName = member.position === "top" ? "上段" : member.position === "middle" ? "中段" : "下段";
   return {
     ...part,
     id: frameMemberPartKey(frame, member),
     sourceDeviceId: frameMemberPartKey(frame, member),
+    sourceDeviceIds: [frameMemberPartKey(frame, member)],
     location: `複線図上の${frame.label} ${positionName}`,
     x: frame.x,
     y: frame.y,
@@ -752,31 +783,36 @@ function createMountingFramePart(
 
 function createDirectPart(
   candidate: CandidateDiagram,
-  device: CandidateDevice,
+  group: DirectInspectionDeviceGroup,
   hasDefect: boolean,
   random: RandomSource,
 ): DirectInspectionPart {
-  const defectProblem = hasDefect ? randomItem(getDirectDefectProblems(device), random) : undefined;
-  const deviceName = getInspectionDeviceName(device);
+  const { detailDevice, devices } = group;
+  const diagramDevice = devices[0];
+  const defectProblem = hasDefect ? randomItem(getDirectDefectProblems(detailDevice), random) : undefined;
+  const deviceName = devices.length > 1
+    ? devices.map((device) => device.label).join("・") + "（6極端子台代用）"
+    : getInspectionDeviceName(detailDevice);
   return {
-    id: "device-" + device.id,
+    id: "device-" + group.key,
     boxId: "",
-    sourceDeviceId: device.id,
-    deviceType: device.type,
-    deviceVariant: device.variant,
-    cableEntrySide: getCableEntrySide(candidate, device),
+    sourceDeviceId: diagramDevice.id,
+    sourceDeviceIds: devices.map((device) => device.id),
+    deviceType: diagramDevice.type,
+    deviceVariant: detailDevice.variant,
+    cableEntrySide: getCableEntrySide(candidate, diagramDevice),
     title: deviceName,
-    location: "複線図上の" + deviceName + "（表示記号「" + device.label + "」）",
+    location: "複線図上の" + deviceName + "（表示記号「" + devices.map((device) => device.label).join("・") + "」）",
     defectType: defectProblem?.defectType ?? "none",
     question: defectProblem?.question ?? deviceName + "の施工状態を判定してください。",
     choices: defectProblem?.choices ?? ["欠陥なし", "接続不良", "取付不良", "極性誤り"],
     answer: defectProblem?.answer ?? "欠陥なし",
     explanation: defectProblem?.explanation
       ?? "この器具は正常に施工されています。接続部の欠陥は、ボックス内配線図で判定します。",
-    x: device.x,
-    y: device.y,
-    terminalBlock: device.terminalBlock,
-    terminalConnections: resolveTerminalConnections(candidate, device),
+    x: diagramDevice.x,
+    y: diagramDevice.y,
+    terminalBlock: detailDevice.terminalBlock,
+    terminalConnections: resolveTerminalConnections(candidate, detailDevice),
   };
 }
 

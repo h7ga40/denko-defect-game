@@ -55,6 +55,8 @@ export type CandidateDevice = {
   label: string;
   type: DeviceType;
   variant?: DeviceVariant;
+  diagramHidden?: boolean;
+  detailDeviceId?: string;
   x: number;
   y: number;
   outletBoxOpenings?: CandidateOutletBoxOpening[];
@@ -73,6 +75,7 @@ export type CandidateTerminalBlockLayout = {
 
 export type CandidateConnection = {
   id?: string;
+  diagramHidden?: boolean;
   from: string;
   to: string;
   color: "black" | "white" | "red" | "green" | "blue";
@@ -274,10 +277,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 4,
     title: "公式No.4 100V・三相200V混在",
     theme: `${sourceNote}。100V回路、三相200V電動機、ランプレセプタクルを含む回路。`,
-    points: ["電源: 1φ2W 100V、3φ3W 200V（6極端子台）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: 6極端子台、B、BE、ランプレセプタクル、3φ200V電動機"],
+    points: ["電源: 1φ2W 100V、3φ3W 200V（6極端子台）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: 配線用遮断器B・漏電遮断器BE（6極端子台代用）、ランプレセプタクル、3φ200V電動機"],
     devices: [
       {
-        id: "t", label: "100V・200V電源端子台", type: "terminal", variant: "terminal_block", x: 65, y: 140,
+        id: "t", label: "100V・200V電源端子台", type: "terminal", variant: "terminal_block", diagramHidden: true, x: 65, y: 140,
         terminalBlock: { poles: [
           { terminalId: "1", label: "N", circuitLabel: "100V電源" },
           { terminalId: "2", label: "L", circuitLabel: "100V電源" },
@@ -287,8 +290,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
           { terminalId: "6", label: "-", circuitLabel: "未使用" },
         ] },
       },
-      { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", x: 165, y: 95 },
-      { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", x: 165, y: 185 },
+      { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", detailDeviceId: "t", x: 65, y: 95 },
+      { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", detailDeviceId: "t", x: 65, y: 185 },
       { id: "j1", label: "ジョイントボックス1", type: "connector", x: 512, y: 89 },
       { id: "j2", label: "ジョイントボックス2", type: "connector", x: 300, y: 185 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 205, y: 305 },
@@ -298,8 +301,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 520, y: 305 },
     ],
     connections: [
-      { id: "4-terminal-100v", from: "t", to: "b", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 2, coreColors: ["black", "white"] } },
-      { id: "4-terminal-200v", from: "t", to: "be", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 3, coreColors: ["black", "white", "red"] } },
+      { id: "4-terminal-100v", diagramHidden: true, from: "t", to: "b", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 2, coreColors: ["black", "white"] } },
+      { id: "4-terminal-200v", diagramHidden: true, from: "t", to: "be", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 3, coreColors: ["black", "white", "red"] } },
       { from: "b", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("4-vvf-3", 300) },
       { from: "be", to: "j2", color: "black", label: "VVF 2.0-3C", cable: hozanCable("4-vvf-4", 150) },
       { from: "j1", to: "c", color: "black", cable: hozanCable("4-vvf-1", 250) },
@@ -330,10 +333,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 5,
     title: "公式No.5 200Vコンセント・接地",
     theme: `${sourceNote}。100V/200V電源、20A 250Vコンセント、接地、施工省略の蛍光灯を含む回路。`,
-    points: ["電源: 100V、200V（6極端子台、対地電圧150V以下）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: 6極端子台、B、BE、20A 250Vコンセント、ランプレセプタクル、蛍光灯（施工省略）"],
+    points: ["電源: 100V、200V（6極端子台、対地電圧150V以下）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: 配線用遮断器B・漏電遮断器BE（6極端子台代用）、20A 250Vコンセント、ランプレセプタクル、蛍光灯（施工省略）"],
     devices: [
       {
-        id: "t", label: "100V・200V電源端子台", type: "terminal", variant: "terminal_block", x: 70, y: 140,
+        id: "t", label: "100V・200V電源端子台", type: "terminal", variant: "terminal_block", diagramHidden: true, x: 70, y: 140,
         terminalBlock: { poles: [
           { terminalId: "1", label: "N", circuitLabel: "100V電源" },
           { terminalId: "2", label: "L", circuitLabel: "100V電源" },
@@ -343,8 +346,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
           { terminalId: "6", label: "-", circuitLabel: "未使用" },
         ] },
       },
-      { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", x: 170, y: 95 },
-      { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", x: 170, y: 185 },
+      { id: "b", label: "B", type: "breaker", variant: "circuit_breaker", detailDeviceId: "t", x: 70, y: 95 },
+      { id: "be", label: "BE", type: "breaker", variant: "earth_leakage_breaker", detailDeviceId: "t", x: 70, y: 185 },
       { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 120, y: 305 },
       { id: "j", label: "ジョイントボックス", type: "connector", x: 430, y: 95 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 300, y: 195 },
@@ -354,8 +357,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "c", label: "蛍光灯 イ 施工省略", type: "lamp", variant: "fluorescent_lamp", x: 630, y: 95 },
     ],
     connections: [
-      { id: "5-terminal-100v", from: "t", to: "b", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 2, coreColors: ["black", "white"] } },
-      { id: "5-terminal-200v", from: "t", to: "be", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 3, coreColors: ["black", "red", "green"] } },
+      { id: "5-terminal-100v", diagramHidden: true, from: "t", to: "b", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 2, coreColors: ["black", "white"] } },
+      { id: "5-terminal-200v", diagramHidden: true, from: "t", to: "be", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 3, coreColors: ["black", "red", "green"] } },
       { from: "b", to: "j", color: "black", label: "VVF 2.0-2C", cable: hozanCable("5-vvf-2", 250) },
       { from: "be", to: "outlet", color: "black", label: "VVF 2.0-3C", cable: hozanCable("5-vvf-3", 250) },
       { from: "outlet", to: "ed", color: "green", label: "E1.6" },
@@ -447,7 +450,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
           { side: "left", size: 19, remoteDeviceId: "j1", fitting: "rubber_bushing" },
         ],
       },
-      { id: "r1", label: "R イ 施工省略", type: "lamp", variant: "omitted_work", x: 390, y: 85 },
+      { id: "r1", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 390, y: 85 },
       { id: "sw2", label: "スイッチ イ4", type: "switch", variant: "four_way_switch", x: 390, y: 325 },
       { id: "r2", label: "R イ 施工省略", type: "lamp", variant: "omitted_work", x: 590, y: 85 },
       { id: "sw3", label: "スイッチ イ3", type: "switch", variant: "three_way_switch", x: 590, y: 325 },
@@ -592,7 +595,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "c", label: "引掛 イ", type: "lamp", variant: "ceiling_connector", x: 600, y: 100 },
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 205, y: 285 },
       { id: "sw", label: "スイッチ イ", type: "switch", variant: "single_pole_switch", x: 360, y: 315 },
-      { id: "load", label: "スイッチ ロ 施工省略", type: "switch", variant: "omitted_work", x: 600, y: 285 },
+      { id: "load", label: "スイッチ ロ", type: "switch", variant: "single_pole_switch", x: 600, y: 285 },
     ],
     connections: [
       { from: "p", to: "box", color: "black", label: "VVF 2.0-2C", cable: hozanCable("11-vvf-2", 150) },
