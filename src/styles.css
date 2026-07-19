@@ -697,6 +697,45 @@ button {
   fill: #ffffff;
 }
 
+.candidate-device.mounting-frame {
+  fill: #eef4f8;
+}
+
+.candidate-frame-member {
+  stroke: #596a78;
+  stroke-width: 2;
+}
+
+.candidate-frame-member.switch {
+  fill: #fff8e8;
+}
+
+.candidate-frame-member.pilot {
+  fill: #eaf7fb;
+}
+
+.candidate-frame-member.receptacle {
+  fill: #ffffff;
+}
+
+.mounting-frame-body {
+  fill: #eef4f8;
+  stroke: #596a78;
+  stroke-width: 7;
+}
+
+.mounting-frame-slot {
+  fill: #ffffff;
+  stroke: #879caf;
+  stroke-width: 4;
+}
+
+.mounting-frame-rocker {
+  fill: #fff8e8;
+  stroke: #596a78;
+  stroke-width: 3;
+}
+
 .candidate-connector {
   fill: #ffffff;
   stroke: #596a78;

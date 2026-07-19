@@ -21,6 +21,8 @@ export type DeviceVariant =
   | "three_way_switch"
   | "four_way_switch"
   | "switch_group"
+  | "embedded_receptacle"
+  | "double_receptacle"
   | "exposed_receptacle"
   | "grounded_receptacle"
   | "grounded_20a_receptacle"
@@ -79,6 +81,24 @@ export type CandidateDeviceWiring = {
   terminals: CandidateDeviceTerminalConnection[];
 };
 
+export type MountingFramePosition = "top" | "middle" | "bottom";
+
+export type CandidateMountingFrameMember = {
+  id: string;
+  label: string;
+  variant: DeviceVariant;
+  position: MountingFramePosition;
+  sourceDeviceId?: string;
+};
+
+export type CandidateMountingFrame = {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  members: CandidateMountingFrameMember[];
+};
+
 export type CandidateDiagram = {
   no: number;
   title: string;
@@ -88,6 +108,7 @@ export type CandidateDiagram = {
   connections: CandidateConnection[];
   boxWirings?: CandidateBoxWiring[];
   deviceWirings?: CandidateDeviceWiring[];
+  mountingFrames?: CandidateMountingFrame[];
 };
 
 const sourceNote = "令和8年度第二種電気工事士技能試験候補問題の公式No.に対応";
@@ -121,6 +142,17 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("1-vvf-1", 150, { sourceStockPieceIndex: 1 }) },
       { from: "j2", to: "omit", color: "black", label: "ハ 施工省略", cable: hozanCable("1-vvf-1", 150, { sourceStockPieceIndex: 1 }) },
     ],
+    mountingFrames: [{
+      id: "frame-1",
+      label: "埋込連用取付枠",
+      x: 240,
+      y: 315,
+      members: [
+        { id: "switch-i", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
+        { id: "switch-ro", label: "ロ", variant: "single_pole_switch", position: "middle" },
+        { id: "switch-ha", label: "ハ（位置表示灯内蔵）", variant: "single_pole_switch", position: "bottom" },
+      ],
+    }],
   },
   {
     no: 2,
@@ -133,7 +165,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "r1", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 220, y: 85 },
       { id: "j2", label: "接続点", type: "connector", x: 430, y: 198 },
       { id: "pl", label: "PL 常時", type: "pilot", variant: "pilot_lamp", x: 430, y: 85 },
-      { id: "r2", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 605, y: 198 },
+      { id: "r2", label: "2", type: "receptacle", variant: "double_receptacle", x: 605, y: 198 },
       { id: "sw", label: "スイッチ 2", type: "switch", variant: "single_pole_switch", x: 430, y: 310 },
       { id: "omit", label: "施工省略", type: "box", x: 575, y: 310 },
     ],
@@ -146,6 +178,16 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j2", to: "sw", color: "black", cable: hozanCable("2-vvf-2", 150) },
       { from: "sw", to: "omit", color: "black", label: "施工省略", cable: hozanCable("2-vvf-1", 150) },
     ],
+    mountingFrames: [{
+      id: "frame-1",
+      label: "埋込連用取付枠",
+      x: 430,
+      y: 310,
+      members: [
+        { id: "switch", label: "片切", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
+        { id: "pilot", label: "常時点灯", variant: "pilot_lamp", position: "bottom", sourceDeviceId: "pl" },
+      ],
+    }],
   },
   {
     no: 3,
@@ -187,6 +229,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
         { terminalId: "L1", conductors: [{ cableId: "3-timer-ceiling", coreIndex: 0 }] },
       ],
     }],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 210, y: 330,
+      members: [{ id: "switch", label: "ロ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "sw" }],
+    }],
   },
   {
     no: 4,
@@ -217,6 +263,13 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j1", to: "r", color: "black", label: "電源表示灯", cable: hozanCable("4-vvf-1", 250) },
       { from: "c", to: "sw", color: "black", label: "イ", cable: hozanCable("4-vvf-2", 200) },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 630, y: 318,
+      members: [
+        { id: "switch", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
+        { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom" },
+      ],
+    }],
   },
   {
     no: 5,
@@ -245,6 +298,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j", to: "c", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 100) },
       { from: "j", to: "sw", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 200) },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 472, y: 300,
+      members: [
+        { id: "switch-i", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
+        { id: "switch-ro", label: "ロ", variant: "single_pole_switch", position: "middle" },
+        { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom" },
+      ],
+    }],
   },
   {
     no: 6,
@@ -269,6 +330,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j2", to: "outlet", color: "black", label: "露出形", cable: hozanCable("6-vvf-1", 150) },
       { from: "j2", to: "sw2", color: "black", label: "イ3", cable: hozanCable("6-vvf-2", 150) },
       { from: "j2", to: "p", color: "black", label: "VVF 2.0-2C", cable: hozanCable("6-vvf-3", 150) },
+    ],
+    mountingFrames: [
+      { id: "frame-1", label: "埋込連用取付枠1", x: 300, y: 320, members: [{ id: "switch", label: "イ 3路", variant: "three_way_switch", position: "middle", sourceDeviceId: "sw1" }] },
+      { id: "frame-2", label: "埋込連用取付枠2", x: 525, y: 320, members: [{ id: "switch", label: "イ 3路", variant: "three_way_switch", position: "middle", sourceDeviceId: "sw2" }] },
     ],
   },
   {
@@ -296,6 +361,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "box", to: "r2", color: "black", label: "イ 施工省略", cable: hozanCable("7-vvf-1", 250) },
       { from: "box", to: "sw3", color: "black", label: "イ3", cable: hozanCable("7-vvf-2", 250) },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 330, y: 335,
+      members: [{ id: "switch", label: "イ 4路", variant: "four_way_switch", position: "middle", sourceDeviceId: "sw2" }],
+    }],
   },
   {
     no: 8,
@@ -351,6 +420,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "eet", to: "pl", color: "black", label: "2" },
       { from: "eet", to: "ed", color: "green", label: "E1.6", cable: hozanCable("9-iv", 100, { lengthMm: 150 }) },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 115, y: 330,
+      members: [{ id: "switch", label: "イ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "sw" }],
+    }],
   },
   {
     no: 10,
@@ -374,6 +447,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j", to: "pl", color: "black", label: "同時点滅", cable: hozanCable("10-vvf-2", 150) },
       { from: "pl", to: "sw", color: "black", label: "イ" },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 430, y: 320,
+      members: [
+        { id: "switch", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
+        { id: "pilot", label: "同時点滅", variant: "pilot_lamp", position: "middle", sourceDeviceId: "pl" },
+        { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom" },
+      ],
+    }],
   },
   {
     no: 11,
@@ -397,6 +478,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "11-e19-red", from: "box", to: "sw", color: "red", cable: hozanCable("11-iv-3", 250, { lengthMm: 450 }) },
       { from: "box", to: "load", color: "black", label: "ロ", cable: hozanCable("11-vvf-1", 250) },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 360, y: 320,
+      members: [
+        { id: "switch-i", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
+        { id: "switch-ro", label: "ロ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "load" },
+        { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom" },
+      ],
+    }],
   },
   {
     no: 12,
@@ -422,6 +511,14 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "12-pf16-white", from: "box", to: "c2", color: "white", cable: hozanCable("12-iv-2", 200, { lengthMm: 400 }) },
       { id: "12-pf16-red", from: "box", to: "c2", color: "red", cable: hozanCable("12-iv-3", 200, { lengthMm: 400 }) },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 500, y: 315,
+      members: [
+        { id: "switch-i", label: "イ", variant: "single_pole_switch", position: "top", sourceDeviceId: "sw" },
+        { id: "switch-ro", label: "ロ", variant: "single_pole_switch", position: "middle" },
+        { id: "receptacle", label: "コンセント", variant: "embedded_receptacle", position: "bottom" },
+      ],
+    }],
   },
   {
     no: 13,
@@ -449,5 +546,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j2", to: "a", color: "black", label: "A（3A）", cable: hozanCable("13-vvf-1", 200) },
       { from: "a", to: "load", color: "black", label: "VVR 1.6-2C ロ", cable: hozanCable("13-vvr", 200, { lengthMm: 250 }) },
     ],
+    mountingFrames: [{
+      id: "frame-1", label: "埋込連用取付枠", x: 90, y: 335,
+      members: [{ id: "switch", label: "イ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "sw" }],
+    }],
   },
 ];

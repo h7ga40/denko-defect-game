@@ -78,6 +78,14 @@ export const deviceSpecifications: Record<DeviceVariant, DeviceSpecification> = 
     terminal("ha-line", "ハ電源", "line", 2),
     terminal("ha-load", "ハ返り", "load", 2),
   ]),
+  embedded_receptacle: wired("埋込連用コンセント", "push_in", [
+    terminal("line", "非接地側", "line", 2),
+    terminal("neutral", "接地側", "neutral", 2),
+  ]),
+  double_receptacle: wired("埋込ダブルコンセント", "push_in", [
+    terminal("line", "非接地側", "line", 2),
+    terminal("neutral", "接地側", "neutral", 2),
+  ]),
   exposed_receptacle: wired("露出形コンセント", "screw", [
     terminal("line", "非接地側", "line"),
     terminal("neutral", "接地側", "neutral"),

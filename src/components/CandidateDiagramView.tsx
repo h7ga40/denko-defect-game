@@ -1,5 +1,12 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
-import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "../data/candidateDiagrams";
+import {
+  candidateDiagrams,
+  type CandidateDevice,
+  type CandidateDiagram,
+  type CandidateMountingFrame,
+  type CandidateMountingFrameMember,
+  type MountingFramePosition,
+} from "../data/candidateDiagrams";
 import { resolveCableRunSpecification } from "../data/cableSpecifications";
 import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
 import { CandidateMaterials } from "./CandidateMaterials";
@@ -81,6 +88,9 @@ export function CandidateSvg({
   const devicesById = new Map(diagram.devices.map((device) => [device.id, device]));
   const boxesByDeviceId = new Map(inspectionBoxes.map((box) => [box.sourceDeviceId, box]));
   const partsByDeviceId = new Map(directParts.map((part) => [part.sourceDeviceId, part]));
+  const framedDeviceIds = new Set(
+    (diagram.mountingFrames ?? []).flatMap((frame) => frame.members.flatMap((member) => member.sourceDeviceId ? [member.sourceDeviceId] : [])),
+  );
 
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label={"候補問題" + diagram.no + "の複線図"}>
@@ -90,8 +100,10 @@ export function CandidateSvg({
       </text>
 
       {diagram.connections.map((connection, index) => {
-        const from = devicesById.get(connection.from);
-        const to = devicesById.get(connection.to);
+        const fromDevice = devicesById.get(connection.from);
+        const toDevice = devicesById.get(connection.to);
+        const from = fromDevice && getDeviceRenderPoint(diagram, fromDevice);
+        const to = toDevice && getDeviceRenderPoint(diagram, toDevice);
         if (!from || !to) return null;
 
         const offset = getParallelOffset(index, from, to);
@@ -133,6 +145,7 @@ export function CandidateSvg({
       })}
 
       {diagram.devices.map((device) => {
+        if (framedDeviceIds.has(device.id)) return null;
         const box = boxesByDeviceId.get(device.id);
         if (box) {
           const answered = box.parts.every((part) => Boolean(answers[part.id]));
@@ -167,7 +180,92 @@ export function CandidateSvg({
 
         return <CandidateDeviceNode device={device} interaction={interaction} key={device.id} />;
       })}
+      {(diagram.mountingFrames ?? []).map((frame) => {
+        const part = partsByDeviceId.get(frame.id);
+        const interaction = part ? {
+          label: part.title + "を選択",
+          status: getStatus(
+            part.id === selectedDirectPartId,
+            Boolean(answers[part.id]),
+            answers[part.id] === part.answer,
+            submitted,
+          ),
+          onSelect: () => onSelectDirectPart?.(part.id),
+        } : undefined;
+        const memberInteractions = new Map(frame.members.flatMap((member) => {
+          const memberPart = partsByDeviceId.get(`frame-member:${frame.id}:${member.id}`);
+          if (!memberPart) return [];
+          return [[member.id, {
+            label: memberPart.title + "を選択",
+            status: getStatus(
+              memberPart.id === selectedDirectPartId,
+              Boolean(answers[memberPart.id]),
+              answers[memberPart.id] === memberPart.answer,
+              submitted,
+            ),
+            onSelect: () => onSelectDirectPart?.(memberPart.id),
+          } satisfies Interaction] as const];
+        }));
+        return <MountingFrameNode frame={frame} interaction={interaction} key={frame.id} memberInteractions={memberInteractions} />;
+      })}
     </svg>
+  );
+}
+
+const mountingFrameOffsets: Record<MountingFramePosition, number> = { top: -25, middle: 0, bottom: 25 };
+
+function getDeviceRenderPoint(diagram: CandidateDiagram, device: CandidateDevice): CandidateDevice {
+  for (const frame of diagram.mountingFrames ?? []) {
+    const member = frame.members.find((item) => item.sourceDeviceId === device.id);
+    if (member) return { ...device, x: frame.x, y: frame.y + mountingFrameOffsets[member.position] };
+  }
+  return device;
+}
+
+function MountingFrameNode({
+  frame,
+  interaction,
+  memberInteractions,
+}: {
+  frame: CandidateMountingFrame;
+  interaction?: Interaction;
+  memberInteractions: Map<string, Interaction>;
+}) {
+  return (
+    <g>
+      <SelectableGroup height={118} interaction={interaction} width={96} x={frame.x} y={frame.y}>
+        <rect className="candidate-device mounting-frame" x={frame.x - 37} y={frame.y - 52} width="74" height="104" rx="8" />
+        <circle className="device-detail" cx={frame.x} cy={frame.y - 43} r="4" />
+        <circle className="device-detail" cx={frame.x} cy={frame.y + 43} r="4" />
+        <text className="candidate-label small-label" x={frame.x} y={frame.y > 290 ? frame.y - 62 : frame.y + 68} textAnchor="middle">
+          {frame.label}
+        </text>
+      </SelectableGroup>
+      {frame.members.map((member) => (
+        <MountingFrameMemberNode frame={frame} interaction={memberInteractions.get(member.id)} member={member} key={member.id} />
+      ))}
+    </g>
+  );
+}
+
+function MountingFrameMemberNode({ frame, interaction, member }: { frame: CandidateMountingFrame; interaction?: Interaction; member: CandidateMountingFrameMember }) {
+  const y = frame.y + mountingFrameOffsets[member.position];
+  const isReceptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle";
+  const isPilot = member.variant === "pilot_lamp";
+  return (
+    <SelectableGroup height={22} interaction={interaction} width={68} x={frame.x} y={y}>
+      <rect className={"candidate-device candidate-frame-member " + (isReceptacle ? "receptacle" : isPilot ? "pilot" : "switch")} x={frame.x - 27} y={y - 10} width="54" height="20" rx="4" />
+      {isReceptacle ? (
+        <>
+          <line className="device-mark" x1={frame.x - 8} y1={y - 5} x2={frame.x - 8} y2={y + 5} />
+          <line className="device-mark" x1={frame.x + 8} y1={y - 5} x2={frame.x + 8} y2={y + 5} />
+        </>
+      ) : isPilot ? (
+        <circle className="pilot-core" cx={frame.x} cy={y} r="5" />
+      ) : (
+        <text className="candidate-symbol-text centered" x={frame.x} y={y + 5}>{member.variant === "three_way_switch" ? "3" : member.variant === "four_way_switch" ? "4" : member.label.split("（")[0]}</text>
+      )}
+    </SelectableGroup>
   );
 }
 
@@ -382,6 +480,9 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
   }
 
   if (
+    device.variant === "embedded_receptacle"
+    || device.variant === "double_receptacle"
+    ||
     device.type === "receptacle"
     || device.type === "grounded_receptacle"
   ) {

@@ -7,6 +7,7 @@ import { DeviceDetailShape } from "./svg/DeviceDetailShape";
 import { DirectionalSheath, DirectionalWire } from "./svg/DirectionalCable";
 import { WiringDiagram } from "./svg/WiringDiagram";
 import { MetalConduitDiagram } from "./svg/diagrams/MetalConduitDiagram";
+import { MountingFrameDiagram } from "./svg/diagrams/MountingFrameDiagram";
 import { OutletBoxAccessoryDiagram } from "./svg/diagrams/OutletBoxAccessoryDiagram";
 import { PfConduitDiagram } from "./svg/diagrams/PfConduitDiagram";
 import { TerminalBlockDiagram } from "./svg/diagrams/TerminalBlockDiagram";
@@ -24,6 +25,10 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
   const selectedBox = round.boxes.find((box) => box.id === selectedBoxId) ?? round.boxes[0];
   const selectedDirectPart = round.directParts.find((part) => part.id === selectedDirectPartId);
   const selectedPart = selectedDirectPart ?? selectedBox.parts.find((part) => part.id === selectedPartId) ?? selectedBox.parts[0];
+  const selectedFrameId = selectedDirectPart?.parentMountingFrameId ?? selectedDirectPart?.mountingFrame?.id;
+  const selectedFrameParts = selectedFrameId
+    ? round.directParts.filter((part) => part.mountingFrame?.id === selectedFrameId || part.parentMountingFrameId === selectedFrameId)
+    : [];
   const infrastructurePart = !selectedDirectPart && "connection" in selectedPart && !["ring_sleeve", "push_connector"].includes(selectedPart.connection.method)
     ? selectedPart
     : undefined;
@@ -108,6 +113,14 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             />
           )}
         </div>
+        {selectedDirectPart && selectedFrameParts.length > 1 && (
+          <DirectPartSelector
+            answers={answers}
+            onSelectPart={selectDirectPart}
+            parts={selectedFrameParts}
+            selectedPartId={selectedDirectPart.id}
+          />
+        )}
         {!selectedDirectPart && (
           <>
             <BoxPartSelector answers={answers} box={selectedBox} onSelectPart={setSelectedPartId} selectedPartId={selectedPart.id} />
@@ -132,6 +145,33 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
         )}
       </article>
     </section>
+  );
+}
+
+function DirectPartSelector({
+  answers,
+  onSelectPart,
+  parts,
+  selectedPartId,
+}: {
+  answers: InspectionAnswers;
+  onSelectPart: (partId: string) => void;
+  parts: DirectInspectionPart[];
+  selectedPartId: string;
+}) {
+  return (
+    <div className="box-part-selector" aria-label="埋込連用取付枠の点検部">
+      {parts.map((part) => (
+        <button
+          className={["box-part-button", part.id === selectedPartId ? "selected" : "", answers[part.id] ? "answered" : ""].filter(Boolean).join(" ")}
+          key={part.id}
+          onClick={() => onSelectPart(part.id)}
+          type="button"
+        >
+          {part.mountingFrame ? "取付枠" : part.mountingFrameMember?.label ?? part.title}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -190,6 +230,9 @@ function InfrastructureDiagram({ part }: { part: BoxInspectionPart }) {
   return <OutletBoxAccessoryDiagram defectType={part.defectType} />;
 }
 function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
+  if (part.mountingFrame) {
+    return <MountingFrameDiagram defectType={part.defectType} frame={part.mountingFrame} />;
+  }
   if (part.defectType !== "none") {
     return <WiringDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }

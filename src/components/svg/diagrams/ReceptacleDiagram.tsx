@@ -10,7 +10,7 @@ export function ReceptacleDiagram({ cableEntrySide, title = "コンセント", v
       <text className="label" x="360" y="62" textAnchor="middle">{title}</text>
       <DirectionalWire className="wire black" lane={-38} side={cableEntrySide} targetX={472} targetY={168} />
       <DirectionalWire className="wire white" lane={38} side={cableEntrySide} targetX={438} targetY={168} />
-      <DeviceDetailShape variant={variant === "exposed_receptacle" || variant === "grounded_receptacle" || variant === "grounded_20a_receptacle" || variant === "eet_receptacle" ? variant : "receptacle"} x={455} y={195} />
+      <DeviceDetailShape variant={variant === "embedded_receptacle" || variant === "double_receptacle" || variant === "exposed_receptacle" || variant === "grounded_receptacle" || variant === "grounded_20a_receptacle" || variant === "eet_receptacle" ? variant : "receptacle"} x={455} y={195} />
       <text className="defect-label" x="360" y={cableEntrySide === "bottom" ? 94 : 340} textAnchor="middle">
         接地側と非接地側が逆です
       </text>

@@ -11,6 +11,7 @@ import { OutletBoxDiagram } from "./diagrams/OutletBoxDiagram";
 import { OutletBoxAccessoryDiagram } from "./diagrams/OutletBoxAccessoryDiagram";
 import { MetalConduitDiagram } from "./diagrams/MetalConduitDiagram";
 import { PfConduitDiagram } from "./diagrams/PfConduitDiagram";
+import { PilotLampDiagram } from "./diagrams/PilotLampDiagram";
 import { PushConnectorDiagram } from "./diagrams/PushConnectorDiagram";
 import { ReceptacleDiagram } from "./diagrams/ReceptacleDiagram";
 import { RingSleeveDiagram } from "./diagrams/RingSleeveDiagram";
@@ -47,7 +48,10 @@ export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName,
     case "ceiling_connector_polarity":
       return <CeilingConnectorDiagram cableEntrySide={cableEntrySide} />;
     case "mounting_frame_loose":
-      return <MountingFrameDiagram />;
+    case "mounting_frame_wrong_position":
+      return <MountingFrameDiagram defectType={defectType} />;
+    case "pilot_lamp_wrong_terminal":
+      return <PilotLampDiagram cableEntrySide={cableEntrySide} title={deviceName} />;
     case "switch_wrong_terminal":
       return <SwitchDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
     case "receptacle_polarity":

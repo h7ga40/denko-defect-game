@@ -17,6 +17,8 @@ export type DefectType =
   | "terminal_block_wrong_terminal"
   | "ceiling_connector_polarity"
   | "mounting_frame_loose"
+  | "mounting_frame_wrong_position"
+  | "pilot_lamp_wrong_terminal"
   | "switch_wrong_terminal"
   | "receptacle_polarity"
   | "outlet_box_wrong_hole"
@@ -247,13 +249,33 @@ export const problems: Problem[] = [
   },
   {
     id: "mounting-frame-loose",
-    title: "連用取付枠 器具固定不良",
-    circuitName: "連用取付枠の簡略施工図",
+    title: "埋込連用取付枠 器具固定不良",
+    circuitName: "埋込連用取付枠の簡略施工図",
     defectType: "mounting_frame_loose",
     question: "連用取付枠への器具取付状態として、欠陥を選んでください。",
     choices: ["欠陥なし", "器具が取付枠へ確実に固定されていない", "端子番号が違う", "接地線の接続忘れ"],
     answer: "器具が取付枠へ確実に固定されていない",
     explanation: "連用取付枠では器具を枠へ確実に固定します。図では片側の固定爪が掛かっていない状態です。",
+  },
+  {
+    id: "mounting-frame-wrong-position",
+    title: "埋込連用取付枠 器具位置誤り",
+    circuitName: "埋込連用取付枠の組立図",
+    defectType: "mounting_frame_wrong_position",
+    question: "埋込連用取付枠に取り付けた器具の位置を判定してください。",
+    choices: ["欠陥なし", "器具の取付位置が施工条件と違う", "器具が取付枠へ確実に固定されていない", "端子番号が違う"],
+    answer: "器具の取付位置が施工条件と違う",
+    explanation: "器具の種類は合っていますが、施工条件で指定された上・中・下の位置と異なる位置へ取り付けられています。",
+  },
+  {
+    id: "pilot-lamp-wrong-terminal",
+    title: "埋込連用パイロットランプ 端子接続誤り",
+    circuitName: "埋込連用パイロットランプの簡略施工図",
+    defectType: "pilot_lamp_wrong_terminal",
+    question: "埋込連用パイロットランプの端子接続を判定してください。",
+    choices: ["欠陥なし", "指定と異なる端子へ接続している", "器具の取付位置が施工条件と違う", "器具が取付枠へ確実に固定されていない"],
+    answer: "指定と異なる端子へ接続している",
+    explanation: "パイロットランプの点灯方式と施工条件に合う端子へ接続する必要があります。図では一方の心線が指定と異なる端子へ接続されています。",
   },
   {
     id: "switch-wrong-terminal",

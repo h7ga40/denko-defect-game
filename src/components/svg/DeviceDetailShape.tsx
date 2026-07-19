@@ -103,12 +103,15 @@ export function DeviceDetailShape({ variant, x, y }: DeviceDetailShapeProps) {
 
   if (
     variant === "receptacle"
+    || variant === "embedded_receptacle"
+    || variant === "double_receptacle"
     || variant === "exposed_receptacle"
     || variant === "grounded_receptacle"
     || variant === "grounded_20a_receptacle"
     || variant === "eet_receptacle"
   ) {
     const exposed = variant === "exposed_receptacle";
+    const double = variant === "double_receptacle";
     const grounded = variant === "grounded_receptacle" || variant === "grounded_20a_receptacle" || variant === "eet_receptacle";
     const twentyAmp = variant === "grounded_20a_receptacle";
     return (
@@ -120,6 +123,10 @@ export function DeviceDetailShape({ variant, x, y }: DeviceDetailShapeProps) {
         <rect className="cad-face" x={x - 34} y={y - 47} width="68" height={grounded ? "94" : "74"} rx="12" />
         <path className="cad-slot" d={"M " + (x - 17) + " " + (y - 27) + " V " + (y - 4)} />
         <path className="cad-slot" d={"M " + (x + 17) + " " + (y - 27) + " V " + (y - 4) + (twentyAmp ? " H " + (x + 31) : "")} />
+        {double && <>
+          <path className="cad-slot" d={"M " + (x - 17) + " " + (y + 15) + " V " + (y + 38)} />
+          <path className="cad-slot" d={"M " + (x + 17) + " " + (y + 15) + " V " + (y + 38)} />
+        </>}
         {grounded && <path className="cad-slot" d={"M " + (x - 10) + " " + (y + 24) + " Q " + x + " " + (y + 36) + " " + (x + 10) + " " + (y + 24)} />}
         {variant === "eet_receptacle" && <circle className="cad-ground-terminal" cx={x + 27} cy={y + 49} r="8" />}
       </g>

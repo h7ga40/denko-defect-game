@@ -1,4 +1,10 @@
-import { candidateDiagrams, type CandidateDevice, type CandidateDiagram } from "./candidateDiagrams";
+import {
+  candidateDiagrams,
+  type CandidateDevice,
+  type CandidateDiagram,
+  type CandidateMountingFrame,
+  type CandidateMountingFrameMember,
+} from "./candidateDiagrams";
 import {
   type CableEndPreparation,
   type CableRunSpecification,
@@ -76,6 +82,9 @@ export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   cableEntrySide: CableEntrySide;
   x: number;
   y: number;
+  mountingFrame?: CandidateMountingFrame;
+  mountingFrameMember?: CandidateMountingFrameMember;
+  parentMountingFrameId?: string;
 };
 
 export type BoxInspectionRound = {
@@ -284,7 +293,12 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
       infrastructureSpecs: createInfrastructureSpecs(candidate, device),
     };
   });
-  const directDevices = candidate.devices.filter(isDirectInspectionDevice);
+  const framedDeviceIds = new Set(
+    (candidate.mountingFrames ?? []).flatMap((frame) => frame.members.flatMap((member) => member.sourceDeviceId ? [member.sourceDeviceId] : [])),
+  );
+  const directDevices = candidate.devices.filter((device) => isDirectInspectionDevice(device) && !framedDeviceIds.has(device.id));
+  const mountingFrames = candidate.mountingFrames ?? [];
+  const mountingFrameMembers = mountingFrames.flatMap((frame) => frame.members.map((member) => ({ frame, member })));
   const defectPlans = new Map<string, DefectType | "random">();
   const targetDefectCount = randomInt(2, 3, random);
   const connectionDefectCandidates = createConnectionDefectCandidates(plannedBoxes, random);
@@ -318,7 +332,11 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
   const directDefectKeys = directDevices
     .filter((device) => getDirectDefectProblems(device).length > 0)
     .map((device) => "device:" + device.id);
-  const remainingTargets = shuffle([...boxPartKeys, ...directDefectKeys].filter((key) => !defectPlans.has(key)), random);
+  const frameDefectKeys = mountingFrames.map((frame) => "frame:" + frame.id);
+  const frameMemberDefectKeys = mountingFrameMembers
+    .filter(({ member }) => getDirectDefectProblems(createFrameMemberDevice(member)).length > 0)
+    .map(({ frame, member }) => frameMemberPartKey(frame, member));
+  const remainingTargets = shuffle([...boxPartKeys, ...directDefectKeys, ...frameDefectKeys, ...frameMemberDefectKeys].filter((key) => !defectPlans.has(key)), random);
   for (const key of remainingTargets.slice(0, Math.max(0, targetDefectCount - defectPlans.size))) {
     defectPlans.set(key, "random");
   }
@@ -326,9 +344,17 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
   const boxes = plannedBoxes.map(({ device, index, wiring, installation, infrastructureSpecs }) =>
     createBox(candidate, device, index, wiring, installation, infrastructureSpecs, defectPlans, random),
   );
-  const directParts = directDevices.map((device) =>
-    createDirectPart(candidate, device, defectPlans.has("device:" + device.id), random),
-  );
+  const directParts = [
+    ...directDevices.map((device) =>
+      createDirectPart(candidate, device, defectPlans.has("device:" + device.id), random),
+    ),
+    ...mountingFrames.map((frame) =>
+      createMountingFramePart(candidate, frame, defectPlans.has("frame:" + frame.id), random),
+    ),
+    ...mountingFrameMembers.map(({ frame, member }) =>
+      createMountingFrameMemberPart(candidate, frame, member, defectPlans.has(frameMemberPartKey(frame, member)), random),
+    ),
+  ];
   const defectCount = defectPlans.size;
 
   return {
@@ -619,9 +645,86 @@ function getDirectDefectProblems(device: CandidateDevice): Problem[] {
     three_way_switch: ["switch-wrong-terminal"],
     four_way_switch: ["switch-wrong-terminal"],
     switch_group: ["switch-wrong-terminal"],
+    embedded_receptacle: ["receptacle-polarity"],
+    double_receptacle: ["receptacle-polarity"],
+    pilot_lamp: ["pilot-lamp-wrong-terminal"],
   };
   const ids = device.variant ? idsByVariant[device.variant] ?? [] : [];
   return problems.filter((problem) => ids.includes(problem.id));
+}
+
+function frameMemberPartKey(frame: CandidateMountingFrame, member: CandidateMountingFrameMember) {
+  return `frame-member:${frame.id}:${member.id}`;
+}
+
+function createFrameMemberDevice(member: CandidateMountingFrameMember): CandidateDevice {
+  const receptacle = member.variant === "embedded_receptacle" || member.variant === "double_receptacle";
+  const pilot = member.variant === "pilot_lamp";
+  return {
+    id: member.sourceDeviceId ?? member.id,
+    label: member.label,
+    type: receptacle ? "receptacle" : pilot ? "pilot" : "switch",
+    variant: member.variant,
+    x: 0,
+    y: 0,
+  };
+}
+
+function createMountingFrameMemberPart(
+  candidate: CandidateDiagram,
+  frame: CandidateMountingFrame,
+  member: CandidateMountingFrameMember,
+  hasDefect: boolean,
+  random: RandomSource,
+): DirectInspectionPart {
+  const sourceDevice = member.sourceDeviceId
+    ? candidate.devices.find((device) => device.id === member.sourceDeviceId)
+    : undefined;
+  const memberDevice = createFrameMemberDevice(member);
+  const device = sourceDevice
+    ? { ...memberDevice, id: sourceDevice.id, x: sourceDevice.x, y: sourceDevice.y }
+    : memberDevice;
+  const part = createDirectPart(candidate, device, hasDefect, random);
+  const positionName = member.position === "top" ? "上段" : member.position === "middle" ? "中段" : "下段";
+  return {
+    ...part,
+    id: frameMemberPartKey(frame, member),
+    sourceDeviceId: frameMemberPartKey(frame, member),
+    location: `複線図上の${frame.label} ${positionName}`,
+    x: frame.x,
+    y: frame.y,
+    mountingFrameMember: member,
+    parentMountingFrameId: frame.id,
+  };
+}
+
+function createMountingFramePart(
+  candidate: CandidateDiagram,
+  frame: CandidateMountingFrame,
+  hasDefect: boolean,
+  random: RandomSource,
+): DirectInspectionPart {
+  const frameProblems = problems.filter((problem) =>
+    problem.id === "mounting-frame-loose" || problem.id === "mounting-frame-wrong-position"
+  );
+  const defectProblem = hasDefect ? randomItem(frameProblems, random) : undefined;
+  return {
+    id: "frame-" + frame.id,
+    boxId: "",
+    sourceDeviceId: frame.id,
+    deviceType: "switch",
+    cableEntrySide: "bottom",
+    title: frame.label,
+    location: `複線図上の${frame.label}（${frame.members.length}器具）`,
+    defectType: defectProblem?.defectType ?? "none",
+    question: defectProblem?.question ?? `${frame.label}の器具構成と取付状態を判定してください。`,
+    choices: defectProblem?.choices ?? ["欠陥なし", "器具の取付位置が施工条件と違う", "器具が取付枠へ確実に固定されていない", "端子番号が違う"],
+    answer: defectProblem?.answer ?? "欠陥なし",
+    explanation: defectProblem?.explanation ?? "指定された器具が上・中・下の正しい位置へ確実に固定されています。",
+    x: frame.x,
+    y: frame.y,
+    mountingFrame: frame,
+  };
 }
 
 function createDirectPart(
@@ -678,6 +781,8 @@ function getInspectionDeviceName(device: CandidateDevice) {
     three_way_switch: "埋込連用タンブラスイッチ（3路）",
     four_way_switch: "埋込連用タンブラスイッチ（4路）",
     switch_group: "埋込連用タンブラスイッチ",
+    embedded_receptacle: "埋込連用コンセント",
+    double_receptacle: "埋込ダブルコンセント",
     exposed_receptacle: "露出形コンセント",
     grounded_receptacle: "埋込コンセント（接地極付）",
     grounded_20a_receptacle: "埋込コンセント（20A 250V 接地極付）",
