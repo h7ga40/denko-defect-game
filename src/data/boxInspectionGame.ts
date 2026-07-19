@@ -95,13 +95,38 @@ export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   terminalConnections?: Array<{ terminalId: string; color: WireColor }>;
 };
 
+type InspectionUnitBase<TPart extends BoxInspectionPart | DirectInspectionPart> = {
+  id: string;
+  label: string;
+  location: string;
+  sourceDeviceIds: string[];
+  x: number;
+  y: number;
+  parts: TPart[];
+};
+
+export type BoxInspectionUnit = InspectionUnitBase<BoxInspectionPart> & {
+  kind: "box";
+  box: InspectionBox;
+};
+
+export type MountingFrameInspectionUnit = InspectionUnitBase<DirectInspectionPart> & {
+  kind: "mounting_frame";
+  mountingFrame: CandidateMountingFrame;
+};
+
+export type DirectDeviceInspectionUnit = InspectionUnitBase<DirectInspectionPart> & {
+  kind: "direct_device";
+};
+
+export type InspectionUnit = BoxInspectionUnit | MountingFrameInspectionUnit | DirectDeviceInspectionUnit;
+export type InspectionPart = BoxInspectionPart | DirectInspectionPart;
+
 export type BoxInspectionRound = {
   id: string;
   title: string;
   candidate: CandidateDiagram;
-  boxes: InspectionBox[];
-  directParts: DirectInspectionPart[];
-  parts: Array<BoxInspectionPart | DirectInspectionPart>;
+  units: InspectionUnit[];
   defectCount: number;
   seed?: string;
 };
@@ -353,16 +378,51 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
   const boxes = plannedBoxes.map(({ device, index, wiring, installation, infrastructureSpecs }) =>
     createBox(candidate, device, index, wiring, installation, infrastructureSpecs, defectPlans, random),
   );
-  const directParts = [
-    ...directDeviceGroups.map((group) =>
-      createDirectPart(candidate, group, defectPlans.has("device:" + group.key), random),
-    ),
-    ...mountingFrames.map((frame) =>
+  const directDeviceParts = directDeviceGroups.map((group) =>
+    createDirectPart(candidate, group, defectPlans.has("device:" + group.key), random),
+  );
+  const frameParts = new Map(mountingFrames.map((frame) => [
+    frame.id,
+    [
       createMountingFramePart(candidate, frame, defectPlans.has("frame:" + frame.id), random),
-    ),
-    ...mountingFrameMembers.map(({ frame, member }) =>
-      createMountingFrameMemberPart(candidate, frame, member, defectPlans.has(frameMemberPartKey(frame, member)), random),
-    ),
+      ...frame.members.map((member) =>
+        createMountingFrameMemberPart(candidate, frame, member, defectPlans.has(frameMemberPartKey(frame, member)), random),
+      ),
+    ],
+  ]));
+  const units: InspectionUnit[] = [
+    ...boxes.map((box): BoxInspectionUnit => ({
+      id: box.id,
+      kind: "box",
+      label: box.label,
+      location: box.location,
+      sourceDeviceIds: [box.sourceDeviceId],
+      x: box.x,
+      y: box.y,
+      parts: box.parts,
+      box,
+    })),
+    ...directDeviceParts.map((part): DirectDeviceInspectionUnit => ({
+      id: "unit-" + part.id,
+      kind: "direct_device",
+      label: part.title,
+      location: part.location,
+      sourceDeviceIds: part.sourceDeviceIds ?? [part.sourceDeviceId],
+      x: part.x,
+      y: part.y,
+      parts: [part],
+    })),
+    ...mountingFrames.map((frame): MountingFrameInspectionUnit => ({
+      id: "unit-frame-" + frame.id,
+      kind: "mounting_frame",
+      label: frame.label,
+      location: `複線図上の${frame.label}`,
+      sourceDeviceIds: [frame.id, ...frame.members.flatMap((member) => member.sourceDeviceId ? [member.sourceDeviceId] : [])],
+      x: frame.x,
+      y: frame.y,
+      parts: frameParts.get(frame.id) ?? [],
+      mountingFrame: frame,
+    })),
   ];
   const defectCount = defectPlans.size;
 
@@ -372,9 +432,7 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
       : "seed-" + encodeURIComponent(options.seed) + "-candidate-" + candidate.no,
     title: "候補問題No." + candidate.no + " 施工チェック",
     candidate,
-    boxes,
-    directParts,
-    parts: [...boxes.flatMap((box) => box.parts), ...directParts],
+    units,
     defectCount,
     seed: options.seed,
   };

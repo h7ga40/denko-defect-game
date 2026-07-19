@@ -26,6 +26,8 @@
 
 候補問題No.1～No.13から1問をランダムに選ぶ。
 
+施工チェックの内部データは`CandidateDiagram -> InspectionUnit -> InspectionPart`の3階層で管理する。`InspectionUnit`は`box`、`mounting_frame`、`direct_device`の判別可能な共用体とし、ボックス内結線、取付枠全体と構成器具、単独器具をそれぞれ親単位の`parts`へまとめる。ラウンド直下には旧来の`boxes`と`directParts`を並列保持せず、採点対象は`units`から展開する。これは複線図全体、工作部分の配線・組立図、個別欠陥判定図の3段階表示へ移行するための基盤とする。
+
 複線図上の選択対象:
 
 - 直接選択: ランプ、引掛シーリングローゼット、スイッチ、コンセント、遮断器、端子台など
@@ -228,7 +230,7 @@ DefectType、Problem、欠陥判定モードの全28問を管理する。
 ## 5. コンポーネント
 
 - App.tsx: モード切替、欠陥判定の進行、最高得点
-- WorkInspectionGame.tsx: 施工チェックの回答、採点、再出題
+- WorkInspectionGame.tsx: `InspectionUnit`単位の選択、施工チェックの回答、採点、再出題
 - CandidateDiagramView.tsx / CandidateSvg: 複線図、部品記号、部品本体の選択状態
 - BoxWiringDiagram.tsx: 外周ケーブル、心線の折曲点、中央周辺の結線部を結ぶ放射状配線と、ボックス・ブッシング・管工事の点検部
 - StrippedCableEnd.tsx: シース剥ぎ長と芯線ごとのストリップ長を反映するケーブル端SVG

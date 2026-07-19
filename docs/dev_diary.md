@@ -282,6 +282,18 @@
   - `npm run build`
   - 全13問・全23ボックスが明示結線で解決され、未割当心線、ケーブル参照、支給長の検証エラーがないことを確認。
   - ChromeヘッドレスでNo.1・3・6の侵入方向と、Android相当幅390pxのNo.7表示を確認。
+## 2026-07-20
+
+- Work done:
+  - 施工チェックのラウンドデータを`CandidateDiagram -> InspectionUnit -> InspectionPart`へ階層化。
+  - `InspectionUnit`をボックス、埋込連用取付枠、単独器具の判別可能な共用体として定義。
+  - 取付枠全体と上・中・下の構成器具を同じ親ユニットへ集約し、旧`boxes`・`directParts`並列配列を廃止。
+  - 選択状態をボックス用・直接器具用の二系統から、選択中ユニット・部品の一系統へ統合。
+- Verification:
+  - `npm.cmd run build`
+  - 全13問で空ユニットなし、部品ID重複なし、ボックス数・取付枠数が候補問題データと一致することを確認。
+  - Android相当幅390pxで横あふれがなく、No.2の取付枠ユニットから取付枠・常時点灯・片切を選択できることを確認。
+
 ## Entry Template
 
 - Date: YYYY-MM-DD

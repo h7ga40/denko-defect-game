@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart } from "../data/boxInspectionGame";
+import { useState } from "react";
+import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart, type InspectionBox, type InspectionPart } from "../data/boxInspectionGame";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
 import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
@@ -17,36 +17,44 @@ type InspectionAnswers = Record<string, string>;
 
 export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number; seed?: string }) {
   const [round, setRound] = useState<BoxInspectionRound>(() => createBoxInspectionRound({ candidateNo, seed }));
-  const [selectedBoxId, setSelectedBoxId] = useState(() => round.boxes[0].id);
-  const [selectedPartId, setSelectedPartId] = useState(() => round.boxes[0].parts[0].id);
-  const [selectedDirectPartId, setSelectedDirectPartId] = useState<string | null>(null);
+  const [selectedUnitId, setSelectedUnitId] = useState(() => round.units[0].id);
+  const [selectedPartId, setSelectedPartId] = useState(() => round.units[0].parts[0].id);
   const [answers, setAnswers] = useState<InspectionAnswers>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const selectedBox = round.boxes.find((box) => box.id === selectedBoxId) ?? round.boxes[0];
-  const selectedDirectPart = round.directParts.find((part) => part.id === selectedDirectPartId);
-  const selectedPart = selectedDirectPart ?? selectedBox.parts.find((part) => part.id === selectedPartId) ?? selectedBox.parts[0];
-  const selectedFrameId = selectedDirectPart?.parentMountingFrameId ?? selectedDirectPart?.mountingFrame?.id;
-  const selectedFrameParts = selectedFrameId
-    ? round.directParts.filter((part) => part.mountingFrame?.id === selectedFrameId || part.parentMountingFrameId === selectedFrameId)
-    : [];
-  const infrastructurePart = !selectedDirectPart && "connection" in selectedPart && !["ring_sleeve", "push_connector"].includes(selectedPart.connection.method)
+  const parts = round.units.reduce<InspectionPart[]>((result, unit) => {
+    result.push(...unit.parts as InspectionPart[]);
+    return result;
+  }, []);
+  const inspectionBoxes = round.units.filter((unit) => unit.kind === "box").map((unit) => unit.box);
+  const directParts = round.units.reduce<DirectInspectionPart[]>((result, unit) => {
+    if (unit.kind !== "box") result.push(...unit.parts);
+    return result;
+  }, []);
+  const selectedUnit = round.units.find((unit) => unit.id === selectedUnitId) ?? round.units[0];
+  const selectedPart = selectedUnit.parts.find((part) => part.id === selectedPartId) ?? selectedUnit.parts[0];
+  const selectedBox = selectedUnit.kind === "box" ? selectedUnit.box : undefined;
+  const selectedDirectPart = selectedUnit.kind === "box" ? undefined : selectedPart as DirectInspectionPart;
+  const selectedFrameParts = selectedUnit.kind === "mounting_frame" ? selectedUnit.parts : [];
+  const infrastructurePart = selectedBox && "connection" in selectedPart && !["ring_sleeve", "push_connector"].includes(selectedPart.connection.method)
     ? selectedPart
     : undefined;
   const answeredCount = Object.keys(answers).length;
-  const markedDefects = round.parts.filter((part) => answers[part.id] && answers[part.id] !== "欠陥なし");
-  const correctCount = useMemo(() => round.parts.filter((part) => answers[part.id] === part.answer).length, [answers, round.parts]);
+  const markedDefects = parts.filter((part) => answers[part.id] && answers[part.id] !== "欠陥なし");
+  const correctCount = parts.filter((part) => answers[part.id] === part.answer).length;
 
   function selectBox(boxId: string) {
-    const box = round.boxes.find((item) => item.id === boxId);
-    if (!box) return;
-    setSelectedBoxId(boxId);
-    setSelectedDirectPartId(null);
-    setSelectedPartId(box.parts[0].id);
+    const unit = round.units.find((item) => item.kind === "box" && item.box.id === boxId);
+    if (!unit) return;
+    setSelectedUnitId(unit.id);
+    setSelectedPartId(unit.parts[0].id);
   }
 
   function selectDirectPart(partId: string) {
-    setSelectedDirectPartId(partId);
+    const unit = round.units.find((item) => item.kind !== "box" && item.parts.some((part) => part.id === partId));
+    if (!unit) return;
+    setSelectedUnitId(unit.id);
+    setSelectedPartId(partId);
   }
 
   function selectAnswer(answer: string) {
@@ -57,9 +65,8 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
   function restart() {
     const nextRound = createBoxInspectionRound({ candidateNo, seed });
     setRound(nextRound);
-    setSelectedBoxId(nextRound.boxes[0].id);
-    setSelectedPartId(nextRound.boxes[0].parts[0].id);
-    setSelectedDirectPartId(null);
+    setSelectedUnitId(nextRound.units[0].id);
+    setSelectedPartId(nextRound.units[0].parts[0].id);
     setAnswers({});
     setSubmitted(false);
   }
@@ -70,7 +77,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
         <div className="problem-meta">
           <span>候補問題 No.{round.candidate.no}</span>
           {round.seed && <span title={round.seed}>シード {round.seed.length > 20 ? round.seed.slice(0, 20) + "…" : round.seed}</span>}
-          <span>回答 {answeredCount} / {round.parts.length}</span>
+          <span>回答 {answeredCount} / {parts.length}</span>
         </div>
         <h2>{round.title}</h2>
         <p className="candidate-theme">
@@ -82,11 +89,11 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
           <CandidateSvg
             answers={answers}
             diagram={round.candidate}
-            directParts={round.directParts}
-            inspectionBoxes={round.boxes}
+            directParts={directParts}
+            inspectionBoxes={inspectionBoxes}
             onSelectBox={selectBox}
             onSelectDirectPart={selectDirectPart}
-            selectedBoxId={selectedDirectPart ? undefined : selectedBox.id}
+            selectedBoxId={selectedBox?.id}
             selectedDirectPartId={selectedDirectPart?.id}
             submitted={submitted}
           />
@@ -99,7 +106,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
           <span>{selectedPart.location}</span>
           <span>{answers[selectedPart.id] ? "回答済み" : "未回答"}</span>
         </div>
-        <h2>{selectedDirectPart ? selectedPart.title : selectedBox.label}</h2>
+        <h2>{selectedDirectPart ? selectedPart.title : selectedBox?.label}</h2>
         <div className="diagram-wrap focused-diagram">
           {selectedDirectPart ? (
             <DirectDeviceDiagram part={selectedDirectPart} />
@@ -108,7 +115,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
           ) : (
             <BoxWiringDiagram
               answers={answers}
-              box={selectedBox}
+              box={selectedBox!}
               onSelectPart={setSelectedPartId}
               selectedPartId={selectedPart.id}
               submitted={submitted}
@@ -123,7 +130,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             selectedPartId={selectedDirectPart.id}
           />
         )}
-        {!selectedDirectPart && (
+        {selectedBox && (
           <>
             <BoxPartSelector answers={answers} box={selectedBox} onSelectPart={setSelectedPartId} selectedPartId={selectedPart.id} />
             <h3 className="connection-title">{selectedPart.title}</h3>
@@ -142,7 +149,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             );
           })}
         </div>
-        {submitted ? <InspectionResult answers={answers} correctCount={correctCount} onRestart={restart} parts={round.parts} /> : (
+        {submitted ? <InspectionResult answers={answers} correctCount={correctCount} onRestart={restart} parts={parts} /> : (
           <button className="primary complete-button" onClick={() => setSubmitted(true)} type="button">完了して採点する</button>
         )}
       </article>
@@ -177,11 +184,11 @@ function DirectPartSelector({
   );
 }
 
-function DefectList({ markedDefects }: { markedDefects: Array<BoxInspectionPart | DirectInspectionPart> }) {
+function DefectList({ markedDefects }: { markedDefects: InspectionPart[] }) {
   return <div className="defect-list"><strong>欠陥ありとして選択した接続部</strong>{markedDefects.length === 0 ? <p>まだ欠陥ありにした接続部はありません。</p> : <ul>{markedDefects.map((part) => <li key={part.id}>{part.location}: {part.title}</li>)}</ul>}</div>;
 }
 
-function InspectionResult({ answers, correctCount, onRestart, parts }: { answers: InspectionAnswers; correctCount: number; onRestart: () => void; parts: Array<BoxInspectionPart | DirectInspectionPart> }) {
+function InspectionResult({ answers, correctCount, onRestart, parts }: { answers: InspectionAnswers; correctCount: number; onRestart: () => void; parts: InspectionPart[] }) {
   return (
     <div className="inspection-result">
       <h3>採点結果: {correctCount} / {parts.length}</h3>
@@ -202,7 +209,7 @@ function BoxPartSelector({
   selectedPartId,
 }: {
   answers: InspectionAnswers;
-  box: BoxInspectionRound["boxes"][number];
+  box: InspectionBox;
   onSelectPart: (partId: string) => void;
   selectedPartId: string;
 }) {
