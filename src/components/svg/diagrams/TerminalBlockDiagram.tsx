@@ -16,8 +16,10 @@ export function TerminalBlockDiagram({
 
   const terminals = getDeviceSpecification(variant)?.terminals
     ?? getDeviceSpecification("terminal_block")!.terminals;
-  const startX = 235;
-  const spacing = 50;
+  const omittedX = 325;
+  const installedX = 395;
+  const startY = 120;
+  const spacing = 34;
 
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label={title + "の欠陥図"}>
@@ -25,17 +27,20 @@ export function TerminalBlockDiagram({
       <text className="label" x="360" y="62" textAnchor="middle">
         {title}
       </text>
-      <rect className="device" x="210" y="110" width="320" height="150" rx="10" />
+      <rect className="device" x="280" y="88" width="160" height="228" rx="10" />
+      <text className="small" x={omittedX} y="108" textAnchor="middle">施工省略</text>
+      <text className="small" x={installedX} y="108" textAnchor="middle">施工</text>
       {terminals.map((terminal, index) => (
         <g key={terminal.id}>
-          <rect className="terminal" x={startX + index * spacing} y="150" width="34" height="58" rx="5" />
-          <text className="small" x={startX + 17 + index * spacing} y="135" textAnchor="middle">
+          <circle className="terminal omitted-terminal" cx={omittedX} cy={startY + index * spacing} r="10" />
+          <circle className="terminal" cx={installedX} cy={startY + index * spacing} r="10" />
+          <text className="small" x="360" y={startY + index * spacing + 5} textAnchor="middle">
             {terminal.label}
           </text>
         </g>
       ))}
-      <path className="wire black" d={"M 95 165 C 170 165, 205 178, " + (startX + 17) + " 178"} />
-      <path className="wire alert" d={"M 95 220 C 185 240, 255 178, " + (startX + spacing * Math.min(1, terminals.length - 1) + 17) + " 178"} />
+      <path className="wire black" d={`M 650 135 C 545 135, 480 120, ${installedX} ${startY}`} />
+      <path className="wire alert" d={`M 650 245 C 545 245, 480 ${startY + spacing}, ${installedX} ${startY + spacing}`} />
       <text className="defect-label" x="360" y="330" textAnchor="middle">
         指定端子ではなく隣の端子へ接続
       </text>

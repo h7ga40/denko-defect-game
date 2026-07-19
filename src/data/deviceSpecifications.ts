@@ -39,7 +39,7 @@ const unwired = (name: string): DeviceSpecification => ({
 const sixPoleTerminalBlock = (name: string) => wired(
   name,
   "terminal_block",
-  Array.from({ length: 6 }, (_, index) => terminal(String(index + 1), String(index + 1), "control")),
+  Array.from({ length: 6 }, (_, index) => terminal(String(index + 1), String(index + 1), "control", 2, 2)),
 );
 
 export const deviceSpecifications: Record<DeviceVariant, DeviceSpecification> = {

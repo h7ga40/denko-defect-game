@@ -830,6 +830,24 @@ button {
   text-anchor: middle;
 }
 
+.candidate-terminal-number {
+  fill: #344557;
+  font-size: 8px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.candidate-terminal-heading {
+  fill: #526272;
+  font-size: 8px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.omitted-terminal {
+  stroke-dasharray: 3 2;
+}
+
 .candidate-symbol-text.motor-mark {
   font-size: 23px;
 }

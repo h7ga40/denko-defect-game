@@ -108,7 +108,7 @@ export function CandidateSvg({
         const to = toDevice && getDeviceRenderPoint(diagram, toDevice);
         if (!from || !to) return null;
 
-        const offset = getParallelOffset(index, from, to);
+        const offset = getParallelOffset(diagram.connections, index, from, to);
         const cable = resolveCableRunSpecification(diagram, connection, index);
         const wireOffsets = getCoreOffsets(cable.coreColors.length);
         const labelX = (from.x + to.x) / 2 + offset.x * 1.8;
@@ -542,7 +542,28 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
     );
   }
 
-  if (device.variant === "earth_terminal" || device.variant === "terminal_block") {
+  if (device.variant === "terminal_block") {
+    const terminalRows = [-45, -27, -9, 9, 27, 45];
+    return (
+      <SelectableGroup height={160} interaction={interaction} width={112} x={device.x} y={device.y}>
+        <text className="candidate-terminal-heading" x={device.x - 20} y={device.y - 63} textAnchor="middle">省略</text>
+        <text className="candidate-terminal-heading" x={device.x + 20} y={device.y - 63} textAnchor="middle">施工</text>
+        <rect className="candidate-device terminal" x={device.x - 40} y={device.y - 57} width="80" height="114" rx="6" />
+        {terminalRows.map((yOffset, row) => (
+          <g key={row}>
+            <circle className="device-detail omitted-terminal" cx={device.x - 20} cy={device.y + yOffset} r="6" />
+            <circle className="device-detail" cx={device.x + 20} cy={device.y + yOffset} r="6" />
+            <text className="candidate-terminal-number" x={device.x} y={device.y + yOffset + 3} textAnchor="middle">
+              {row + 1}
+            </text>
+          </g>
+        ))}
+        <text className="candidate-label small-label" x={device.x} y={device.y + 76} textAnchor="middle">{device.label}</text>
+      </SelectableGroup>
+    );
+  }
+
+  if (device.variant === "earth_terminal") {
     return (
       <SelectableGroup height={94} interaction={interaction} width={108} x={device.x} y={device.y}>
         <rect className="candidate-device terminal" x={device.x - 44} y={device.y - 30} width="88" height="60" rx="8" />
@@ -550,7 +571,7 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
           <circle className="device-detail" cx={device.x + offset} cy={device.y} key={offset} r="6" />
         ))}
         <text className="candidate-symbol-text centered" x={device.x} y={device.y + 23}>
-          {device.variant === "earth_terminal" ? "ED" : "T"}
+          ED
         </text>
         {label}
       </SelectableGroup>
@@ -594,13 +615,26 @@ function makeWirePath(from: CandidateDevice, to: CandidateDevice, offset: { x: n
   return "M " + startX + " " + startY + " Q " + controlX + " " + controlY + " " + endX + " " + endY;
 }
 
-function getParallelOffset(index: number, from: CandidateDevice, to: CandidateDevice) {
-  const pairOffset = (index % 3) - 1;
+function getParallelOffset(
+  connections: CandidateDiagram["connections"],
+  index: number,
+  from: CandidateDevice,
+  to: CandidateDevice,
+) {
+  const parallelIndexes = connections.flatMap((connection, connectionIndex) =>
+    connection.from === connections[index].from && connection.to === connections[index].to
+      ? [connectionIndex]
+      : []
+  );
+  const occurrenceIndex = parallelIndexes.indexOf(index);
+  const pairOffset = parallelIndexes.length > 1
+    ? (occurrenceIndex - (parallelIndexes.length - 1) / 2) * 18
+    : ((index % 3) - 1) * 8;
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const length = Math.hypot(dx, dy) || 1;
   return {
-    x: (-dy / length) * pairOffset * 8,
-    y: (dx / length) * pairOffset * 8,
+    x: (-dy / length) * pairOffset,
+    y: (dx / length) * pairOffset,
   };
 }
