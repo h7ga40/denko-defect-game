@@ -14,11 +14,13 @@ import { PfConduitDiagram } from "./svg/diagrams/PfConduitDiagram";
 import { TerminalBlockDiagram } from "./svg/diagrams/TerminalBlockDiagram";
 
 type InspectionAnswers = Record<string, string>;
+type InspectionStage = "assembly" | "defect";
 
 export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number; seed?: string }) {
   const [round, setRound] = useState<BoxInspectionRound>(() => createBoxInspectionRound({ candidateNo, seed }));
   const [selectedUnitId, setSelectedUnitId] = useState(() => round.units[0].id);
   const [selectedPartId, setSelectedPartId] = useState(() => round.units[0].parts[0].id);
+  const [stage, setStage] = useState<InspectionStage>("assembly");
   const [answers, setAnswers] = useState<InspectionAnswers>({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -35,7 +37,6 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
   const selectedPart = selectedUnit.parts.find((part) => part.id === selectedPartId) ?? selectedUnit.parts[0];
   const selectedBox = selectedUnit.kind === "box" ? selectedUnit.box : undefined;
   const selectedDirectPart = selectedUnit.kind === "box" ? undefined : selectedPart as DirectInspectionPart;
-  const selectedFrameParts = selectedUnit.kind === "mounting_frame" ? selectedUnit.parts : [];
   const infrastructurePart = selectedBox && "connection" in selectedPart && !["ring_sleeve", "push_connector"].includes(selectedPart.connection.method)
     ? selectedPart
     : undefined;
@@ -48,13 +49,20 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     if (!unit) return;
     setSelectedUnitId(unit.id);
     setSelectedPartId(unit.parts[0].id);
+    setStage("assembly");
   }
 
   function selectDirectPart(partId: string) {
     const unit = round.units.find((item) => item.kind !== "box" && item.parts.some((part) => part.id === partId));
     if (!unit) return;
     setSelectedUnitId(unit.id);
+    setSelectedPartId(unit.kind === "mounting_frame" ? unit.parts[0].id : partId);
+    setStage(unit.kind === "mounting_frame" ? "assembly" : "defect");
+  }
+
+  function openInspectionPart(partId: string) {
     setSelectedPartId(partId);
+    setStage("defect");
   }
 
   function selectAnswer(answer: string) {
@@ -67,6 +75,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     setRound(nextRound);
     setSelectedUnitId(nextRound.units[0].id);
     setSelectedPartId(nextRound.units[0].parts[0].id);
+    setStage("assembly");
     setAnswers({});
     setSubmitted(false);
   }
@@ -81,7 +90,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
         </div>
         <h2>{round.title}</h2>
         <p className="candidate-theme">
-          ランプ・スイッチ・コンセントなどは複線図から直接選択し、リングスリーブと差込形コネクタはボックス内で選択します。欠陥は{round.defectCount}か所です。
+          ボックスと埋込連用取付枠は正常組立図から点検部を選択し、単独器具は複線図から直接選択します。欠陥は{round.defectCount}か所です。
         </p>
         <CandidateConstructionConditions conditions={round.candidate.constructionConditions} />
         <CandidateMaterials candidateNo={round.candidate.no} />
@@ -102,53 +111,75 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
       </article>
 
       <article className="problem-card inspection-question">
-        <div className="problem-meta">
-          <span>{selectedPart.location}</span>
-          <span>{answers[selectedPart.id] ? "回答済み" : "未回答"}</span>
-        </div>
-        <h2>{selectedDirectPart ? selectedPart.title : selectedBox?.label}</h2>
-        <div className="diagram-wrap focused-diagram">
-          {selectedDirectPart ? (
-            <DirectDeviceDiagram part={selectedDirectPart} />
-          ) : infrastructurePart ? (
-            <InfrastructureDiagram part={infrastructurePart} />
-          ) : (
-            <BoxWiringDiagram
-              answers={answers}
-              box={selectedBox!}
-              onSelectPart={setSelectedPartId}
-              selectedPartId={selectedPart.id}
-              submitted={submitted}
-            />
-          )}
-        </div>
-        {selectedDirectPart && selectedFrameParts.length > 1 && (
-          <DirectPartSelector
-            answers={answers}
-            onSelectPart={selectDirectPart}
-            parts={selectedFrameParts}
-            selectedPartId={selectedDirectPart.id}
-          />
-        )}
-        {selectedBox && (
+        {stage === "assembly" ? (
           <>
-            <BoxPartSelector answers={answers} box={selectedBox} onSelectPart={setSelectedPartId} selectedPartId={selectedPart.id} />
-            <h3 className="connection-title">{selectedPart.title}</h3>
+            <div className="problem-meta">
+              <span>{selectedUnit.location}</span>
+              <span>正常組立図</span>
+            </div>
+            <h2>{selectedUnit.label}</h2>
+            <div className="diagram-wrap focused-diagram">
+              {selectedUnit.kind === "box" ? (
+                <BoxWiringDiagram
+                  answers={{}}
+                  box={selectedUnit.assemblyBox}
+                  onSelectPart={openInspectionPart}
+                  selectedPartId=""
+                  submitted={false}
+                />
+              ) : selectedUnit.kind === "mounting_frame" ? (
+                <MountingFrameDiagram defectType="none" frame={selectedUnit.mountingFrame} />
+              ) : selectedDirectPart ? (
+                <DirectDeviceDiagram part={{ ...selectedDirectPart, defectType: "none" }} />
+              ) : null}
+            </div>
+            {selectedUnit.kind === "box" && (
+              <BoxPartSelector answers={answers} box={selectedUnit.assemblyBox} onSelectPart={openInspectionPart} selectedPartId="" />
+            )}
+            {selectedUnit.kind === "mounting_frame" && (
+              <DirectPartSelector answers={answers} onSelectPart={openInspectionPart} parts={selectedUnit.parts} selectedPartId="" />
+            )}
+          </>
+        ) : (
+          <>
+            <div className="problem-meta">
+              <span>{selectedPart.location}</span>
+              <span>{answers[selectedPart.id] ? "回答済み" : "未回答"}</span>
+            </div>
+            <h2>{selectedPart.title}</h2>
+            {selectedUnit.kind !== "direct_device" && (
+              <button className="inspection-back-button" onClick={() => setStage("assembly")} type="button">工作部分の組立図に戻る</button>
+            )}
+            <div className="diagram-wrap focused-diagram">
+              {selectedDirectPart ? (
+                <DirectDeviceDiagram part={selectedDirectPart} />
+              ) : infrastructurePart ? (
+                <InfrastructureDiagram part={infrastructurePart} />
+              ) : (
+                <BoxWiringDiagram
+                  answers={answers}
+                  box={selectedBox!}
+                  onSelectPart={openInspectionPart}
+                  selectedPartId={selectedPart.id}
+                  submitted={submitted}
+                />
+              )}
+            </div>
+            <p className="question">{selectedPart.question}</p>
+            <div className="choices" role="list">
+              {selectedPart.choices.map((choice) => {
+                const selected = answers[selectedPart.id] === choice;
+                const correct = submitted && choice === selectedPart.answer;
+                const wrong = submitted && selected && choice !== selectedPart.answer;
+                return (
+                  <button className={["choice", selected ? "selected" : "", correct ? "correct" : "", wrong ? "wrong" : ""].filter(Boolean).join(" ")} disabled={submitted} key={choice} onClick={() => selectAnswer(choice)} type="button">
+                    {choice}
+                  </button>
+                );
+              })}
+            </div>
           </>
         )}
-        <p className="question">{selectedPart.question}</p>
-        <div className="choices" role="list">
-          {selectedPart.choices.map((choice) => {
-            const selected = answers[selectedPart.id] === choice;
-            const correct = submitted && choice === selectedPart.answer;
-            const wrong = submitted && selected && choice !== selectedPart.answer;
-            return (
-              <button className={["choice", selected ? "selected" : "", correct ? "correct" : "", wrong ? "wrong" : ""].filter(Boolean).join(" ")} disabled={submitted} key={choice} onClick={() => selectAnswer(choice)} type="button">
-                {choice}
-              </button>
-            );
-          })}
-        </div>
         {submitted ? <InspectionResult answers={answers} correctCount={correctCount} onRestart={restart} parts={parts} /> : (
           <button className="primary complete-button" onClick={() => setSubmitted(true)} type="button">完了して採点する</button>
         )}

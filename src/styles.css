@@ -203,6 +203,23 @@ button {
   margin: 14px 0;
 }
 
+.inspection-back-button {
+  min-height: 40px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid #aebfca;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #27606d;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.inspection-back-button:hover {
+  border-color: #1f6f8b;
+  background: #eaf7fb;
+}
+
 .defect-list {
   margin-top: 14px;
   padding: 14px;

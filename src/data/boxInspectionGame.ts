@@ -108,6 +108,7 @@ type InspectionUnitBase<TPart extends BoxInspectionPart | DirectInspectionPart> 
 export type BoxInspectionUnit = InspectionUnitBase<BoxInspectionPart> & {
   kind: "box";
   box: InspectionBox;
+  assemblyBox: InspectionBox;
 };
 
 export type MountingFrameInspectionUnit = InspectionUnitBase<DirectInspectionPart> & {
@@ -401,6 +402,7 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
       y: box.y,
       parts: box.parts,
       box,
+      assemblyBox: createAssemblyBox(box),
     })),
     ...directDeviceParts.map((part): DirectDeviceInspectionUnit => ({
       id: "unit-" + part.id,
@@ -632,6 +634,26 @@ function createBox(
       if (!template) throw new Error(`${spec.method}の欠陥テンプレートがありません。`);
       return toPart(template, id, label, spec, partIndex, defectPlan !== undefined);
     }),
+  };
+}
+
+function createAssemblyBox(box: InspectionBox): InspectionBox {
+  const installation = createCorrectBoxWiringInstallation(box.wiring);
+  const connectionById = new Map(
+    createConnectionSpecs(box.wiring, installation).map((connection) => [connection.id, connection]),
+  );
+  return {
+    ...box,
+    installation,
+    parts: box.parts.map((part) => ({
+      ...part,
+      defectType: "none",
+      question: "",
+      choices: [],
+      answer: "欠陥なし",
+      explanation: "正常な配線・組立状態です。",
+      connection: connectionById.get(part.connection.id) ?? part.connection,
+    })),
   };
 }
 
