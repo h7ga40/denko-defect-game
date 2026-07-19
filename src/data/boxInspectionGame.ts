@@ -7,6 +7,7 @@ import {
   type CandidateOutletBoxOpening,
 } from "./candidateDiagrams";
 import {
+  getCandidateCableRuns,
   type CableEndPreparation,
   type CableRunSpecification,
 } from "./cableSpecifications";
@@ -87,6 +88,8 @@ export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   mountingFrame?: CandidateMountingFrame;
   mountingFrameMember?: CandidateMountingFrameMember;
   parentMountingFrameId?: string;
+  terminalBlock?: CandidateDevice["terminalBlock"];
+  terminalConnections?: Array<{ terminalId: string; color: WireColor }>;
 };
 
 export type BoxInspectionRound = {
@@ -774,7 +777,23 @@ function createDirectPart(
       ?? "この器具は正常に施工されています。接続部の欠陥は、ボックス内配線図で判定します。",
     x: device.x,
     y: device.y,
+    terminalBlock: device.terminalBlock,
+    terminalConnections: resolveTerminalConnections(candidate, device),
   };
+}
+
+function resolveTerminalConnections(candidate: CandidateDiagram, device: CandidateDevice) {
+  const wiring = candidate.deviceWirings?.find((item) => item.deviceId === device.id);
+  if (!wiring) return undefined;
+
+  const cableById = new Map(getCandidateCableRuns(candidate).map((cable) => [cable.id, cable]));
+  return wiring.terminals.flatMap((terminal) =>
+    terminal.conductors.flatMap((conductor) => {
+      const cable = cableById.get(conductor.cableId);
+      const color = cable?.coreColors[conductor.coreIndex];
+      return color ? [{ terminalId: terminal.terminalId, color }] : [];
+    }),
+  );
 }
 
 function getCableEntrySide(candidate: CandidateDiagram, device: CandidateDevice): CableEntrySide {

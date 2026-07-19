@@ -450,6 +450,14 @@ button {
   stroke: #17945f;
 }
 
+.wire.red {
+  stroke: #c83349;
+}
+
+.wire.blue {
+  stroke: #2576b8;
+}
+
 .wire.loop {
   stroke-width: 8;
 }

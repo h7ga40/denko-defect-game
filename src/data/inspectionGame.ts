@@ -242,7 +242,7 @@ export const inspectionTemplates: InspectionTemplate[] = [
     choices: ["欠陥なし", "指定端子と異なる端子へ接続している", "接地線の接続忘れ", "ケーブル外装が器具内に入っていない"],
     defectAnswer: "指定端子と異なる端子へ接続している",
     normalExplanation: "指定された端子番号へ接続されています。",
-    defectExplanation: "指定端子ではなく隣の端子へ接続されています。",
+    defectExplanation: "指定端子ではなく別の端子へ接続されています。",
   },
   {
     id: "ceiling-connector",

@@ -554,7 +554,7 @@ export function CandidateDeviceNode({ device, interaction }: { device: Candidate
             <circle className="device-detail omitted-terminal" cx={device.x - 20} cy={device.y + yOffset} r="6" />
             <circle className="device-detail" cx={device.x + 20} cy={device.y + yOffset} r="6" />
             <text className="candidate-terminal-number" x={device.x} y={device.y + yOffset + 3} textAnchor="middle">
-              {row + 1}
+              {device.terminalBlock?.poles[row]?.label ?? row + 1}
             </text>
           </g>
         ))}

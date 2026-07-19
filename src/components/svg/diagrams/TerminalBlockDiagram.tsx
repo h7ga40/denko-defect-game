@@ -1,14 +1,18 @@
-import type { DeviceVariant } from "../../../data/candidateDiagrams";
+import type { CandidateTerminalBlockLayout, DeviceVariant } from "../../../data/candidateDiagrams";
 import { getDeviceSpecification } from "../../../data/deviceSpecifications";
 
 export function TerminalBlockDiagram({
   defect = true,
   title = "端子台",
   variant = "terminal_block",
+  terminalBlock,
+  terminalConnections,
 }: {
   defect?: boolean;
   title?: string;
   variant?: DeviceVariant;
+  terminalBlock?: CandidateTerminalBlockLayout;
+  terminalConnections?: Array<{ terminalId: string; color: "black" | "white" | "red" | "green" | "blue" }>;
 }) {
   if (variant === "timer_switch") {
     return <TimerSwitchTerminalDiagram defect={defect} title={title} />;
@@ -17,40 +21,79 @@ export function TerminalBlockDiagram({
     return <AutomaticSwitchTerminalDiagram defect={defect} title={title} />;
   }
 
-  const terminals = getDeviceSpecification(variant)?.terminals
+  const specificationTerminals = getDeviceSpecification(variant)?.terminals
     ?? getDeviceSpecification("terminal_block")!.terminals;
+  const poles = terminalBlock?.poles ?? specificationTerminals.map((terminal) => ({
+    terminalId: terminal.id,
+    label: terminal.label,
+    circuitLabel: "",
+  }));
+  const connections = terminalConnections ?? [
+    { terminalId: poles[0]?.terminalId ?? "1", color: "black" as const },
+    { terminalId: poles[1]?.terminalId ?? "2", color: "white" as const },
+  ];
+  const connectedIds = new Set(connections.map((connection) => connection.terminalId));
+  const wrongConnectionIndex = defect && connections.length > 0 ? connections.length - 1 : -1;
+  const unusedPoleIndex = poles.findIndex((pole) => !connectedIds.has(pole.terminalId));
   const omittedX = 325;
   const installedX = 395;
   const startY = 120;
   const spacing = 34;
+  const colorLabels = {
+    black: "黒線",
+    white: "白線",
+    red: "赤線",
+    green: "緑線",
+    blue: "青線",
+  };
 
   return (
-    <svg viewBox="0 0 720 390" role="img" aria-label={title + "の欠陥図"}>
+    <svg viewBox="0 0 720 390" role="img" aria-label={title + (defect ? "の欠陥図" : "の正常施工図")}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
-      <text className="label" x="360" y="62" textAnchor="middle">
-        {title}
-      </text>
+      <text className="label" x="360" y="55" textAnchor="middle">{title}</text>
       <rect className="device" x="280" y="88" width="160" height="228" rx="10" />
-      <text className="small" x={omittedX} y="108" textAnchor="middle">施工省略</text>
+      <text className="small" x={omittedX} y="108" textAnchor="middle">
+        {terminalBlock ? "電源側" : "施工省略"}
+      </text>
       <text className="small" x={installedX} y="108" textAnchor="middle">施工</text>
-      {terminals.map((terminal, index) => (
-        <g key={terminal.id}>
+      {poles.map((pole, index) => (
+        <g key={pole.terminalId}>
+          <text className="small" x="270" y={startY + index * spacing + 5} textAnchor="end">
+            {pole.circuitLabel}
+          </text>
           <circle className="terminal omitted-terminal" cx={omittedX} cy={startY + index * spacing} r="10" />
           <circle className="terminal" cx={installedX} cy={startY + index * spacing} r="10" />
           <text className="small" x="360" y={startY + index * spacing + 5} textAnchor="middle">
-            {terminal.label}
+            {pole.label}
           </text>
         </g>
       ))}
-      <path className="wire black" d={`M 650 135 C 545 135, 480 120, ${installedX} ${startY}`} />
-      <path className="wire alert" d={`M 650 245 C 545 245, 480 ${startY + spacing}, ${installedX} ${startY + spacing}`} />
-      <text className="defect-label" x="360" y="330" textAnchor="middle">
-        指定端子ではなく隣の端子へ接続
+      {connections.map((connection, index) => {
+        const poleIndex = Math.max(0, poles.findIndex((pole) => pole.terminalId === connection.terminalId));
+        const wrong = index === wrongConnectionIndex;
+        const targetIndex = wrong
+          ? unusedPoleIndex >= 0 ? unusedPoleIndex : Math.max(0, poleIndex - 1)
+          : poleIndex;
+        const sourceY = startY + poleIndex * spacing;
+        const targetY = startY + targetIndex * spacing;
+        return (
+          <g key={connection.terminalId + "-" + index}>
+            <path
+              className={"wire " + (wrong ? "alert" : connection.color)}
+              d={`M 650 ${sourceY} C 545 ${sourceY}, 480 ${targetY}, ${installedX} ${targetY}`}
+            />
+            <text className="small" x="625" y={sourceY - 7} textAnchor="end">
+              {colorLabels[connection.color]}
+            </text>
+          </g>
+        );
+      })}
+      <text className={defect ? "defect-label" : "small"} x="360" y="346" textAnchor="middle">
+        {defect ? "指定端子ではなく空き端子へ接続" : "端子名と線色どおりに接続"}
       </text>
     </svg>
   );
 }
-
 function AutomaticSwitchTerminalDiagram({ defect, title }: { defect: boolean; title: string }) {
   const terminals = [
     { id: "1", x: 280 },
