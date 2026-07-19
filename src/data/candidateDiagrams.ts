@@ -569,9 +569,23 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { from: "j2", to: "r", color: "black", label: "イ", cable: hozanCable("13-vvf-1", 150) },
       { from: "j2", to: "e", color: "black", label: "E", cable: hozanCable("13-vvf-1", 150) },
       { from: "e", to: "ed", color: "green", label: "E1.6", cable: hozanCable("13-iv", 100, { lengthMm: 150 }) },
-      { from: "j2", to: "a", color: "black", label: "A（3A）", cable: hozanCable("13-vvf-1", 200) },
-      { from: "a", to: "load", color: "black", label: "VVR 1.6-2C ロ", cable: hozanCable("13-vvr", 200, { lengthMm: 250 }) },
+      { id: "13-box2-automatic", from: "j2", to: "a", color: "black", label: "A（3A）", cable: hozanCable("13-vvf-1", 200) },
+      { id: "13-automatic-outdoor", from: "a", to: "load", color: "black", label: "VVR 1.6-2C ロ", cable: hozanCable("13-vvr", 200, { lengthMm: 250 }) },
     ],
+    deviceWirings: [{
+      deviceId: "a",
+      terminals: [
+        { terminalId: "1", conductors: [{ cableId: "13-box2-automatic", coreIndex: 0 }] },
+        {
+          terminalId: "2",
+          conductors: [
+            { cableId: "13-box2-automatic", coreIndex: 1 },
+            { cableId: "13-automatic-outdoor", coreIndex: 1 },
+          ],
+        },
+        { terminalId: "3", conductors: [{ cableId: "13-automatic-outdoor", coreIndex: 0 }] },
+      ],
+    }],
     mountingFrames: [{
       id: "frame-1", label: "埋込連用取付枠", x: 150, y: 325,
       members: [{ id: "switch", label: "イ", variant: "single_pole_switch", position: "middle", sourceDeviceId: "sw" }],

@@ -124,7 +124,11 @@ export const deviceSpecifications: Record<DeviceVariant, DeviceSpecification> = 
     terminal("S2", "S2", "neutral", 1, 2),
     terminal("L1", "L1", "load"),
   ]),
-  automatic_switch: sixPoleTerminalBlock("自動点滅器（端子台代用）"),
+  automatic_switch: wired("自動点滅器（端子台代用）", "terminal_block", [
+    terminal("1", "1", "line"),
+    terminal("2", "2", "neutral", 1, 2),
+    terminal("3", "3", "load"),
+  ]),
   earth_terminal: wired("接地端子", "screw", [terminal("earth", "E", "ground")], false),
   terminal_block: sixPoleTerminalBlock("6P端子台"),
   motor_terminal: unwired("三相誘導電動機（施工省略）"),

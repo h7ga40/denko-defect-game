@@ -13,6 +13,9 @@ export function TerminalBlockDiagram({
   if (variant === "timer_switch") {
     return <TimerSwitchTerminalDiagram defect={defect} title={title} />;
   }
+  if (variant === "automatic_switch") {
+    return <AutomaticSwitchTerminalDiagram defect={defect} title={title} />;
+  }
 
   const terminals = getDeviceSpecification(variant)?.terminals
     ?? getDeviceSpecification("terminal_block")!.terminals;
@@ -43,6 +46,41 @@ export function TerminalBlockDiagram({
       <path className="wire alert" d={`M 650 245 C 545 245, 480 ${startY + spacing}, ${installedX} ${startY + spacing}`} />
       <text className="defect-label" x="360" y="330" textAnchor="middle">
         指定端子ではなく隣の端子へ接続
+      </text>
+    </svg>
+  );
+}
+
+function AutomaticSwitchTerminalDiagram({ defect, title }: { defect: boolean; title: string }) {
+  const terminals = [
+    { id: "1", x: 280 },
+    { id: "2", x: 360 },
+    { id: "3", x: 440 },
+  ];
+  const outdoorBlackX = defect ? 360 : 440;
+
+  return (
+    <svg viewBox="0 0 720 390" role="img" aria-label={title + (defect ? "の欠陥図" : "の正常施工図")}>
+      <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
+      <text className="label" x="360" y="54" textAnchor="middle">{title}</text>
+      <text className="small" x="92" y="95" textAnchor="middle">アウトレットボックス2</text>
+      <text className="small" x="628" y="95" textAnchor="middle">屋外灯</text>
+      <rect className="device" x="230" y="128" width="260" height="132" rx="10" />
+      {terminals.map((terminal) => (
+        <g key={terminal.id}>
+          <rect className="terminal" x={terminal.x - 20} y="160" width="40" height="62" rx="5" />
+          <circle className="terminal" cx={terminal.x} cy="190" r="7" />
+          <text className="small" x={terminal.x} y="150" textAnchor="middle">{terminal.id}</text>
+        </g>
+      ))}
+      <path className="wire black" d="M 68 140 C 150 140, 210 172, 280 180" />
+      <path className="wire white" d="M 68 230 C 165 230, 255 210, 360 202" />
+      <path className="wire white" d="M 652 140 C 550 140, 455 166, 360 178" />
+      <path className={defect ? "wire alert" : "wire black"} d={`M 652 230 C 560 230, 505 210, ${outdoorBlackX} 202`} />
+      <text className="small" x="92" y="127" textAnchor="middle">黒→1 / 白→2</text>
+      <text className="small" x="628" y="127" textAnchor="middle">白→2 / 黒→3</text>
+      <text className={defect ? "defect-label" : "small"} x="360" y="326" textAnchor="middle">
+        {defect ? "屋外灯側の黒線を3ではなく2へ接続" : "2端子には白線2本を接続"}
       </text>
     </svg>
   );

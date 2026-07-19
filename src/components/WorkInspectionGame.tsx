@@ -233,18 +233,16 @@ function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   if (part.mountingFrame) {
     return <MountingFrameDiagram defectType={part.defectType} frame={part.mountingFrame} />;
   }
+  if (part.deviceVariant === "timer_switch" || part.deviceVariant === "automatic_switch") {
+    return <TerminalBlockDiagram defect={part.defectType !== "none"} title={part.title} variant={part.deviceVariant} />;
+  }
   if (part.defectType !== "none") {
     return <WiringDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }
 
-  if (part.deviceVariant === "timer_switch") {
-    return <TerminalBlockDiagram defect={false} title={part.title} variant="timer_switch" />;
-  }
-
   const inlineDevice = part.deviceVariant === "circuit_breaker"
     || part.deviceVariant === "earth_leakage_breaker"
-    || part.deviceVariant === "terminal_block"
-    || part.deviceVariant === "automatic_switch";
+    || part.deviceVariant === "terminal_block";
   const horizontal = part.cableEntrySide === "left" || part.cableEntrySide === "right";
   const targetX = part.cableEntrySide === "left" ? 296 : part.cableEntrySide === "right" ? 424 : 360;
   const targetY = part.cableEntrySide === "top" ? 112 : part.cableEntrySide === "bottom" ? 268 : 190;
