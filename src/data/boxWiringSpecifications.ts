@@ -22,6 +22,8 @@ export type BoxConductorEndpoint = {
   endpointId: string;
   remoteEndpointId: string;
   remoteLabel: string;
+  remoteX: number;
+  remoteY: number;
   coreIndex: number;
   color: CableCoreColor;
   conductorDiameterMm: 1.6 | 2.0;
@@ -54,6 +56,8 @@ type IncidentCable = {
   preparation: CableEndPreparation;
   remoteEndpointId: string;
   remoteLabel: string;
+  remoteX: number;
+  remoteY: number;
 };
 
 export function resolveBoxWiringSpecification(
@@ -213,13 +217,16 @@ function getIncidentCables(candidate: CandidateDiagram, device: CandidateDevice)
     const cable = resolveCableRunSpecification(candidate, connection, index);
     const cableEnd = connection.from === device.id ? "from" : "to";
     const remoteEndpointId = cableEnd === "from" ? connection.to : connection.from;
-    const remoteLabel = candidate.devices.find((item) => item.id === remoteEndpointId)?.label ?? remoteEndpointId;
+    const remoteDevice = candidate.devices.find((item) => item.id === remoteEndpointId);
+    const remoteLabel = remoteDevice?.label ?? remoteEndpointId;
     return [{
       cable,
       cableEnd,
       preparation: cableEnd === "from" ? cable.fromEnd : cable.toEnd,
       remoteEndpointId,
       remoteLabel,
+      remoteX: remoteDevice?.x ?? device.x,
+      remoteY: remoteDevice?.y ?? device.y,
     }];
   });
 }
@@ -232,6 +239,8 @@ function createConductorEndpoints(incident: IncidentCable): BoxConductorEndpoint
     endpointId: incident.preparation.endpointId,
     remoteEndpointId: incident.remoteEndpointId,
     remoteLabel: incident.remoteLabel,
+    remoteX: incident.remoteX,
+    remoteY: incident.remoteY,
     coreIndex,
     color,
     conductorDiameterMm: incident.cable.conductorDiameterMm,

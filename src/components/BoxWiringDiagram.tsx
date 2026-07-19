@@ -404,11 +404,32 @@ function layoutCable(box: InspectionBox, cableId: string, index: number, defectT
   }
 
   const count = box.wiring.cables.length;
-  const angle = count === 1 ? -Math.PI / 2 : -Math.PI / 2 + (Math.PI * 2 * index) / count;
+  const deltaX = (conductor?.remoteX ?? box.x) - box.x;
+  const deltaY = (conductor?.remoteY ?? box.y) - box.y;
+  const hasRemoteDirection = deltaX !== 0 || deltaY !== 0;
+  const angle = hasRemoteDirection
+    ? Math.atan2(deltaY, deltaX)
+    : count === 1 ? -Math.PI / 2 : -Math.PI / 2 + (Math.PI * 2 * index) / count;
+  const direction = { x: Math.cos(angle), y: Math.sin(angle) };
+  const boundaryDistance = 190 / Math.max(Math.abs(direction.x), Math.abs(direction.y));
+  const sameRemoteCableIds = box.wiring.cables
+    .filter((cable) => box.wiring.conductors.some((item) =>
+      item.cableId === cable.id && item.remoteEndpointId === conductor?.remoteEndpointId,
+    ))
+    .map((cable) => cable.id);
+  const remoteCableIndex = sameRemoteCableIds.indexOf(cableId);
+  const laneOffset = (remoteCableIndex - (sameRemoteCableIds.length - 1) / 2) * 12;
+  const tangent = { x: -direction.y, y: direction.x };
   return {
     angle,
-    entry: { x: center.x + Math.cos(angle) * 190, y: center.y + Math.sin(angle) * 190 },
-    bend: { x: center.x + Math.cos(angle) * 125, y: center.y + Math.sin(angle) * 125 },
+    entry: {
+      x: center.x + direction.x * boundaryDistance + tangent.x * laneOffset,
+      y: center.y + direction.y * boundaryDistance + tangent.y * laneOffset,
+    },
+    bend: {
+      x: center.x + direction.x * Math.max(105, boundaryDistance - 70) + tangent.x * laneOffset,
+      y: center.y + direction.y * Math.max(105, boundaryDistance - 70) + tangent.y * laneOffset,
+    },
   };
 }
 
