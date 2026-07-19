@@ -123,6 +123,9 @@ export function validateBoxWiringSpecification(wiring: BoxWiringSpecification) {
 
   for (const conductor of wiring.conductors) {
     const assignedConnectionId = wiring.groups.find((group) => group.conductorIds.includes(conductor.id))?.id ?? null;
+    if (assignedConnectionId === null) {
+      errors.push(`心線${conductor.id}が結線へ割り当てられていません。`);
+    }
     if (assignedConnectionId !== conductor.correctConnectionId) {
       errors.push(`心線${conductor.id}の正しい結線IDが割当てと一致していません。`);
     }
