@@ -245,14 +245,32 @@ export const candidateDiagrams: CandidateDiagram[] = [
       { id: "ed", label: "ED", type: "terminal", variant: "earth_terminal", x: 570, y: 325 },
     ],
     connections: [
-      { from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("3-vvf-3", 150) },
-      { from: "j1", to: "sw", color: "black", label: "ロ", cable: hozanCable("3-vvf-1", 150) },
+      { id: "3-power-box1", from: "p", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("3-vvf-3", 150) },
+      { id: "3-box1-switch", from: "j1", to: "sw", color: "black", label: "ロ", cable: hozanCable("3-vvf-1", 150) },
       { id: "3-box1-box2", from: "j1", to: "j2", color: "black", label: "VVF 1.6-3C", cable: hozanCable("3-vvf-2", 150) },
       { id: "3-box2-timer", from: "j2", to: "ts", color: "black", label: "VVF 1.6-2C", cable: hozanCable("3-vvf-1", 150) },
       { id: "3-timer-ceiling", from: "ts", to: "c", color: "black", label: "VVF 1.6-2C イ", cable: hozanCable("3-vvf-1", 200) },
-      { from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("3-vvf-1", 150) },
-      { from: "j2", to: "e", color: "black", label: "E", cable: hozanCable("3-vvf-1", 150) },
+      { id: "3-box2-receptacle", from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("3-vvf-1", 150) },
+      { id: "3-box2-grounded", from: "j2", to: "e", color: "black", label: "E", cable: hozanCable("3-vvf-1", 150) },
       { from: "e", to: "ed", color: "green", label: "E1.6", cable: hozanCable("3-iv", 100, { lengthMm: 150 }) },
+    ],
+    boxWirings: [
+      {
+        deviceId: "j1",
+        groups: [
+          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "3-power-box1", coreIndex: 1 }, { cableId: "3-box1-box2", coreIndex: 1 }] },
+          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "3-power-box1", coreIndex: 0 }, { cableId: "3-box1-switch", coreIndex: 0 }, { cableId: "3-box1-box2", coreIndex: 0 }] },
+          { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "3-box1-switch", coreIndex: 1 }, { cableId: "3-box1-box2", coreIndex: 2 }] },
+        ],
+      },
+      {
+        deviceId: "j2",
+        groups: [
+          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "3-box1-box2", coreIndex: 1 }, { cableId: "3-box2-timer", coreIndex: 1 }, { cableId: "3-box2-receptacle", coreIndex: 1 }, { cableId: "3-box2-grounded", coreIndex: 1 }] },
+          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "3-box1-box2", coreIndex: 0 }, { cableId: "3-box2-timer", coreIndex: 0 }, { cableId: "3-box2-grounded", coreIndex: 0 }] },
+          { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "3-box1-box2", coreIndex: 2 }, { cableId: "3-box2-receptacle", coreIndex: 0 }] },
+        ],
+      },
     ],
     deviceWirings: [{
       deviceId: "ts",
@@ -303,13 +321,31 @@ export const candidateDiagrams: CandidateDiagram[] = [
     connections: [
       { id: "4-terminal-100v", diagramHidden: true, from: "t", to: "b", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 2, coreColors: ["black", "white"] } },
       { id: "4-terminal-200v", diagramHidden: true, from: "t", to: "be", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 3, coreColors: ["black", "white", "red"] } },
-      { from: "b", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("4-vvf-3", 300) },
-      { from: "be", to: "j2", color: "black", label: "VVF 2.0-3C", cable: hozanCable("4-vvf-4", 150) },
-      { from: "j1", to: "c", color: "black", cable: hozanCable("4-vvf-1", 250) },
-      { from: "j2", to: "m", color: "black", cable: hozanCable("4-vvf-4", 250, { lengthMm: 300 }) },
+      { id: "4-breaker-box1", from: "b", to: "j1", color: "black", label: "VVF 2.0-2C", cable: hozanCable("4-vvf-3", 300) },
+      { id: "4-leakage-box2", from: "be", to: "j2", color: "black", label: "VVF 2.0-3C", cable: hozanCable("4-vvf-4", 150) },
+      { id: "4-box1-ceiling", from: "j1", to: "c", color: "black", cable: hozanCable("4-vvf-1", 250) },
+      { id: "4-box2-motor", from: "j2", to: "m", color: "black", cable: hozanCable("4-vvf-4", 250, { lengthMm: 300 }) },
       { from: "m", to: "ed", color: "green", label: "ED" },
-      { from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("4-vvf-1", 250) },
-      { from: "j1", to: "sw", color: "black", label: "イ", cable: hozanCable("4-vvf-2", 200) },
+      { id: "4-box2-receptacle", from: "j2", to: "r", color: "black", label: "ロ", cable: hozanCable("4-vvf-1", 250) },
+      { id: "4-box1-frame", from: "j1", to: "sw", color: "black", label: "イ", cable: hozanCable("4-vvf-2", 200) },
+    ],
+    boxWirings: [
+      {
+        deviceId: "j1",
+        groups: [
+          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "4-breaker-box1", coreIndex: 1 }, { cableId: "4-box1-ceiling", coreIndex: 1 }, { cableId: "4-box1-frame", coreIndex: 1 }] },
+          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "4-breaker-box1", coreIndex: 0 }, { cableId: "4-box1-frame", coreIndex: 0 }] },
+          { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "4-box1-ceiling", coreIndex: 0 }, { cableId: "4-box1-frame", coreIndex: 2 }] },
+        ],
+      },
+      {
+        deviceId: "j2",
+        groups: [
+          { id: "phase-t", method: "ring_sleeve", conductors: [{ cableId: "4-leakage-box2", coreIndex: 0 }, { cableId: "4-box2-motor", coreIndex: 0 }] },
+          { id: "phase-s", method: "ring_sleeve", conductors: [{ cableId: "4-leakage-box2", coreIndex: 1 }, { cableId: "4-box2-motor", coreIndex: 1 }, { cableId: "4-box2-receptacle", coreIndex: 1 }] },
+          { id: "phase-r", method: "ring_sleeve", conductors: [{ cableId: "4-leakage-box2", coreIndex: 2 }, { cableId: "4-box2-motor", coreIndex: 2 }, { cableId: "4-box2-receptacle", coreIndex: 0 }] },
+        ],
+      },
     ],
     deviceWirings: [{
       deviceId: "t",
@@ -359,14 +395,23 @@ export const candidateDiagrams: CandidateDiagram[] = [
     connections: [
       { id: "5-terminal-100v", diagramHidden: true, from: "t", to: "b", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 2, coreColors: ["black", "white"] } },
       { id: "5-terminal-200v", diagramHidden: true, from: "t", to: "be", color: "black", cable: { cableType: "VVF", conductorDiameterMm: 2.0, coreCount: 3, coreColors: ["black", "red", "green"] } },
-      { from: "b", to: "j", color: "black", label: "VVF 2.0-2C", cable: hozanCable("5-vvf-2", 250) },
+      { id: "5-breaker-box", from: "b", to: "j", color: "black", label: "VVF 2.0-2C", cable: hozanCable("5-vvf-2", 250) },
       { from: "be", to: "outlet", color: "black", label: "VVF 2.0-3C", cable: hozanCable("5-vvf-3", 250) },
       { from: "outlet", to: "ed", color: "green", label: "E1.6" },
-      { from: "j", to: "r", color: "black", label: "ロ", cable: hozanCable("5-vvf-1", 250) },
-      { from: "j", to: "c", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 100) },
+      { id: "5-box-receptacle", from: "j", to: "r", color: "black", label: "ロ", cable: hozanCable("5-vvf-1", 250) },
+      { id: "5-box-omitted", from: "j", to: "c", color: "black", label: "イ", cable: hozanCable("5-vvf-1", 100) },
       { id: "5-box1-switches", from: "j", to: "sw", color: "black", label: "VVF 1.6-2C ×2", cable: hozanCable("5-vvf-1", 200) },
       { id: "5-box1-receptacle", from: "j", to: "frame-outlet", color: "black", cable: hozanCable("5-vvf-1", 200) },
     ],
+    boxWirings: [{
+      deviceId: "j",
+      groups: [
+        { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "5-breaker-box", coreIndex: 1 }, { cableId: "5-box-receptacle", coreIndex: 1 }, { cableId: "5-box-omitted", coreIndex: 1 }, { cableId: "5-box1-receptacle", coreIndex: 1 }] },
+        { id: "line", method: "ring_sleeve", conductors: [{ cableId: "5-breaker-box", coreIndex: 0 }, { cableId: "5-box1-switches", coreIndex: 0 }] },
+        { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "5-box-receptacle", coreIndex: 0 }, { cableId: "5-box1-switches", coreIndex: 1 }] },
+        { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "5-box-omitted", coreIndex: 0 }, { cableId: "5-box1-receptacle", coreIndex: 0 }] },
+      ],
+    }],
     deviceWirings: [{
       deviceId: "t",
       terminals: [
