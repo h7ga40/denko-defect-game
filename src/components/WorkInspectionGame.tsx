@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart } from "../data/boxInspectionGame";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
+import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
 import { CandidateMaterials } from "./CandidateMaterials";
 import { DeviceDetailShape } from "./svg/DeviceDetailShape";
 import { DirectionalSheath, DirectionalWire } from "./svg/DirectionalCable";
@@ -75,6 +76,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
         <p className="candidate-theme">
           ランプ・スイッチ・コンセントなどは複線図から直接選択し、リングスリーブと差込形コネクタはボックス内で選択します。欠陥は{round.defectCount}か所です。
         </p>
+        <CandidateConstructionConditions conditions={round.candidate.constructionConditions} />
         <CandidateMaterials candidateNo={round.candidate.no} />
         <div className="diagram-wrap">
           <CandidateSvg

@@ -99,6 +99,8 @@ export type CandidateConductorReference = {
 export type CandidateBoxConnectionGroup = {
   id: string;
   method: "ring_sleeve" | "push_connector";
+  sleeveSize?: "small" | "medium";
+  mark?: "○" | "小" | "中";
   conductors: CandidateConductorReference[];
 };
 
@@ -140,6 +142,7 @@ export type CandidateDiagram = {
   no: number;
   title: string;
   theme: string;
+  constructionConditions: string[];
   points: string[];
   devices: CandidateDevice[];
   connections: CandidateConnection[];
@@ -161,6 +164,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 1,
     title: "公式No.1 基本回路",
     theme: `${sourceNote}。ランプレセプタクル、引掛シーリングローゼット、スイッチ群、施工省略の蛍光灯を含む回路。`,
+    constructionConditions: ["右側のジョイントボックス内の接続は差込形コネクタを使用し、左側はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: EM-EEF 2.0-2C", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ群、蛍光灯（施工省略）"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 92, y: 205 },
@@ -194,9 +198,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j2",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "1-box1-box2", coreIndex: 1 }, { cableId: "1-box2-receptacle", coreIndex: 1 }, { cableId: "1-box2-omitted", coreIndex: 1 }] },
-          { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "1-box1-box2", coreIndex: 2 }, { cableId: "1-box2-receptacle", coreIndex: 0 }] },
-          { id: "switch-ha", method: "ring_sleeve", conductors: [{ cableId: "1-box1-box2", coreIndex: 0 }, { cableId: "1-box2-omitted", coreIndex: 0 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "1-box1-box2", coreIndex: 1 }, { cableId: "1-box2-receptacle", coreIndex: 1 }, { cableId: "1-box2-omitted", coreIndex: 1 }] },
+          { id: "switch-ro", method: "push_connector", conductors: [{ cableId: "1-box1-box2", coreIndex: 2 }, { cableId: "1-box2-receptacle", coreIndex: 0 }] },
+          { id: "switch-ha", method: "push_connector", conductors: [{ cableId: "1-box1-box2", coreIndex: 0 }, { cableId: "1-box2-omitted", coreIndex: 0 }] },
         ],
       },
     ],
@@ -216,6 +220,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 2,
     title: "公式No.2 常時点灯確認表示灯",
     theme: `${sourceNote}。確認表示灯（パイロットランプ）は常時点灯。`,
+    constructionConditions: ["右側のジョイントボックス内の接続は差込形コネクタを使用し、左側はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: ランプレセプタクル、確認表示灯、スイッチ、施工省略部"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 70, y: 205 },
@@ -249,9 +254,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j2",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "2-box1-box2", coreIndex: 1 }, { cableId: "2-box2-frame", coreIndex: 1 }, { cableId: "2-box2-omitted", coreIndex: 1 }, { cableId: "2-box2-outlet", coreIndex: 1 }] },
-          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "2-box1-box2", coreIndex: 0 }, { cableId: "2-box2-frame", coreIndex: 0 }, { cableId: "2-box2-outlet", coreIndex: 0 }] },
-          { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "2-box1-box2", coreIndex: 2 }, { cableId: "2-box2-frame", coreIndex: 2 }, { cableId: "2-box2-omitted", coreIndex: 0 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "2-box1-box2", coreIndex: 1 }, { cableId: "2-box2-frame", coreIndex: 1 }, { cableId: "2-box2-omitted", coreIndex: 1 }, { cableId: "2-box2-outlet", coreIndex: 1 }] },
+          { id: "line", method: "push_connector", conductors: [{ cableId: "2-box1-box2", coreIndex: 0 }, { cableId: "2-box2-frame", coreIndex: 0 }, { cableId: "2-box2-outlet", coreIndex: 0 }] },
+          { id: "switch-i", method: "push_connector", conductors: [{ cableId: "2-box1-box2", coreIndex: 2 }, { cableId: "2-box2-frame", coreIndex: 2 }, { cableId: "2-box2-omitted", coreIndex: 0 }] },
         ],
       },
     ],
@@ -270,6 +275,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 3,
     title: "公式No.3 タイムスイッチ・接地回路",
     theme: `${sourceNote}。タイムスイッチ、ランプレセプタクル、接地を含む回路。`,
+    constructionConditions: ["右側のジョイントボックス内の接続は差込形コネクタを使用し、左側はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、VVF 1.6-2C、VVF 1.6-3C、E1.6", "器具: TS（S1・S2・L1）、ランプレセプタクル、引掛シーリングローゼット、接地極付器具"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 175, y: 90 },
@@ -304,9 +310,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j2",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "3-box1-box2", coreIndex: 1 }, { cableId: "3-box2-timer", coreIndex: 1 }, { cableId: "3-box2-receptacle", coreIndex: 1 }, { cableId: "3-box2-grounded", coreIndex: 1 }] },
-          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "3-box1-box2", coreIndex: 0 }, { cableId: "3-box2-timer", coreIndex: 0 }, { cableId: "3-box2-grounded", coreIndex: 0 }] },
-          { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "3-box1-box2", coreIndex: 2 }, { cableId: "3-box2-receptacle", coreIndex: 0 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "3-box1-box2", coreIndex: 1 }, { cableId: "3-box2-timer", coreIndex: 1 }, { cableId: "3-box2-receptacle", coreIndex: 1 }, { cableId: "3-box2-grounded", coreIndex: 1 }] },
+          { id: "line", method: "push_connector", conductors: [{ cableId: "3-box1-box2", coreIndex: 0 }, { cableId: "3-box2-timer", coreIndex: 0 }, { cableId: "3-box2-grounded", coreIndex: 0 }] },
+          { id: "switch-ro", method: "push_connector", conductors: [{ cableId: "3-box1-box2", coreIndex: 2 }, { cableId: "3-box2-receptacle", coreIndex: 0 }] },
         ],
       },
     ],
@@ -333,6 +339,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 4,
     title: "公式No.4 100V・三相200V混在",
     theme: `${sourceNote}。100V回路、三相200V電動機、ランプレセプタクルを含む回路。`,
+    constructionConditions: ["左側のジョイントボックス2内の接続は差込形コネクタを使用し、右側のジョイントボックス1内はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V、3φ3W 200V（6極端子台）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: 配線用遮断器B・漏電遮断器BE（6極端子台代用）、ランプレセプタクル、3φ200V電動機"],
     devices: [
       {
@@ -379,9 +386,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j2",
         groups: [
-          { id: "phase-t", method: "ring_sleeve", conductors: [{ cableId: "4-leakage-box2", coreIndex: 0 }, { cableId: "4-box2-motor", coreIndex: 0 }] },
-          { id: "phase-s", method: "ring_sleeve", conductors: [{ cableId: "4-leakage-box2", coreIndex: 1 }, { cableId: "4-box2-motor", coreIndex: 1 }, { cableId: "4-box2-receptacle", coreIndex: 1 }] },
-          { id: "phase-r", method: "ring_sleeve", conductors: [{ cableId: "4-leakage-box2", coreIndex: 2 }, { cableId: "4-box2-motor", coreIndex: 2 }, { cableId: "4-box2-receptacle", coreIndex: 0 }] },
+          { id: "phase-t", method: "push_connector", conductors: [{ cableId: "4-leakage-box2", coreIndex: 0 }, { cableId: "4-box2-motor", coreIndex: 0 }] },
+          { id: "phase-s", method: "push_connector", conductors: [{ cableId: "4-leakage-box2", coreIndex: 1 }, { cableId: "4-box2-motor", coreIndex: 1 }, { cableId: "4-box2-receptacle", coreIndex: 1 }] },
+          { id: "phase-r", method: "push_connector", conductors: [{ cableId: "4-leakage-box2", coreIndex: 2 }, { cableId: "4-box2-motor", coreIndex: 2 }, { cableId: "4-box2-receptacle", coreIndex: 0 }] },
         ],
       },
     ],
@@ -407,6 +414,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 5,
     title: "公式No.5 200Vコンセント・接地",
     theme: `${sourceNote}。100V/200V電源、20A 250Vコンセント、接地、施工省略の蛍光灯を含む回路。`,
+    constructionConditions: ["4本の心線をまとめる結線のみ差込形コネクタを使用し、その他の結線はリングスリーブを使用する。"],
     points: ["電源: 100V、200V（6極端子台、対地電圧150V以下）", "電線: VVF 2.0-2C、VVF 2.0-3C、E1.6", "器具: 配線用遮断器B・漏電遮断器BE（6極端子台代用）、20A 250Vコンセント、ランプレセプタクル、蛍光灯（施工省略）"],
     devices: [
       {
@@ -444,7 +452,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     boxWirings: [{
       deviceId: "j",
       groups: [
-        { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "5-breaker-box", coreIndex: 1 }, { cableId: "5-box-receptacle", coreIndex: 1 }, { cableId: "5-box-omitted", coreIndex: 1 }, { cableId: "5-box1-receptacle", coreIndex: 1 }] },
+        { id: "neutral", method: "push_connector", conductors: [{ cableId: "5-breaker-box", coreIndex: 1 }, { cableId: "5-box-receptacle", coreIndex: 1 }, { cableId: "5-box-omitted", coreIndex: 1 }, { cableId: "5-box1-receptacle", coreIndex: 1 }] },
         { id: "line", method: "ring_sleeve", conductors: [{ cableId: "5-breaker-box", coreIndex: 0 }, { cableId: "5-box1-switches", coreIndex: 0 }] },
         { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "5-box-receptacle", coreIndex: 0 }, { cableId: "5-box1-switches", coreIndex: 1 }] },
         { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "5-box-omitted", coreIndex: 0 }, { cableId: "5-box1-receptacle", coreIndex: 0 }] },
@@ -489,6 +497,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 6,
     title: "公式No.6 露出形コンセント",
     theme: `${sourceNote}。露出形コンセントと2か所の照明器具を含む回路。`,
+    constructionConditions: ["左側のジョイントボックス内の接続は差込形コネクタを使用し、右側はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: 引掛シーリングローゼット、露出形コンセント、スイッチ"],
     devices: [
       { id: "c1", label: "引掛 イ 施工省略", type: "lamp", variant: "omitted_work", x: 170, y: 90 },
@@ -513,10 +522,10 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j1",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "6-omitted-box1", coreIndex: 1 }, { cableId: "6-ceiling-box1", coreIndex: 1 }, { cableId: "6-box1-box2", coreIndex: 1 }] },
-          { id: "lamp-i", method: "ring_sleeve", conductors: [{ cableId: "6-omitted-box1", coreIndex: 0 }, { cableId: "6-ceiling-box1", coreIndex: 0 }, { cableId: "6-box1-switch", coreIndex: 0 }] },
-          { id: "traveler-1", method: "ring_sleeve", conductors: [{ cableId: "6-box1-switch", coreIndex: 1 }, { cableId: "6-box1-box2", coreIndex: 0 }] },
-          { id: "traveler-2", method: "ring_sleeve", conductors: [{ cableId: "6-box1-switch", coreIndex: 2 }, { cableId: "6-box1-box2", coreIndex: 2 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "6-omitted-box1", coreIndex: 1 }, { cableId: "6-ceiling-box1", coreIndex: 1 }, { cableId: "6-box1-box2", coreIndex: 1 }] },
+          { id: "lamp-i", method: "push_connector", conductors: [{ cableId: "6-omitted-box1", coreIndex: 0 }, { cableId: "6-ceiling-box1", coreIndex: 0 }, { cableId: "6-box1-switch", coreIndex: 0 }] },
+          { id: "traveler-1", method: "push_connector", conductors: [{ cableId: "6-box1-switch", coreIndex: 1 }, { cableId: "6-box1-box2", coreIndex: 0 }] },
+          { id: "traveler-2", method: "push_connector", conductors: [{ cableId: "6-box1-switch", coreIndex: 2 }, { cableId: "6-box1-box2", coreIndex: 2 }] },
         ],
       },
       {
@@ -538,6 +547,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 7,
     title: "公式No.7 ボックス分岐",
     theme: `${sourceNote}。左側のジョイントボックスと右側のアウトレットボックスから、複数のランプレセプタクルとスイッチへ分岐。`,
+    constructionConditions: ["右側のアウトレットボックス内の接続は差込形コネクタを使用し、左側のジョイントボックス内はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、VVF 1.6-2C、VVF 1.6-3C", "器具: ランプレセプタクル、ジョイントボックス（施工省略）、アウトレットボックス、3路・4路スイッチ"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 150, y: 85 },
@@ -581,12 +591,12 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "box",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "7-box1-box2", coreIndex: 1 }, { cableId: "7-box2-receptacle", coreIndex: 1 }, { cableId: "7-box2-omitted", coreIndex: 1 }] },
-          { id: "lamp-i", method: "ring_sleeve", conductors: [{ cableId: "7-box2-receptacle", coreIndex: 0 }, { cableId: "7-box2-omitted", coreIndex: 0 }, { cableId: "7-box2-switch3", coreIndex: 0 }] },
-          { id: "traveler-in-1", method: "ring_sleeve", conductors: [{ cableId: "7-box1-box2", coreIndex: 0 }, { cableId: "7-box2-four-way-a", coreIndex: 0 }] },
-          { id: "traveler-in-2", method: "ring_sleeve", conductors: [{ cableId: "7-box1-box2", coreIndex: 2 }, { cableId: "7-box2-four-way-a", coreIndex: 1 }] },
-          { id: "traveler-out-1", method: "ring_sleeve", conductors: [{ cableId: "7-box2-four-way-b", coreIndex: 0 }, { cableId: "7-box2-switch3", coreIndex: 1 }] },
-          { id: "traveler-out-2", method: "ring_sleeve", conductors: [{ cableId: "7-box2-four-way-b", coreIndex: 1 }, { cableId: "7-box2-switch3", coreIndex: 2 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "7-box1-box2", coreIndex: 1 }, { cableId: "7-box2-receptacle", coreIndex: 1 }, { cableId: "7-box2-omitted", coreIndex: 1 }] },
+          { id: "lamp-i", method: "push_connector", conductors: [{ cableId: "7-box2-receptacle", coreIndex: 0 }, { cableId: "7-box2-omitted", coreIndex: 0 }, { cableId: "7-box2-switch3", coreIndex: 0 }] },
+          { id: "traveler-in-1", method: "push_connector", conductors: [{ cableId: "7-box1-box2", coreIndex: 0 }, { cableId: "7-box2-four-way-a", coreIndex: 0 }] },
+          { id: "traveler-in-2", method: "push_connector", conductors: [{ cableId: "7-box1-box2", coreIndex: 2 }, { cableId: "7-box2-four-way-a", coreIndex: 1 }] },
+          { id: "traveler-out-1", method: "push_connector", conductors: [{ cableId: "7-box2-four-way-b", coreIndex: 0 }, { cableId: "7-box2-switch3", coreIndex: 1 }] },
+          { id: "traveler-out-2", method: "push_connector", conductors: [{ cableId: "7-box2-four-way-b", coreIndex: 1 }, { cableId: "7-box2-switch3", coreIndex: 2 }] },
         ],
       },
     ],
@@ -599,6 +609,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 8,
     title: "公式No.8 端子台代用遮断器",
     theme: `${sourceNote}。3台の配線用遮断器を6極端子台で代用する回路。`,
+    constructionConditions: ["4本の心線をまとめる結線のみ差込形コネクタを使用し、その他の結線はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVR 2.0-2C、VVF 1.6-2C", "器具: 配線用遮断器3台（6極端子台代用）、ランプレセプタクル、引掛シーリングローゼット"],
     devices: [
       { id: "p", label: "電源 施工省略", type: "power", x: 70, y: 180 },
@@ -629,8 +640,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
     boxWirings: [{
       deviceId: "box",
       groups: [
-        { id: "line", method: "ring_sleeve", conductors: [{ cableId: "8-power-box1", coreIndex: 0 }, { cableId: "8-breaker-1", coreIndex: 0 }, { cableId: "8-breaker-2", coreIndex: 0 }, { cableId: "8-breaker-3", coreIndex: 0 }] },
-        { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "8-power-box1", coreIndex: 1 }, { cableId: "8-box-ceiling", coreIndex: 1 }, { cableId: "8-box-receptacle", coreIndex: 1 }, { cableId: "8-box-omitted", coreIndex: 1 }] },
+        { id: "line", method: "push_connector", conductors: [{ cableId: "8-power-box1", coreIndex: 0 }, { cableId: "8-breaker-1", coreIndex: 0 }, { cableId: "8-breaker-2", coreIndex: 0 }, { cableId: "8-breaker-3", coreIndex: 0 }] },
+        { id: "neutral", method: "push_connector", conductors: [{ cableId: "8-power-box1", coreIndex: 1 }, { cableId: "8-box-ceiling", coreIndex: 1 }, { cableId: "8-box-receptacle", coreIndex: 1 }, { cableId: "8-box-omitted", coreIndex: 1 }] },
         { id: "branch-i", method: "ring_sleeve", conductors: [{ cableId: "8-breaker-1", coreIndex: 1 }, { cableId: "8-box-ceiling", coreIndex: 0 }] },
         { id: "branch-ro", method: "ring_sleeve", conductors: [{ cableId: "8-breaker-2", coreIndex: 1 }, { cableId: "8-box-receptacle", coreIndex: 0 }] },
         { id: "branch-ha", method: "ring_sleeve", conductors: [{ cableId: "8-breaker-3", coreIndex: 1 }, { cableId: "8-box-omitted", coreIndex: 0 }] },
@@ -652,6 +663,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 9,
     title: "公式No.9 接地端子付コンセント",
     theme: `${sourceNote}。EET、接地、ランプレセプタクル、引掛シーリングローゼットを含む回路。`,
+    constructionConditions: ["左側のジョイントボックス内の接続は差込形コネクタを使用し、右側はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、E1.6", "器具: ランプレセプタクル、引掛シーリングローゼット、EET、接地"],
     devices: [
       { id: "r1", label: "R イ", type: "lamp", variant: "lamp_receptacle", x: 140, y: 90 },
@@ -678,9 +690,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j1",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "9-receptacle-box1", coreIndex: 1 }, { cableId: "9-box1-box2", coreIndex: 1 }] },
-          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "9-box1-switch", coreIndex: 0 }, { cableId: "9-box1-box2", coreIndex: 0 }] },
-          { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "9-receptacle-box1", coreIndex: 0 }, { cableId: "9-box1-switch", coreIndex: 1 }, { cableId: "9-box1-box2", coreIndex: 2 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "9-receptacle-box1", coreIndex: 1 }, { cableId: "9-box1-box2", coreIndex: 1 }] },
+          { id: "line", method: "push_connector", conductors: [{ cableId: "9-box1-switch", coreIndex: 0 }, { cableId: "9-box1-box2", coreIndex: 0 }] },
+          { id: "switch-i", method: "push_connector", conductors: [{ cableId: "9-receptacle-box1", coreIndex: 0 }, { cableId: "9-box1-switch", coreIndex: 1 }, { cableId: "9-box1-box2", coreIndex: 2 }] },
         ],
       },
       {
@@ -701,6 +713,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 10,
     title: "公式No.10 同時点滅確認表示灯",
     theme: `${sourceNote}。確認表示灯（パイロットランプ）は同時点滅。`,
+    constructionConditions: ["3本の心線をまとめる結線のみ差込形コネクタを使用し、その他の結線はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C", "器具: B、引掛シーリングローゼット、ランプレセプタクル、確認表示灯、スイッチ"],
     devices: [
       { id: "p", label: "電源 施工省略", type: "power", x: 75, y: 205 },
@@ -722,9 +735,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
     boxWirings: [{
       deviceId: "j",
       groups: [
-        { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "10-breaker-box", coreIndex: 1 }, { cableId: "10-box-ceiling", coreIndex: 1 }, { cableId: "10-box-receptacle", coreIndex: 1 }, { cableId: "10-box-frame", coreIndex: 1 }] },
+        { id: "neutral", method: "ring_sleeve", sleeveSize: "medium", mark: "中", conductors: [{ cableId: "10-breaker-box", coreIndex: 1 }, { cableId: "10-box-ceiling", coreIndex: 1 }, { cableId: "10-box-receptacle", coreIndex: 1 }, { cableId: "10-box-frame", coreIndex: 1 }] },
         { id: "line", method: "ring_sleeve", conductors: [{ cableId: "10-breaker-box", coreIndex: 0 }, { cableId: "10-box-frame", coreIndex: 0 }] },
-        { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "10-box-ceiling", coreIndex: 0 }, { cableId: "10-box-receptacle", coreIndex: 0 }, { cableId: "10-box-frame", coreIndex: 2 }] },
+        { id: "switch-i", method: "push_connector", conductors: [{ cableId: "10-box-ceiling", coreIndex: 0 }, { cableId: "10-box-receptacle", coreIndex: 0 }, { cableId: "10-box-frame", coreIndex: 2 }] },
       ],
     }],
     mountingFrames: [{
@@ -740,6 +753,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 11,
     title: "公式No.11 金属管工事",
     theme: `${sourceNote}。IV 1.6（E19）を含む金属管工事の回路。`,
+    constructionConditions: ["電源側電線との2か所の結線は差込形コネクタを使用し、その他の結線はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（E19）", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ、アウトレットボックス"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 80, y: 125 },
@@ -772,8 +786,8 @@ export const candidateDiagrams: CandidateDiagram[] = [
       groups: [
         { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "11-power-box", coreIndex: 1 }, { cableId: "11-box-ceiling", coreIndex: 1 }, { cableId: "11-box-receptacle", coreIndex: 1 }, { cableId: "11-e19-white", coreIndex: 0 }] },
         { id: "line", method: "ring_sleeve", conductors: [{ cableId: "11-power-box", coreIndex: 0 }, { cableId: "11-e19-black", coreIndex: 0 }, { cableId: "11-box-switch-ro", coreIndex: 0 }] },
-        { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "11-box-ceiling", coreIndex: 0 }, { cableId: "11-e19-red", coreIndex: 0 }] },
-        { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "11-box-receptacle", coreIndex: 0 }, { cableId: "11-box-switch-ro", coreIndex: 1 }] },
+        { id: "switch-i", method: "push_connector", conductors: [{ cableId: "11-box-ceiling", coreIndex: 0 }, { cableId: "11-e19-red", coreIndex: 0 }] },
+        { id: "switch-ro", method: "push_connector", conductors: [{ cableId: "11-box-receptacle", coreIndex: 0 }, { cableId: "11-box-switch-ro", coreIndex: 1 }] },
       ],
     }],
     mountingFrames: [{
@@ -788,6 +802,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 12,
     title: "公式No.12 PF管工事",
     theme: `${sourceNote}。IV 1.6（PF16）を含むPF管工事の回路。`,
+    constructionConditions: ["左側のジョイントボックス内の接続は差込形コネクタを使用し、右側のアウトレットボックス内はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、IV 1.6（PF16）", "器具: ランプレセプタクル、引掛シーリングローゼット、スイッチ、アウトレットボックス"],
     devices: [
       { id: "r", label: "R ロ", type: "lamp", variant: "lamp_receptacle", x: 140, y: 90 },
@@ -820,9 +835,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j1",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "12-receptacle-box1", coreIndex: 1 }, { cableId: "12-box1-ceiling", coreIndex: 1 }, { cableId: "12-box1-box2", coreIndex: 1 }] },
-          { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "12-box1-ceiling", coreIndex: 0 }, { cableId: "12-box1-box2", coreIndex: 0 }] },
-          { id: "switch-ro", method: "ring_sleeve", conductors: [{ cableId: "12-receptacle-box1", coreIndex: 0 }, { cableId: "12-box1-box2", coreIndex: 2 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "12-receptacle-box1", coreIndex: 1 }, { cableId: "12-box1-ceiling", coreIndex: 1 }, { cableId: "12-box1-box2", coreIndex: 1 }] },
+          { id: "switch-i", method: "push_connector", conductors: [{ cableId: "12-box1-ceiling", coreIndex: 0 }, { cableId: "12-box1-box2", coreIndex: 0 }] },
+          { id: "switch-ro", method: "push_connector", conductors: [{ cableId: "12-receptacle-box1", coreIndex: 0 }, { cableId: "12-box1-box2", coreIndex: 2 }] },
         ],
       },
       {
@@ -847,6 +862,7 @@ export const candidateDiagrams: CandidateDiagram[] = [
     no: 13,
     title: "公式No.13 VVR・自動点滅器・接地",
     theme: `${sourceNote}。VVR 1.6-2C、自動点滅器、接地、施工省略の屋外灯を含む回路。`,
+    constructionConditions: ["右側のジョイントボックス内の接続は差込形コネクタを使用し、左側はリングスリーブを使用する。"],
     points: ["電源: 1φ2W 100V", "電線: VVF 2.0-2C、VVR 1.6-2C、E1.6", "器具: ランプレセプタクル、自動点滅器、接地極付器具、屋外灯（施工省略）"],
     devices: [
       { id: "p", label: "電源", type: "power", x: 150, y: 85 },
@@ -881,9 +897,9 @@ export const candidateDiagrams: CandidateDiagram[] = [
       {
         deviceId: "j2",
         groups: [
-          { id: "neutral", method: "ring_sleeve", conductors: [{ cableId: "13-box1-box2", coreIndex: 1 }, { cableId: "13-box2-receptacle", coreIndex: 1 }, { cableId: "13-box2-grounded", coreIndex: 1 }, { cableId: "13-box2-automatic", coreIndex: 1 }] },
-          { id: "line", method: "ring_sleeve", conductors: [{ cableId: "13-box1-box2", coreIndex: 0 }, { cableId: "13-box2-grounded", coreIndex: 0 }, { cableId: "13-box2-automatic", coreIndex: 0 }] },
-          { id: "switch-i", method: "ring_sleeve", conductors: [{ cableId: "13-box1-box2", coreIndex: 2 }, { cableId: "13-box2-receptacle", coreIndex: 0 }] },
+          { id: "neutral", method: "push_connector", conductors: [{ cableId: "13-box1-box2", coreIndex: 1 }, { cableId: "13-box2-receptacle", coreIndex: 1 }, { cableId: "13-box2-grounded", coreIndex: 1 }, { cableId: "13-box2-automatic", coreIndex: 1 }] },
+          { id: "line", method: "push_connector", conductors: [{ cableId: "13-box1-box2", coreIndex: 0 }, { cableId: "13-box2-grounded", coreIndex: 0 }, { cableId: "13-box2-automatic", coreIndex: 0 }] },
+          { id: "switch-i", method: "push_connector", conductors: [{ cableId: "13-box1-box2", coreIndex: 2 }, { cableId: "13-box2-receptacle", coreIndex: 0 }] },
         ],
       },
     ],

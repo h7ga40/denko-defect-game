@@ -1224,11 +1224,30 @@ button {
 }
 
 
+.candidate-conditions,
 .candidate-materials {
   margin-top: 14px;
   padding: 14px 0;
   border-top: 1px solid #d9e5ec;
   border-bottom: 1px solid #d9e5ec;
+}
+
+.candidate-conditions {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.candidate-conditions h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.candidate-conditions ul {
+  margin: 6px 0 0;
+  padding-left: 1.25rem;
+  color: #344557;
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .candidate-materials-heading {

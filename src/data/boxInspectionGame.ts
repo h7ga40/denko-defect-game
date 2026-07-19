@@ -451,8 +451,8 @@ function createConnectionSpecs(
       looseConductors,
       looseSourceCables,
       looseSourceCableEnds,
-      sleeveSize: group.method === "ring_sleeve" ? ringRating.size : undefined,
-      mark: group.method === "ring_sleeve" ? ringRating.mark : undefined,
+      sleeveSize: group.method === "ring_sleeve" ? group.sleeveSize ?? ringRating.size : undefined,
+      mark: group.method === "ring_sleeve" ? group.mark ?? ringRating.mark : undefined,
       portCount: group.method === "push_connector" ? correctConductors.length : undefined,
     };
   });

@@ -34,6 +34,8 @@ export type BoxConductorEndpoint = {
 export type BoxConnectionGroup = {
   id: string;
   method: BoxConnectionMethod;
+  sleeveSize?: "small" | "medium";
+  mark?: "○" | "小" | "中";
   conductorIds: string[];
 };
 
@@ -260,6 +262,8 @@ function resolveSpecifiedGroups(
   return specifiedGroups.map((group) => ({
     id: group.id,
     method: group.method,
+    sleeveSize: group.sleeveSize,
+    mark: group.mark,
     conductorIds: group.conductors.flatMap((reference) => {
       const conductorId = conductorIdByReference.get(`${reference.cableId}:${reference.coreIndex}`);
       return [conductorId ?? `missing:${reference.cableId}:core-${reference.coreIndex + 1}`];
