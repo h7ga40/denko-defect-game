@@ -541,17 +541,15 @@ function createBox(
   defectPlans: Map<string, DefectType | "random">,
   random: RandomSource,
 ): InspectionBox {
-  const boxType: BoxType = [7, 8, 11, 12].includes(candidate.no) && device.type === "box"
-    ? "outlet"
-    : device.type === "box" ? "joint" : "outlet";
-  const label = boxType === "joint" ? "ジョイントボックス" : "アウトレットボックス";
+  const boxType: BoxType = device.type === "box" ? "outlet" : "joint";
+  const label = device.label;
   const id = "candidate-" + candidate.no + "-" + device.id;
   const specs = [...createConnectionSpecs(wiring, installation), ...infrastructureSpecs];
 
   return {
     id,
     sourceDeviceId: device.id,
-    label: label + " " + (index + 1),
+    label,
     location: "候補問題No." + candidate.no + "「" + device.label + "」付近",
     boxType,
     x: device.x,

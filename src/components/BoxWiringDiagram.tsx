@@ -29,9 +29,9 @@ export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSe
   const partByConnectionId = new Map(connectionParts.map((part) => [part.connection.id, part]));
 
   return (
-    <svg viewBox="0 0 720 500" role="img" aria-label={box.label + "内の放射状配線図"}>
+    <svg viewBox="0 0 720 500" role="img" aria-label={box.label + (box.boxType === "joint" ? "部分" : "内") + "の放射状配線図"}>
       <rect className="panel" x="18" y="18" width="684" height="464" rx="18" />
-      <text className="label" x="360" y="50" textAnchor="middle">{box.label}内 配線図</text>
+      <text className="label" x="360" y="50" textAnchor="middle">{box.label}{box.boxType === "joint" ? "部分" : "内"} 配線図</text>
       <text className="small" x="360" y="72" textAnchor="middle">
         ケーブル{box.cableCount}本・結線{connectionParts.length}か所
       </text>
@@ -44,7 +44,10 @@ export function BoxWiringDiagram({ box, selectedPartId, answers, submitted, onSe
             selected={selectedPartId === outletBoxPart.id}
             submitted={submitted}
           />
-        : <rect className="box radial-box" x={outletBoxBounds.x} y={outletBoxBounds.y} width={outletBoxBounds.size} height={outletBoxBounds.size} rx="18" />}
+        : <g>
+            <rect className="joint-work-area" x={outletBoxBounds.x} y={outletBoxBounds.y} width={outletBoxBounds.size} height={outletBoxBounds.size} rx="18" />
+            <text className="small joint-work-label" x="190" y="112">施工省略位置</text>
+          </g>}
 
       {box.wiring.cables.map((cable, index) => (
         <RadialCable

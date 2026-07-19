@@ -959,8 +959,15 @@ button {
   stroke: #198754;
 }
 
-.radial-box {
-  fill: #f8fbfd;
+.joint-work-area {
+  fill: none;
+  stroke: #9aabb5;
+  stroke-dasharray: 9 7;
+  stroke-width: 2;
+}
+
+.joint-work-label {
+  fill: #6f7f89;
 }
 .outlet-box-shell-hit {
   fill: #f8fbfd;
