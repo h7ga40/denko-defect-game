@@ -9,8 +9,7 @@ import {
 } from "../data/candidateDiagrams";
 import { resolveCableRunSpecification } from "../data/cableSpecifications";
 import type { CableInspectionPart, DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
-import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
-import { CandidateMaterials } from "./CandidateMaterials";
+import { ConstructionReferencePanel } from "./ConstructionReferencePanel";
 import { FluorescentLampSymbol } from "./svg/FluorescentLampSymbol";
 import { OutdoorLightSymbol } from "./svg/OutdoorLightSymbol";
 
@@ -67,8 +66,7 @@ export function CandidateDiagramView({ initialCandidateNo = 1 }: { initialCandid
         </div>
         <h2>{selected.title}</h2>
         <p className="candidate-theme">{selected.theme}</p>
-        <CandidateConstructionConditions conditions={selected.constructionConditions} />
-        <CandidateMaterials candidateNo={selected.no} />
+        <ConstructionReferencePanel candidateNo={selected.no} conditions={selected.constructionConditions} />
         <div className="diagram-wrap">
           <CandidateSvg diagram={selected} />
         </div>

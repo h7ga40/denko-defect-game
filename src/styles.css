@@ -1390,6 +1390,112 @@ button {
   border-bottom: 1px solid #d9e5ec;
 }
 
+.construction-reference {
+  margin-top: 14px;
+  border: 1px solid #d9e5ec;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.construction-reference-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 12px;
+  background: #f3f8fb;
+}
+
+.construction-reference-toolbar button {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid #aebfca;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f6f8b;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.reference-details {
+  border-top: 1px solid #d9e5ec;
+}
+
+.reference-details summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 9px 12px;
+  cursor: pointer;
+  color: #172033;
+  font-weight: 800;
+  list-style: none;
+}
+
+.reference-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.reference-details summary::before {
+  content: "+";
+  display: grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid #aebfca;
+  border-radius: 4px;
+  color: #1f6f8b;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.reference-details[open] summary::before {
+  content: "−";
+}
+
+.reference-details summary:hover,
+.reference-details summary:focus-visible {
+  background: #f7fbfd;
+}
+
+.reference-details summary:focus-visible {
+  outline: 2px solid #1f6f8b;
+  outline-offset: -2px;
+}
+
+.reference-details summary small {
+  margin-left: auto;
+  color: #526272;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.reference-details .candidate-conditions,
+.reference-details .candidate-materials {
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 0;
+  border-top: 1px solid #e4edf2;
+}
+
+.reference-details .candidate-conditions h3,
+.reference-details .candidate-materials-heading h3 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .candidate-conditions {
   border-bottom: 0;
   padding-bottom: 0;

@@ -4,8 +4,7 @@ import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { ConnectionDetailDiagram } from "./svg/ConnectionDetailDiagram";
 import { CableInspectionDiagram } from "./svg/CableInspectionDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
-import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
-import { CandidateMaterials } from "./CandidateMaterials";
+import { ConstructionReferencePanel } from "./ConstructionReferencePanel";
 import { DeviceDetailShape } from "./svg/DeviceDetailShape";
 import { DirectionalSheath, DirectionalWire } from "./svg/DirectionalCable";
 import { WiringDiagram } from "./svg/WiringDiagram";
@@ -148,8 +147,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             <ConnectionDetailDiagram part={selectedPart as BoxInspectionPart} />
           )}
         </div>
-        <CandidateConstructionConditions conditions={round.candidate.constructionConditions} />
-        <CandidateMaterials candidateNo={round.candidate.no} />
+        <ConstructionReferencePanel candidateNo={round.candidate.no} conditions={round.candidate.constructionConditions} />
       </article>
 
       <article className="problem-card inspection-controls">
