@@ -105,6 +105,7 @@ export default function App() {
       ) : (
         <ProblemView
           index={currentIndex}
+          key={currentProblem.id}
           onAnswer={handleAnswer}
           onNext={handleNext}
           problem={currentProblem}

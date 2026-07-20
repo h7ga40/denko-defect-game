@@ -133,6 +133,19 @@ button {
   height: auto;
 }
 
+.quiz-inspection-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+  gap: 14px;
+  align-items: start;
+  margin: 18px 0;
+}
+
+.quiz-inspection-diagram,
+.quiz-inspection-layout .physical-inspection-controls {
+  margin: 0;
+}
+
 .candidate-layout {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
@@ -1070,6 +1083,7 @@ button {
   }
 
   .inspection-layout,
+  .quiz-inspection-layout,
   .candidate-layout {
     grid-template-columns: minmax(0, 1fr);
   }

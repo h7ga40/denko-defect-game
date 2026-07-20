@@ -1,12 +1,26 @@
 import type { ReactNode } from "react";
 import type { DeviceVariant } from "../data/candidateDiagrams";
-import type { InspectionPart, WireColor } from "../data/boxInspectionGame";
+import type { WireColor } from "../data/boxInspectionGame";
 import { getDeviceSpecification } from "../data/deviceSpecifications";
-import type { InspectionObservation, InspectionViewpoint, PhysicalTargetState } from "../data/physicalInspection";
+import type {
+  InspectionObservation,
+  InspectionViewpoint,
+  PhysicalInspectionModel,
+  PhysicalTargetState,
+} from "../data/physicalInspection";
+
+export type PhysicalInspectionDisplayPart = {
+  title: string;
+  defectType: import("../data/problems").DefectType;
+  physicalInspection: PhysicalInspectionModel;
+  deviceVariant?: DeviceVariant;
+  connection?: { method: string; wireColors: WireColor[] };
+  installedCable?: { coreColors: WireColor[] };
+};
 
 type Props = {
   children: ReactNode;
-  part: InspectionPart;
+  part: PhysicalInspectionDisplayPart;
   viewpoint: InspectionViewpoint;
   latestObservation?: InspectionObservation;
 };
@@ -43,12 +57,12 @@ function OrthographicDiagram({
   viewpoint,
 }: {
   latestObservation?: InspectionObservation;
-  part: InspectionPart;
+  part: PhysicalInspectionDisplayPart;
   viewpoint: InspectionViewpoint;
 }) {
   const target = selectInspectionTarget(part, latestObservation);
   const title = part.title.split("（")[0].trim();
-  const directVariant = "deviceVariant" in part ? part.deviceVariant : undefined;
+  const directVariant = part.deviceVariant;
   const terminalCount = directVariant ? getDeviceSpecification(directVariant)?.terminals.length ?? 2 : 2;
   const side = viewpoint === "left" || viewpoint === "right";
 
@@ -58,9 +72,9 @@ function OrthographicDiagram({
       <text className="label" x="360" y="52" textAnchor="middle">{title}</text>
       <text className="inspection-view-label" x="360" y="78" textAnchor="middle">{viewpointName(viewpoint)}確認図</text>
       <g className="orthographic-object" data-physical-target={target?.id}>
-        {"installedCable" in part ? (
+        {part.installedCable ? (
           <CableOrthographic part={part} side={side} />
-        ) : "connection" in part ? (
+        ) : part.connection ? (
           <ConnectionOrthographic method={part.connection.method} side={side} wireColors={part.connection.wireColors} />
         ) : side ? (
           <DeviceSideView mirrored={viewpoint === "right"} round={isRoundVariant(directVariant)} target={target} variant={directVariant} />
@@ -68,7 +82,7 @@ function OrthographicDiagram({
           <DeviceBackView round={isRoundVariant(directVariant)} target={target} terminalCount={terminalCount} variant={directVariant} />
         )}
       </g>
-      {("installedCable" in part || "connection" in part) && (
+      {(part.installedCable || part.connection) && (
         <text className="small" x="360" y="342" textAnchor="middle">
           {side ? "側面から収まりと固定状態を確認" : "背面から端子と固定状態を確認"}
         </text>
@@ -401,8 +415,8 @@ function ConnectionOrthographic({ method, side, wireColors }: { method: string; 
   );
 }
 
-function CableOrthographic({ part, side }: { part: Extract<InspectionPart, { installedCable: unknown }>; side: boolean }) {
-  const cable = part.installedCable;
+function CableOrthographic({ part, side }: { part: PhysicalInspectionDisplayPart; side: boolean }) {
+  const cable = part.installedCable!;
   return side ? (
     <>
       <path className="orthographic-cable" d="M 82 202 H 638" />
@@ -433,7 +447,7 @@ function CableOrthographic({ part, side }: { part: Extract<InspectionPart, { ins
   );
 }
 
-function selectInspectionTarget(part: InspectionPart, latestObservation?: InspectionObservation) {
+function selectInspectionTarget(part: PhysicalInspectionDisplayPart, latestObservation?: InspectionObservation) {
   const model = part.physicalInspection;
   if (latestObservation && !latestObservation.actionId.endsWith(":view")) {
     const observed = model.installed.targets[latestObservation.targetId];

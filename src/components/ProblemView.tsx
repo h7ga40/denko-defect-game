@@ -1,4 +1,9 @@
+import { useMemo, useState } from "react";
+import { createPhysicalInspectionSession } from "../data/physicalInspection";
+import { createProblemInspectionPart } from "../data/problemInspection";
 import type { Problem } from "../data/problems";
+import { PhysicalInspectionControls } from "./PhysicalInspectionControls";
+import { PhysicalInspectionView } from "./PhysicalInspectionView";
 import { WiringDiagram } from "./svg/WiringDiagram";
 
 type ProblemViewProps = {
@@ -20,6 +25,9 @@ export function ProblemView({
 }: ProblemViewProps) {
   const answered = selectedAnswer !== null;
   const isCorrect = selectedAnswer === problem.answer;
+  const inspectionPart = useMemo(() => createProblemInspectionPart(problem), [problem]);
+  const [inspectionSession, setInspectionSession] = useState(createPhysicalInspectionSession);
+  const latestObservation = inspectionSession.observations.at(-1);
 
   return (
     <section className="problem-card" aria-labelledby="problem-title">
@@ -30,8 +38,25 @@ export function ProblemView({
         <span>{problem.circuitName}</span>
       </div>
       <h2 id="problem-title">{problem.title}</h2>
-      <div className="diagram-wrap">
-        <WiringDiagram defectType={problem.defectType} />
+      <div className="quiz-inspection-layout">
+        <div className="diagram-wrap quiz-inspection-diagram">
+          <PhysicalInspectionView
+            latestObservation={latestObservation}
+            part={inspectionPart}
+            viewpoint={inspectionSession.viewpoint}
+          >
+            <WiringDiagram
+              defectType={problem.defectType}
+              deviceName={inspectionPart.title.split(" ")[0]}
+              deviceVariant={inspectionPart.deviceVariant}
+            />
+          </PhysicalInspectionView>
+        </div>
+        <PhysicalInspectionControls
+          model={inspectionPart.physicalInspection}
+          onChange={setInspectionSession}
+          session={inspectionSession}
+        />
       </div>
       <p className="question">{problem.question}</p>
       <div className="choices" role="list">
