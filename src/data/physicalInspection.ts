@@ -160,6 +160,36 @@ export function createPhysicalInspectionSession(): PhysicalInspectionSession {
   return { selectedActionId: null, viewpoint: "front", observations: [] };
 }
 
+export function resolveInspectionAction(
+  model: PhysicalInspectionModel,
+  action: InspectionAction,
+  viewpoint: InspectionViewpoint,
+): InspectionObservation {
+  const target = model.installed.targets[action.targetId];
+  if (!target) throw new Error(`検査対象${action.targetId}がありません。`);
+
+  let result: InspectionObservationResult;
+  if (action.kind === "view") {
+    const visibleDamage = target.damage?.some((damage) => damage.visibleFrom.includes(viewpoint)) ?? false;
+    result = target.damage?.length && !visibleDamage ? "not_visible" : "visible";
+  } else if (action.kind === "pull") {
+    result = target.retention === "releases_on_pull" ? "released" : "retained";
+  } else if (action.kind === "wiggle") {
+    result = target.retention === "moves" || target.tightening === "loose" || target.tightening === "unfastened"
+      ? "movement_detected"
+      : "stable";
+  } else {
+    result = "cover_removed";
+  }
+
+  return {
+    actionId: action.id,
+    targetId: action.targetId,
+    result,
+    revealedTargetIds: action.kind === "remove_cover" ? [...action.revealsTargetIds] : [],
+  };
+}
+
 export function validatePhysicalInspectionModel(model: PhysicalInspectionModel) {
   const errors: string[] = [];
   if (model.schemaVersion !== 1) errors.push("未対応のスキーマバージョンです。");

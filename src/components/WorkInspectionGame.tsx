@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type CableInspectionPart, type DirectInspectionPart, type InspectionBox, type InspectionPart, type InspectionUnit } from "../data/boxInspectionGame";
-import { toExpectedPhysicalInspection } from "../data/physicalInspection";
+import { createPhysicalInspectionSession, toExpectedPhysicalInspection, type PhysicalInspectionSession } from "../data/physicalInspection";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { ConnectionDetailDiagram } from "./svg/ConnectionDetailDiagram";
 import { CableInspectionDiagram } from "./svg/CableInspectionDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
 import { ConstructionReferencePanel } from "./ConstructionReferencePanel";
+import { PhysicalInspectionControls } from "./PhysicalInspectionControls";
+import { PhysicalInspectionView } from "./PhysicalInspectionView";
 import { DeviceDetailShape } from "./svg/DeviceDetailShape";
 import { DirectionalSheath, DirectionalWire } from "./svg/DirectionalCable";
 import { WiringDiagram } from "./svg/WiringDiagram";
@@ -25,6 +27,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
   const [stage, setStage] = useState<InspectionStage>("overview");
   const [answers, setAnswers] = useState<InspectionAnswers>({});
   const [submitted, setSubmitted] = useState(false);
+  const [inspectionSessions, setInspectionSessions] = useState<Record<string, PhysicalInspectionSession>>({});
 
   const parts = round.units.reduce<InspectionPart[]>((result, unit) => {
     result.push(...unit.parts as InspectionPart[]);
@@ -46,6 +49,8 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
   const infrastructurePart = selectedBox && "connection" in selectedPart && !["ring_sleeve", "push_connector"].includes(selectedPart.connection.method)
     ? selectedPart
     : undefined;
+  const inspectionSession = inspectionSessions[selectedPart.id] ?? createPhysicalInspectionSession();
+  const latestObservation = inspectionSession.observations.at(-1);
   const answeredCount = Object.keys(answers).length;
   const markedDefects = parts.filter((part) => answers[part.id] && answers[part.id] !== "欠陥なし");
   const correctCount = parts.filter((part) => answers[part.id] === part.answer).length;
@@ -90,6 +95,10 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     setAnswers((previous) => ({ ...previous, [selectedPart.id]: answer }));
   }
 
+  function updateInspectionSession(session: PhysicalInspectionSession) {
+    setInspectionSessions((previous) => ({ ...previous, [selectedPart.id]: session }));
+  }
+
   function restart() {
     const nextRound = createBoxInspectionRound({ candidateNo, seed });
     setRound(nextRound);
@@ -98,6 +107,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     setStage("overview");
     setAnswers({});
     setSubmitted(false);
+    setInspectionSessions({});
   }
 
   const visualTitle = stage === "overview" ? round.title : stage === "assembly" ? selectedUnit.label : selectedPart.title;
@@ -142,14 +152,22 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
                 physicalInspection: toExpectedPhysicalInspection(selectedDirectPart.physicalInspection),
               }} />
             ) : null
-          ) : selectedCablePart ? (
-            <CableInspectionDiagram part={selectedCablePart} />
-          ) : selectedDirectPart ? (
-            <DirectDeviceDiagram part={selectedDirectPart} />
-          ) : infrastructurePart ? (
-            <InfrastructureDiagram part={infrastructurePart} />
           ) : (
-            <ConnectionDetailDiagram part={selectedPart as BoxInspectionPart} />
+            <PhysicalInspectionView
+              latestObservation={latestObservation}
+              part={selectedPart as InspectionPart}
+              viewpoint={inspectionSession.viewpoint}
+            >
+              {selectedCablePart ? (
+                <CableInspectionDiagram part={selectedCablePart} />
+              ) : selectedDirectPart ? (
+                <DirectDeviceDiagram part={selectedDirectPart} />
+              ) : infrastructurePart ? (
+                <InfrastructureDiagram part={infrastructurePart} />
+              ) : (
+                <ConnectionDetailDiagram part={selectedPart as BoxInspectionPart} />
+              )}
+            </PhysicalInspectionView>
           )}
         </div>
         <ConstructionReferencePanel candidateNo={round.candidate.no} conditions={round.candidate.constructionConditions} />
@@ -185,6 +203,11 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             <button className="inspection-back-button" onClick={() => setStage(selectedUnit.kind === "direct_device" || selectedUnit.kind === "cable" ? "overview" : "assembly")} type="button">
               {selectedUnit.kind === "direct_device" || selectedUnit.kind === "cable" ? "複線図に戻る" : "工作部分の組立図に戻る"}
             </button>
+            <PhysicalInspectionControls
+              model={selectedPart.physicalInspection}
+              onChange={updateInspectionSession}
+              session={inspectionSession}
+            />
             <p className="question">{selectedPart.question}</p>
             <div className="choices" role="list">
               {selectedPart.choices.map((choice) => {

@@ -1,0 +1,248 @@
+.physical-inspection-controls {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid #c8d7e0;
+  border-radius: 8px;
+  background: #f7fbfd;
+}
+
+.inspection-control-group {
+  display: grid;
+  gap: 7px;
+}
+
+.inspection-control-group > strong,
+.inspection-observation > strong {
+  color: #27606d;
+  font-size: 0.82rem;
+}
+
+.inspection-viewpoint-buttons,
+.inspection-action-buttons {
+  display: grid;
+  gap: 6px;
+}
+
+.inspection-viewpoint-buttons {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.inspection-action-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.inspection-viewpoint-buttons button,
+.inspection-action-buttons button {
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1px solid #aebfca;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334553;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.inspection-viewpoint-buttons button:hover,
+.inspection-action-buttons button:hover {
+  border-color: #1f6f8b;
+  background: #eaf7fb;
+}
+
+.inspection-viewpoint-buttons button.selected {
+  border-color: #1f6f8b;
+  background: #1f6f8b;
+  color: #ffffff;
+}
+
+.inspection-observation {
+  min-height: 65px;
+  padding: 9px 10px;
+  border-left: 4px solid #1f6f8b;
+  background: #ffffff;
+}
+
+.inspection-observation p {
+  margin: 4px 0 0;
+  color: #334553;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.physical-inspection-view {
+  width: 100%;
+  overflow: hidden;
+}
+
+.physical-inspection-view svg {
+  transform-origin: center;
+}
+
+.inspection-view-label,
+.orthographic-caption {
+  fill: #27606d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.orthographic-body,
+.orthographic-back,
+.orthographic-mount,
+.orthographic-connector-side,
+.orthographic-connector-back,
+.orthographic-cable-face,
+.orthographic-box {
+  fill: #dfe7ec;
+  stroke: #596a78;
+  stroke-width: 6;
+}
+
+.orthographic-box-side {
+  fill: #c9d3da;
+  stroke: #596a78;
+  stroke-width: 4;
+}
+
+.orthographic-conduit-face {
+  fill: #e5ebef;
+  stroke: #526574;
+  stroke-width: 5;
+}
+
+.orthographic-back {
+  fill: #d4dde2;
+}
+
+.orthographic-mount {
+  fill: #c7d1d7;
+}
+
+.orthographic-terminal,
+.orthographic-port {
+  fill: #2f414d;
+  stroke: #172033;
+  stroke-width: 3;
+}
+
+.orthographic-screw,
+.orthographic-depth {
+  fill: none;
+  stroke: #172033;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.orthographic-cable-entry,
+.orthographic-strip-window {
+  fill: #f8fbfd;
+  stroke: #718491;
+  stroke-width: 3;
+}
+
+.orthographic-wire {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 10;
+}
+
+.orthographic-wire.black {
+  stroke: #171717;
+}
+
+.orthographic-wire.white {
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 1px #56616b) drop-shadow(0 0 1px #56616b);
+}
+
+.orthographic-wire.red {
+  stroke: #c83349;
+}
+
+.orthographic-wire.green {
+  stroke: #17945f;
+}
+
+.orthographic-wire.blue {
+  stroke: #2f6fbb;
+}
+
+.orthographic-conduit {
+  fill: none;
+  stroke: #8b98a3;
+  stroke-linecap: round;
+  stroke-width: 48;
+}
+
+.orthographic-fitting,
+.orthographic-locknut {
+  fill: #c9d3da;
+  stroke: #596a78;
+  stroke-width: 5;
+}
+
+.orthographic-box-wall {
+  fill: #aebbc4;
+}
+
+.orthographic-conduit-face {
+  fill: #8b98a3;
+}
+
+.orthographic-cable {
+  fill: none;
+  stroke: #596a78;
+  stroke-linecap: round;
+  stroke-width: 46;
+}
+
+.orthographic-cable-face {
+  fill: #596a78;
+}
+
+.inspection-motion-pull .orthographic-object {
+  animation: inspection-pull 280ms ease-out;
+}
+
+.inspection-motion-released .orthographic-object {
+  animation: inspection-release 420ms ease-out both;
+}
+
+.inspection-motion-wiggle .orthographic-object {
+  animation: inspection-wiggle 360ms ease-in-out;
+}
+
+@keyframes inspection-pull {
+  50% { transform: translateX(8px); }
+}
+
+@keyframes inspection-release {
+  to { transform: translateX(18px); opacity: 0.72; }
+}
+
+@keyframes inspection-wiggle {
+  25% { transform: translateX(-5px) rotate(-0.6deg); }
+  75% { transform: translateX(5px) rotate(0.6deg); }
+}
+
+@media (max-width: 720px) {
+  .inspection-viewpoint-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inspection-action-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inspection-motion-pull .orthographic-object,
+  .inspection-motion-released .orthographic-object,
+  .inspection-motion-wiggle .orthographic-object {
+    animation: none;
+  }
+}
