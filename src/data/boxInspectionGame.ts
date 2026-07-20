@@ -95,6 +95,14 @@ export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   terminalConnections?: DeviceTerminalConnection[];
 };
 
+export type CableInspectionPart = Omit<BoxInspectionPart, "connection" | "boxId"> & {
+  sourceConnectionIndex: number;
+  correctCable: CableRunSpecification;
+  installedCable: CableRunSpecification;
+  fromLabel: string;
+  toLabel: string;
+};
+
 export type DeviceTerminalConnection = {
   conductorId: string;
   terminalId: string;
@@ -102,7 +110,7 @@ export type DeviceTerminalConnection = {
   color: WireColor;
 };
 
-type InspectionUnitBase<TPart extends BoxInspectionPart | DirectInspectionPart> = {
+type InspectionUnitBase<TPart extends BoxInspectionPart | DirectInspectionPart | CableInspectionPart> = {
   id: string;
   label: string;
   location: string;
@@ -127,8 +135,13 @@ export type DirectDeviceInspectionUnit = InspectionUnitBase<DirectInspectionPart
   kind: "direct_device";
 };
 
-export type InspectionUnit = BoxInspectionUnit | MountingFrameInspectionUnit | DirectDeviceInspectionUnit;
-export type InspectionPart = BoxInspectionPart | DirectInspectionPart;
+export type CableInspectionUnit = InspectionUnitBase<CableInspectionPart> & {
+  kind: "cable";
+  cable: CableRunSpecification;
+};
+
+export type InspectionUnit = BoxInspectionUnit | MountingFrameInspectionUnit | DirectDeviceInspectionUnit | CableInspectionUnit;
+export type InspectionPart = BoxInspectionPart | DirectInspectionPart | CableInspectionPart;
 
 export type BoxInspectionRound = {
   id: string;
@@ -421,6 +434,9 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
   const directDeviceGroups = groupDirectInspectionDevices(candidate, directDevices);
   const mountingFrames = candidate.mountingFrames ?? [];
   const mountingFrameMembers = mountingFrames.flatMap((frame) => frame.members.map((member) => ({ frame, member })));
+  const cableRuns = getCandidateCableRuns(candidate)
+    .map((cable, index) => ({ cable, connection: candidate.connections[index], index }))
+    .filter(({ connection }) => !connection.diagramHidden);
   const defectPlans = new Map<string, DefectType | "random">();
   const targetDefectCount = randomInt(2, 3, random);
   const connectionDefectCandidates = createConnectionDefectCandidates(plannedBoxes, random);
@@ -458,7 +474,8 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
   const frameMemberDefectKeys = mountingFrameMembers
     .filter(({ member }) => getDirectDefectProblems(createFrameMemberDevice(member)).length > 0)
     .map(({ frame, member }) => frameMemberPartKey(frame, member));
-  const remainingTargets = shuffle([...boxPartKeys, ...directDefectKeys, ...frameDefectKeys, ...frameMemberDefectKeys].filter((key) => !defectPlans.has(key)), random);
+  const cableDefectKeys = cableRuns.map(({ cable }) => `cable:${cable.id}`);
+  const remainingTargets = shuffle([...boxPartKeys, ...directDefectKeys, ...frameDefectKeys, ...frameMemberDefectKeys, ...cableDefectKeys].filter((key) => !defectPlans.has(key)), random);
   for (const key of remainingTargets.slice(0, Math.max(0, targetDefectCount - defectPlans.size))) {
     defectPlans.set(key, "random");
   }
@@ -478,6 +495,9 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
       ),
     ],
   ]));
+  const cableUnits = cableRuns.map(({ cable, connection, index }) =>
+    createCableInspectionUnit(candidate, cable, connection.from, connection.to, index, defectPlans.has(`cable:${cable.id}`), random)
+  );
   const units: InspectionUnit[] = [
     ...boxes.map((box): BoxInspectionUnit => ({
       id: box.id,
@@ -512,6 +532,7 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
       parts: frameParts.get(frame.id) ?? [],
       mountingFrame: frame,
     })),
+    ...cableUnits,
   ];
   const defectCount = defectPlans.size;
 
@@ -525,6 +546,133 @@ export function createBoxInspectionRound(options: BoxInspectionRoundOptions = {}
     defectCount,
     seed: options.seed,
   };
+}
+
+const cableDefectTypes = [
+  "cable_wrong_type",
+  "cable_too_short",
+  "cable_sheath_strip_short",
+  "cable_sheath_strip_long",
+] as const satisfies DefectType[];
+
+function createCableInspectionUnit(
+  candidate: CandidateDiagram,
+  cable: CableRunSpecification,
+  fromDeviceId: string,
+  toDeviceId: string,
+  connectionIndex: number,
+  hasDefect: boolean,
+  random: RandomSource,
+): CableInspectionUnit {
+  const fromDevice = candidate.devices.find((device) => device.id === fromDeviceId);
+  const toDevice = candidate.devices.find((device) => device.id === toDeviceId);
+  const fromLabel = fromDevice?.label ?? fromDeviceId;
+  const toLabel = toDevice?.label ?? toDeviceId;
+  const correctCable = withExpectedCableEnds(cable, fromDevice, toDevice);
+  const availableTypes = cableDefectTypes.filter((defectType) => {
+    if (defectType === "cable_too_short") return cable.diagramLengthMm !== null;
+    if (defectType === "cable_sheath_strip_short" || defectType === "cable_sheath_strip_long") return cable.hasSheath;
+    return true;
+  });
+  const defectType = hasDefect ? randomItem(availableTypes, random) : "none";
+  const installedCable = applyCableDefect(correctCable, defectType, random);
+  const answers: Record<string, string> = {
+    cable_wrong_type: "指定と異なる種類のケーブルを使用している",
+    cable_too_short: "ケーブル長が指定寸法の50%以下",
+    cable_sheath_strip_short: "ケーブル外装の剥ぎ取りが不足している",
+    cable_sheath_strip_long: "ケーブル外装を剥ぎ取りすぎている",
+  };
+  const explanations: Record<string, string> = {
+    cable_wrong_type: `指定は${formatCableType(correctCable)}ですが、${formatCableType(installedCable)}を使用しています。`,
+    cable_too_short: `指定寸法${correctCable.diagramLengthMm}mmに対し、施工結果は${installedCable.diagramLengthMm}mmです。`,
+    cable_sheath_strip_short: "器具またはボックスへ入る側のケーブル外装の剥ぎ取りが不足しています。",
+    cable_sheath_strip_long: "器具またはボックスへ入る側のケーブル外装を必要以上に剥ぎ取っています。",
+  };
+  const part: CableInspectionPart = {
+    id: `cable-part:${cable.id}`,
+    title: `${fromLabel}～${toLabel} ケーブル`,
+    location: `複線図上の${fromLabel}～${toLabel}`,
+    defectType,
+    question: "ケーブルの種類、長さ、両端の外装処理を判定してください。",
+    choices: [
+      "欠陥なし",
+      "指定と異なる種類のケーブルを使用している",
+      "ケーブル長が指定寸法の50%以下",
+      "ケーブル外装の剥ぎ取りが不足している",
+      "ケーブル外装を剥ぎ取りすぎている",
+    ],
+    answer: defectType === "none" ? "欠陥なし" : answers[defectType],
+    explanation: defectType === "none"
+      ? `${formatCableType(correctCable)}を指定寸法と適切な外装処理で施工しています。`
+      : explanations[defectType],
+    sourceConnectionIndex: connectionIndex,
+    correctCable,
+    installedCable,
+    fromLabel,
+    toLabel,
+  };
+  return {
+    id: `unit-cable:${cable.id}`,
+    kind: "cable",
+    label: part.title,
+    location: part.location,
+    sourceDeviceIds: [fromDeviceId, toDeviceId],
+    x: ((fromDevice?.x ?? 0) + (toDevice?.x ?? 0)) / 2,
+    y: ((fromDevice?.y ?? 0) + (toDevice?.y ?? 0)) / 2,
+    parts: [part],
+    cable: correctCable,
+  };
+}
+
+function withExpectedCableEnds(
+  cable: CableRunSpecification,
+  fromDevice: CandidateDevice | undefined,
+  toDevice: CandidateDevice | undefined,
+): CableRunSpecification {
+  return {
+    ...cable,
+    fromEnd: withExpectedCableEnd(cable, cable.fromEnd, fromDevice),
+    toEnd: withExpectedCableEnd(cable, cable.toEnd, toDevice),
+  };
+}
+
+function withExpectedCableEnd(cable: CableRunSpecification, end: CableEndPreparation, device?: CandidateDevice) {
+  const defaultSheathLength = device?.variant === "lamp_receptacle" ? 50 : 100;
+  return {
+    ...end,
+    sheathStripLengthMm: cable.hasSheath ? end.sheathStripLengthMm ?? defaultSheathLength : null,
+    insulationStripLengthsMm: end.insulationStripLengthsMm.map((length) => length ?? 12),
+  };
+}
+
+function applyCableDefect(cable: CableRunSpecification, defectType: DefectType, random: RandomSource): CableRunSpecification {
+  if (defectType === "cable_wrong_type") {
+    const cableType: CableRunSpecification["cableType"] = cable.cableType === "VVF" ? "VVR" : "VVF";
+    return { ...cable, cableType };
+  }
+  if (defectType === "cable_too_short" && cable.diagramLengthMm !== null) {
+    const diagramLengthMm = Math.floor(cable.diagramLengthMm * 0.45);
+    return { ...cable, diagramLengthMm, lengthMm: diagramLengthMm };
+  }
+  if (defectType === "cable_sheath_strip_short" || defectType === "cable_sheath_strip_long") {
+    const key = randomInt(0, 1, random) === 0 ? "fromEnd" : "toEnd";
+    const normal = cable[key].sheathStripLengthMm ?? 100;
+    return {
+      ...cable,
+      [key]: {
+        ...cable[key],
+        sheathStripLengthMm: defectType === "cable_sheath_strip_short"
+          ? Math.max(10, Math.floor(normal * 0.35))
+          : Math.ceil(normal * 1.8),
+      },
+    };
+  }
+  return cable;
+}
+
+function formatCableType(cable: CableRunSpecification) {
+  const cores = cable.coreCount === 1 ? "" : ` ${cable.coreCount}心`;
+  return `${cable.cableType} ${cable.conductorDiameterMm.toFixed(1)}mm${cores}`;
 }
 
 type PlannedBox = {

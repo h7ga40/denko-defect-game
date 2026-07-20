@@ -8,7 +8,7 @@ import {
   type MountingFramePosition,
 } from "../data/candidateDiagrams";
 import { resolveCableRunSpecification } from "../data/cableSpecifications";
-import type { DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
+import type { CableInspectionPart, DirectInspectionPart, InspectionBox } from "../data/boxInspectionGame";
 import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
 import { CandidateMaterials } from "./CandidateMaterials";
 import { FluorescentLampSymbol } from "./svg/FluorescentLampSymbol";
@@ -21,12 +21,14 @@ type CandidateSvgProps = {
   diagram: CandidateDiagram;
   inspectionBoxes?: InspectionBox[];
   directParts?: DirectInspectionPart[];
+  cableParts?: CableInspectionPart[];
   answers?: InspectionAnswers;
   selectedBoxId?: string;
   selectedDirectPartId?: string;
   submitted?: boolean;
   onSelectBox?: (boxId: string) => void;
   onSelectDirectPart?: (partId: string) => void;
+  onSelectCablePart?: (partId: string) => void;
 };
 
 type Interaction = {
@@ -80,10 +82,12 @@ export function CandidateDiagramView({ initialCandidateNo = 1 }: { initialCandid
 
 export function CandidateSvg({
   answers = {},
+  cableParts = [],
   diagram,
   inspectionBoxes = [],
   directParts = [],
   onSelectBox,
+  onSelectCablePart,
   onSelectDirectPart,
   selectedBoxId,
   selectedDirectPartId,
@@ -123,9 +127,36 @@ export function CandidateSvg({
           && !diagram.connections.slice(0, index).some((previous) =>
             previous.from === connection.from && previous.to === connection.to
           );
+        const cablePart = cableParts.find((part) => part.sourceConnectionIndex === index);
+        const cableStatus = cablePart ? getStatus(
+          cablePart.id === selectedDirectPartId,
+          Boolean(answers[cablePart.id]),
+          answers[cablePart.id] === cablePart.answer,
+          submitted,
+        ) : "idle";
+        const cablePath = makeWirePath(from, to, offset);
+
+        function selectCable() {
+          if (cablePart) onSelectCablePart?.(cablePart.id);
+        }
+
+        function handleCableKeyDown(event: KeyboardEvent<SVGGElement>) {
+          if (!cablePart || (event.key !== "Enter" && event.key !== " ")) return;
+          event.preventDefault();
+          selectCable();
+        }
 
         return (
-          <g key={connection.from + "-" + connection.to + "-" + connection.color + "-" + index}>
+          <g
+            aria-label={cablePart ? `${cablePart.title}を選択` : undefined}
+            className={cablePart ? `candidate-cable-selectable ${cableStatus}` : undefined}
+            key={connection.from + "-" + connection.to + "-" + connection.color + "-" + index}
+            onClick={cablePart ? selectCable : undefined}
+            onKeyDown={cablePart ? handleCableKeyDown : undefined}
+            role={cablePart ? "button" : undefined}
+            tabIndex={cablePart ? 0 : undefined}
+          >
+            {cablePart && <path className="candidate-cable-status" d={cablePath} />}
             {cable.coreColors.map((color, coreIndex) => (
               <path
                 className={"candidate-wire " + color}
@@ -133,6 +164,7 @@ export function CandidateSvg({
                 key={cable.id + "-core-" + coreIndex}
               />
             ))}
+            {cablePart && <path className="candidate-cable-hit" d={cablePath} />}
             {connection.label && (
               <text className="wire-label" x={labelX} y={labelY} textAnchor="middle">
                 {connection.label}
@@ -147,6 +179,9 @@ export function CandidateSvg({
               >
                 {cable.diagramLengthMm}mm
               </text>
+            )}
+            {cablePart && cableStatus !== "idle" && (
+              <circle className="candidate-status-dot" cx={labelX + 12} cy={labelY - 12} r="7" />
             )}
           </g>
         );

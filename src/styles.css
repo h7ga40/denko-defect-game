@@ -753,6 +753,46 @@ button {
   touch-action: manipulation;
 }
 
+.candidate-cable-selectable {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.candidate-cable-selectable:focus-visible {
+  outline: none;
+}
+
+.candidate-cable-status {
+  fill: none;
+  pointer-events: none;
+  stroke: transparent;
+  stroke-linecap: round;
+  stroke-width: 16;
+}
+
+.candidate-cable-selectable:hover .candidate-cable-status,
+.candidate-cable-selectable:focus-visible .candidate-cable-status,
+.candidate-cable-selectable.selected .candidate-cable-status {
+  stroke: #1f6f8b;
+}
+
+.candidate-cable-selectable.answered .candidate-cable-status,
+.candidate-cable-selectable.correct .candidate-cable-status {
+  stroke: #198754;
+}
+
+.candidate-cable-selectable.wrong .candidate-cable-status {
+  stroke: #c83349;
+}
+
+.candidate-cable-hit {
+  fill: none;
+  pointer-events: stroke;
+  stroke: transparent;
+  stroke-linecap: round;
+  stroke-width: 28;
+}
+
 .candidate-hit-area {
   fill: transparent;
   pointer-events: all;

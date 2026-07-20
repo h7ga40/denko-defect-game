@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart, type InspectionBox, type InspectionPart, type InspectionUnit } from "../data/boxInspectionGame";
+import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type CableInspectionPart, type DirectInspectionPart, type InspectionBox, type InspectionPart, type InspectionUnit } from "../data/boxInspectionGame";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { ConnectionDetailDiagram } from "./svg/ConnectionDetailDiagram";
+import { CableInspectionDiagram } from "./svg/CableInspectionDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
 import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
 import { CandidateMaterials } from "./CandidateMaterials";
@@ -31,13 +32,17 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
   }, []);
   const inspectionBoxes = round.units.filter((unit) => unit.kind === "box").map((unit) => unit.box);
   const directParts = round.units.reduce<DirectInspectionPart[]>((result, unit) => {
-    if (unit.kind !== "box") result.push(...unit.parts);
+    if (unit.kind === "direct_device" || unit.kind === "mounting_frame") result.push(...unit.parts);
     return result;
   }, []);
+  const cableParts = round.units.flatMap((unit) => unit.kind === "cable" ? unit.parts : []);
   const selectedUnit = round.units.find((unit) => unit.id === selectedUnitId) ?? round.units[0];
   const selectedPart = selectedUnit.parts.find((part) => part.id === selectedPartId) ?? selectedUnit.parts[0];
   const selectedBox = selectedUnit.kind === "box" ? selectedUnit.box : undefined;
-  const selectedDirectPart = selectedUnit.kind === "box" ? undefined : selectedPart as DirectInspectionPart;
+  const selectedDirectPart = selectedUnit.kind === "direct_device" || selectedUnit.kind === "mounting_frame"
+    ? selectedPart as DirectInspectionPart
+    : undefined;
+  const selectedCablePart = selectedUnit.kind === "cable" ? selectedPart as CableInspectionPart : undefined;
   const infrastructurePart = selectedBox && "connection" in selectedPart && !["ring_sleeve", "push_connector"].includes(selectedPart.connection.method)
     ? selectedPart
     : undefined;
@@ -56,7 +61,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
   function selectUnit(unit: InspectionUnit) {
     setSelectedUnitId(unit.id);
     setSelectedPartId(unit.parts[0].id);
-    setStage(unit.kind === "direct_device" ? "defect" : "assembly");
+    setStage(unit.kind === "direct_device" || unit.kind === "cable" ? "defect" : "assembly");
   }
 
   function selectDirectPart(partId: string) {
@@ -65,6 +70,14 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     setSelectedUnitId(unit.id);
     setSelectedPartId(unit.kind === "mounting_frame" ? unit.parts[0].id : partId);
     setStage(unit.kind === "mounting_frame" ? "assembly" : "defect");
+  }
+
+  function selectCablePart(partId: string) {
+    const unit = round.units.find((item) => item.kind === "cable" && item.parts.some((part) => part.id === partId));
+    if (!unit) return;
+    setSelectedUnitId(unit.id);
+    setSelectedPartId(partId);
+    setStage("defect");
   }
 
   function openInspectionPart(partId: string) {
@@ -108,10 +121,12 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
           {stage === "overview" ? (
             <CandidateSvg
               answers={answers}
+              cableParts={cableParts}
               diagram={round.candidate}
               directParts={directParts}
               inspectionBoxes={inspectionBoxes}
               onSelectBox={selectBox}
+              onSelectCablePart={selectCablePart}
               onSelectDirectPart={selectDirectPart}
               submitted={submitted}
             />
@@ -123,6 +138,8 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             ) : selectedDirectPart ? (
               <DirectDeviceDiagram part={{ ...selectedDirectPart, defectType: "none" }} />
             ) : null
+          ) : selectedCablePart ? (
+            <CableInspectionDiagram part={selectedCablePart} />
           ) : selectedDirectPart ? (
             <DirectDeviceDiagram part={selectedDirectPart} />
           ) : infrastructurePart ? (
@@ -162,8 +179,8 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
           <>
             <h2>{selectedPart.title}</h2>
             <p className="control-summary">{selectedPart.location}・{answers[selectedPart.id] ? "回答済み" : "未回答"}</p>
-            <button className="inspection-back-button" onClick={() => setStage(selectedUnit.kind === "direct_device" ? "overview" : "assembly")} type="button">
-              {selectedUnit.kind === "direct_device" ? "複線図に戻る" : "工作部分の組立図に戻る"}
+            <button className="inspection-back-button" onClick={() => setStage(selectedUnit.kind === "direct_device" || selectedUnit.kind === "cable" ? "overview" : "assembly")} type="button">
+              {selectedUnit.kind === "direct_device" || selectedUnit.kind === "cable" ? "複線図に戻る" : "工作部分の組立図に戻る"}
             </button>
             <p className="question">{selectedPart.question}</p>
             <div className="choices" role="list">
@@ -212,8 +229,8 @@ function InspectionBreadcrumb({
       )}
       {stage !== "overview" && <span className="breadcrumb-separator" aria-hidden="true">›</span>}
       {stage === "assembly" && <span aria-current="page">{unit.label}</span>}
-      {stage === "defect" && unit.kind === "direct_device" && <span aria-current="page">{partLabel}</span>}
-      {stage === "defect" && unit.kind !== "direct_device" && (
+      {stage === "defect" && (unit.kind === "direct_device" || unit.kind === "cable") && <span aria-current="page">{partLabel}</span>}
+      {stage === "defect" && unit.kind !== "direct_device" && unit.kind !== "cable" && (
         <>
           <button onClick={onAssembly} type="button">{unit.label}</button>
           <span className="breadcrumb-separator" aria-hidden="true">›</span>
@@ -237,7 +254,7 @@ function InspectionUnitSelector({
     <div className="inspection-unit-selector" aria-label="工作部分一覧">
       {units.map((unit) => {
         const answered = unit.parts.filter((part) => answers[part.id]).length;
-        const kindLabel = unit.kind === "box" ? "配線" : unit.kind === "mounting_frame" ? "配置" : "器具";
+        const kindLabel = unit.kind === "box" ? "配線" : unit.kind === "mounting_frame" ? "配置" : unit.kind === "cable" ? "ケーブル" : "器具";
         return (
           <button className="inspection-unit-button" key={unit.id} onClick={() => onSelect(unit)} type="button">
             <span className="inspection-unit-kind">{kindLabel}</span>
