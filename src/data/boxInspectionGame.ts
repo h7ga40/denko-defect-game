@@ -92,7 +92,14 @@ export type DirectInspectionPart = Omit<BoxInspectionPart, "connection"> & {
   mountingFrameMember?: CandidateMountingFrameMember;
   parentMountingFrameId?: string;
   terminalBlock?: CandidateDevice["terminalBlock"];
-  terminalConnections?: Array<{ terminalId: string; color: WireColor }>;
+  terminalConnections?: DeviceTerminalConnection[];
+};
+
+export type DeviceTerminalConnection = {
+  conductorId: string;
+  terminalId: string;
+  actualTerminalId: string;
+  color: WireColor;
 };
 
 type InspectionUnitBase<TPart extends BoxInspectionPart | DirectInspectionPart> = {
@@ -899,6 +906,10 @@ function createDirectPart(
   const deviceName = devices.length > 1
     ? devices.map((device) => device.label).join("・") + "（6極端子台代用）"
     : getInspectionDeviceName(detailDevice);
+  const correctTerminalConnections = resolveTerminalConnections(candidate, detailDevice);
+  const terminalConnections = defectProblem && isTerminalConnectionDefect(defectProblem.defectType)
+    ? createWrongTerminalConnections(detailDevice, correctTerminalConnections)
+    : correctTerminalConnections;
   return {
     id: "device-" + group.key,
     boxId: "",
@@ -918,8 +929,31 @@ function createDirectPart(
     x: diagramDevice.x,
     y: diagramDevice.y,
     terminalBlock: detailDevice.terminalBlock,
-    terminalConnections: resolveTerminalConnections(candidate, detailDevice),
+    terminalConnections,
   };
+}
+
+function isTerminalConnectionDefect(defectType: DefectType) {
+  return defectType === "terminal_block_wrong_terminal"
+    || defectType === "switch_wrong_terminal"
+    || defectType === "pilot_lamp_wrong_terminal";
+}
+
+function createWrongTerminalConnections(
+  device: CandidateDevice,
+  connections: DeviceTerminalConnection[] | undefined,
+) {
+  if (!connections?.length) return connections;
+  const terminalIds = getDeviceSpecification(device.variant)?.terminals.map((terminal) => terminal.id) ?? [];
+  const targetIndex = connections.length - 1;
+  return connections.map((connection, index) => {
+    if (index !== targetIndex) return connection;
+    const currentIndex = terminalIds.indexOf(connection.terminalId);
+    const actualTerminalId = terminalIds.find((terminalId, terminalIndex) =>
+      terminalId !== connection.terminalId && terminalIndex > currentIndex
+    ) ?? terminalIds.find((terminalId) => terminalId !== connection.terminalId);
+    return actualTerminalId ? { ...connection, actualTerminalId } : connection;
+  });
 }
 
 function resolveTerminalConnections(candidate: CandidateDiagram, device: CandidateDevice) {
@@ -931,7 +965,12 @@ function resolveTerminalConnections(candidate: CandidateDiagram, device: Candida
     terminal.conductors.flatMap((conductor) => {
       const cable = cableById.get(conductor.cableId);
       const color = cable?.coreColors[conductor.coreIndex];
-      return color ? [{ terminalId: terminal.terminalId, color }] : [];
+      return color ? [{
+        conductorId: `${conductor.cableId}:${conductor.coreIndex}`,
+        terminalId: terminal.terminalId,
+        actualTerminalId: terminal.terminalId,
+        color,
+      }] : [];
     }),
   );
 }
