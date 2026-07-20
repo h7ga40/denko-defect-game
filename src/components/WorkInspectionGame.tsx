@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart, type InspectionBox, type InspectionPart, type InspectionUnit } from "../data/boxInspectionGame";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
+import { ConnectionDetailDiagram } from "./svg/ConnectionDetailDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
 import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
 import { CandidateMaterials } from "./CandidateMaterials";
@@ -127,7 +128,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
           ) : infrastructurePart ? (
             <InfrastructureDiagram part={infrastructurePart} />
           ) : (
-            <BoxWiringDiagram answers={answers} box={selectedBox!} onSelectPart={openInspectionPart} selectedPartId={selectedPart.id} submitted={submitted} />
+            <ConnectionDetailDiagram part={selectedPart as BoxInspectionPart} />
           )}
         </div>
         <CandidateConstructionConditions conditions={round.candidate.constructionConditions} />
