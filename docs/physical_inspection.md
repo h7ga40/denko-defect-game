@@ -67,14 +67,16 @@ _Ref/欠陥写真の写真は形状と観察結果の参照に使い、アプリ
 
 ## ID規約
 
-物理対象IDは`InspectionPart.id`を基点にする。将来、1部品内に複数対象を持つ場合は次のように接尾辞を付ける。
+物理対象IDは`InspectionPart.id`を親IDとして、器具本体、端子、カバーを階層化する。
 
-- `device-sw1:terminal-0`
-- `device-sw1:fastener-left`
-- `device-lamp1:cover`
-- `cable-part:cable-1:from-end`
+- 器具本体: `device-sw1`
+- 端子: `device-sw1:terminal-0`
+- カバー: `device-lamp1:cover`
+- ケーブル端部を分割する場合: `cable-part:cable-1:from-end`
 
-SVG要素の`data-physical-target`と3Dメッシュの`userData.physicalTargetId`へ同じIDを設定できるようにする。
+`PhysicalTargetState.parentId`で親子関係、`label`で操作UIに表示する端子名を保持する。端子IDと名称は`deviceSpecifications`から生成し、ねじ端子と差込端子で利用可能な検査操作を分ける。欠陥は器具全体ではなく該当する端子またはカバーへ適用する。
+
+SVG要素の`data-physical-target`と将来の3Dメッシュの`userData.physicalTargetId`へ同じIDを設定できる。背面SVGは端子台、遮断器、差込端子器具、ねじ端子器具を描き分け、異常状態の子IDだけを強調する。
 
 ## 移行方針
 

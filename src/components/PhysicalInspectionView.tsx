@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { DeviceVariant } from "../data/candidateDiagrams";
 import type { InspectionPart, WireColor } from "../data/boxInspectionGame";
 import { getDeviceSpecification } from "../data/deviceSpecifications";
 import type { InspectionObservation, InspectionViewpoint, PhysicalTargetState } from "../data/physicalInspection";
@@ -29,13 +30,23 @@ export function PhysicalInspectionView({ children, part, viewpoint, latestObserv
 
   return (
     <div className={["physical-inspection-view", `viewpoint-${viewpoint}`, motionClass].filter(Boolean).join(" ")}>
-      {viewpoint === "front" ? children : <OrthographicDiagram part={part} viewpoint={viewpoint} />}
+      {viewpoint === "front" ? children : (
+        <OrthographicDiagram latestObservation={latestObservation} part={part} viewpoint={viewpoint} />
+      )}
     </div>
   );
 }
 
-function OrthographicDiagram({ part, viewpoint }: { part: InspectionPart; viewpoint: InspectionViewpoint }) {
-  const target = Object.values(part.physicalInspection.installed.targets)[0];
+function OrthographicDiagram({
+  latestObservation,
+  part,
+  viewpoint,
+}: {
+  latestObservation?: InspectionObservation;
+  part: InspectionPart;
+  viewpoint: InspectionViewpoint;
+}) {
+  const target = selectInspectionTarget(part, latestObservation);
   const title = part.title.split("（")[0].trim();
   const directVariant = "deviceVariant" in part ? part.deviceVariant : undefined;
   const terminalCount = directVariant ? getDeviceSpecification(directVariant)?.terminals.length ?? 2 : 2;
@@ -52,14 +63,16 @@ function OrthographicDiagram({ part, viewpoint }: { part: InspectionPart; viewpo
         ) : "connection" in part ? (
           <ConnectionOrthographic method={part.connection.method} side={side} wireColors={part.connection.wireColors} />
         ) : side ? (
-          <DeviceSideView mirrored={viewpoint === "right"} round={isRoundVariant(directVariant)} target={target} />
+          <DeviceSideView mirrored={viewpoint === "right"} round={isRoundVariant(directVariant)} target={target} variant={directVariant} />
         ) : (
           <DeviceBackView round={isRoundVariant(directVariant)} target={target} terminalCount={terminalCount} variant={directVariant} />
         )}
       </g>
-      <text className="small" x="360" y="342" textAnchor="middle">
-        {side ? "器具の厚み、電線の収まり、固定状態を確認" : "器具背面の端子、電線、固定状態を確認"}
-      </text>
+      {("installedCable" in part || "connection" in part) && (
+        <text className="small" x="360" y="342" textAnchor="middle">
+          {side ? "側面から収まりと固定状態を確認" : "背面から端子と固定状態を確認"}
+        </text>
+      )}
     </svg>
   );
 }
@@ -73,67 +86,263 @@ function DeviceBackView({
   round: boolean;
   target?: PhysicalTargetState;
   terminalCount: number;
-  variant?: string;
+  variant?: DeviceVariant;
 }) {
-  const positions = Array.from({ length: Math.max(2, terminalCount) }, (_, index) => {
-    const count = Math.max(2, terminalCount);
-    return 360 + (index - (count - 1) / 2) * Math.min(58, 190 / Math.max(1, count - 1));
-  });
-  const pushIn = getDeviceSpecification(variant as Parameters<typeof getDeviceSpecification>[0])?.connectionMethod === "push_in";
-  const looseScrew = target?.tightening === "loose";
-  const releases = target?.retention === "releases_on_pull";
+  const specification = getDeviceSpecification(variant);
+  const terminals = specification?.terminals
+    ?? Array.from({ length: Math.max(2, terminalCount) }, (_, index) => ({
+      id: String(index + 1),
+      label: String(index + 1),
+      insertionHoles: 1,
+    }));
+
+  if (variant === "terminal_block" || variant === "timer_switch" || variant === "automatic_switch") {
+    return <TerminalBlockBackView target={target} terminals={terminals} />;
+  }
+  if (variant === "circuit_breaker" || variant === "earth_leakage_breaker") {
+    return <BreakerBackView target={target} terminals={terminals} />;
+  }
+  if (specification?.connectionMethod === "push_in") {
+    return <PushInDeviceBackView target={target} terminals={terminals} />;
+  }
+  return <ScrewDeviceBackView round={round} target={target} terminals={terminals} />;
+}
+
+function TerminalBlockBackView({
+  target,
+  terminals,
+}: {
+  target?: PhysicalTargetState;
+  terminals: ReadonlyArray<{ id: string; label: string }>;
+}) {
+  const spacing = Math.min(54, 260 / Math.max(1, terminals.length - 1));
+  const startX = 360 - ((terminals.length - 1) * spacing) / 2;
+  return (
+    <>
+      <rect className="orthographic-terminal-block" x="190" y="118" width="340" height="168" rx="10" />
+      <rect className="orthographic-terminal-bridge" x="208" y="166" width="304" height="72" rx="8" />
+      {terminals.map((terminal, index) => {
+        const x = startX + index * spacing;
+        const active = isPhysicalTerminal(target, terminal.id);
+        const loose = active && target?.tightening === "loose";
+        const upperY = loose ? 159 : 169;
+        return (
+          <g data-physical-target={terminalTargetId(target, terminal.id)} key={terminal.id}>
+            <text className="orthographic-terminal-label" x={x} y="145" textAnchor="middle">{terminal.label}</text>
+            <circle className={active ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx={x} cy={upperY} r="12" />
+            <line className={active ? "orthographic-screw alert-stroke" : "orthographic-screw"} x1={x - 7} y1={upperY} x2={x + 7} y2={upperY} />
+            <circle className="orthographic-terminal" cx={x} cy="235" r="12" />
+            <line className="orthographic-screw" x1={x - 7} y1="235" x2={x + 7} y2="235" />
+            <path className={active ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d={`M ${x} ${upperY - 12} V 92`} />
+          </g>
+        );
+      })}
+      <text className="orthographic-caption" x="360" y="312" textAnchor="middle">端子台 施工側・施工省略側</text>
+      {target?.tightening === "loose" && <text className="defect-label" x="360" y="332" textAnchor="middle">選択端子のねじが浮いている</text>}
+    </>
+  );
+}
+
+function BreakerBackView({
+  target,
+  terminals,
+}: {
+  target?: PhysicalTargetState;
+  terminals: ReadonlyArray<{ id: string; label: string }>;
+}) {
+  const positions = [
+    { x: 325, y: 137 },
+    { x: 395, y: 137 },
+    { x: 325, y: 267 },
+    { x: 395, y: 267 },
+  ];
+  return (
+    <>
+      <rect className="orthographic-breaker-body" x="280" y="93" width="160" height="218" rx="12" />
+      <rect className="orthographic-breaker-center" x="307" y="166" width="106" height="72" rx="9" />
+      <path className="orthographic-breaker-toggle" d="M 348 218 V 184 H 374 V 218" />
+      {terminals.map((terminal, index) => {
+        const position = positions[index] ?? { x: 325 + (index % 2) * 70, y: 137 + Math.floor(index / 2) * 130 };
+        const active = isPhysicalTerminal(target, terminal.id);
+        const loose = active && target?.tightening === "loose";
+        const y = loose ? position.y - 9 : position.y;
+        const wireEnd = position.y < 200 ? 82 : 322;
+        return (
+          <g data-physical-target={terminalTargetId(target, terminal.id)} key={terminal.id}>
+            <circle className={active ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx={position.x} cy={y} r="14" />
+            <line className={active ? "orthographic-screw alert-stroke" : "orthographic-screw"} x1={position.x - 9} y1={y} x2={position.x + 9} y2={y} />
+            <path className={active ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d={`M ${position.x} ${y + (position.y < 200 ? -14 : 14)} V ${wireEnd}`} />
+            <text className="orthographic-terminal-label" x={position.x} y={position.y < 200 ? 160 : 291} textAnchor="middle">{terminal.label}</text>
+          </g>
+        );
+      })}
+      <text className="orthographic-caption" x="360" y="336" textAnchor="middle">遮断器端子側</text>
+    </>
+  );
+}
+
+function PushInDeviceBackView({
+  target,
+  terminals,
+}: {
+  target?: PhysicalTargetState;
+  terminals: ReadonlyArray<{ id: string; label: string; insertionHoles?: number }>;
+}) {
+  const rowGap = Math.min(50, 122 / Math.max(1, terminals.length - 1));
+  const startY = 202 - ((terminals.length - 1) * rowGap) / 2;
+  return (
+    <>
+      <rect className="orthographic-mount" x="270" y="91" width="34" height="222" rx="8" />
+      <rect className="orthographic-push-body" x="304" y="112" width="154" height="180" rx="13" />
+      <rect className="orthographic-strip-gauge" x="323" y="130" width="42" height="10" rx="4" />
+      {terminals.map((terminal, index) => {
+        const y = startY + index * rowGap;
+        const active = isPhysicalTerminal(target, terminal.id);
+        const releases = active && target?.retention === "releases_on_pull";
+        const holeCount = Math.max(1, terminal.insertionHoles ?? 1);
+        return (
+          <g data-physical-target={terminalTargetId(target, terminal.id)} key={terminal.id}>
+            <text className="orthographic-terminal-label" x="326" y={y + 5}>{terminal.label}</text>
+            {Array.from({ length: holeCount }, (_, holeIndex) => {
+              const x = 396 + holeIndex * 30;
+              return (
+                <g key={holeIndex}>
+                  <circle className={active ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx={x} cy={y} r="11" />
+                  <circle className={active ? "orthographic-retention-claw alert-stroke" : "orthographic-retention-claw"} cx={x} cy={y} r="4" />
+                </g>
+              );
+            })}
+            <path
+              className={releases ? "orthographic-wire black alert-stroke" : "orthographic-wire black"}
+              d={releases ? `M 392 ${y} H 510` : `M 407 ${y} H 594`}
+            />
+          </g>
+        );
+      })}
+      <text className="orthographic-caption" x="360" y="323" textAnchor="middle">差込端子側</text>
+      {target?.retention === "releases_on_pull" && <text className="defect-label" x="360" y="343" textAnchor="middle">選択端子の固定爪が心線を保持していない</text>}
+    </>
+  );
+}
+
+function ScrewDeviceBackView({
+  round,
+  target,
+  terminals,
+}: {
+  round: boolean;
+  target?: PhysicalTargetState;
+  terminals: ReadonlyArray<{ id: string; label: string }>;
+}) {
+  const positions = terminals.map((_, index) =>
+    360 + (index - (terminals.length - 1) / 2) * Math.min(58, 190 / Math.max(1, terminals.length - 1))
+  );
   return (
     <>
       {round
         ? <circle className="orthographic-body" cx="360" cy="202" r="92" />
         : <rect className="orthographic-mount" x="270" y="105" width="180" height="194" rx="12" />}
       <rect className="orthographic-back" x="292" y="127" width="136" height="150" rx="15" />
-      {positions.map((x, index) => {
-        const alert = index === 0 && (looseScrew || releases);
-        const terminalY = looseScrew && index === 0 ? 191 : 201;
+      {terminals.map((terminal, index) => {
+        const x = positions[index];
+        const active = isPhysicalTerminal(target, terminal.id);
+        const loose = active && target?.tightening === "loose";
+        const terminalY = loose ? 191 : 201;
         return (
-          <g key={index}>
-            <circle className={alert ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx={x} cy={terminalY} r="13" />
-            {pushIn
-              ? <circle className={alert ? "orthographic-retention-claw alert-stroke" : "orthographic-retention-claw"} cx={x} cy={terminalY} r="5" />
-              : <line className={alert ? "orthographic-screw alert-stroke" : "orthographic-screw"} x1={x - 8} y1={terminalY} x2={x + 8} y2={terminalY} />}
+          <g data-physical-target={terminalTargetId(target, terminal.id)} key={terminal.id}>
+            <circle className={active ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx={x} cy={terminalY} r="13" />
+            <line className={active ? "orthographic-screw alert-stroke" : "orthographic-screw"} x1={x - 8} y1={terminalY} x2={x + 8} y2={terminalY} />
+            <text className="orthographic-terminal-label" x={x} y="236" textAnchor="middle">{terminal.label}</text>
           </g>
         );
       })}
       <rect className="orthographic-cable-entry" x="330" y="260" width="60" height="19" rx="8" />
-      <path className={releases ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d={releases ? "M 345 260 C 338 247, 330 237, 326 228" : "M 345 260 C 338 245, 326 228, 320 216"} />
+      <path className={target?.retention === "releases_on_pull" ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d="M 345 260 C 338 245, 326 228, 320 216" />
       <path className="orthographic-wire white" d="M 375 260 C 382 245, 394 228, 400 216" />
-      <text className="orthographic-caption" x="360" y="112" textAnchor="middle">端子側</text>
-      {(looseScrew || releases) && <text className="defect-label" x="360" y="314" textAnchor="middle">{looseScrew ? "端子ねじが浮いている" : "固定爪が心線を保持していない"}</text>}
+      <text className="orthographic-caption" x="360" y="112" textAnchor="middle">ねじ端子側</text>
+      {target?.tightening === "loose" && <text className="defect-label" x="360" y="314" textAnchor="middle">選択端子のねじが浮いている</text>}
     </>
   );
 }
-
-function DeviceSideView({ mirrored, round, target }: { mirrored: boolean; round: boolean; target?: PhysicalTargetState }) {
+function DeviceSideView({
+  mirrored,
+  round,
+  target,
+  variant,
+}: {
+  mirrored: boolean;
+  round: boolean;
+  target?: PhysicalTargetState;
+  variant?: DeviceVariant;
+}) {
   const cannotClose = target?.assembly === "cannot_close";
+  const terminalBlock = variant === "terminal_block" || variant === "timer_switch" || variant === "automatic_switch";
+  const breaker = variant === "circuit_breaker" || variant === "earth_leakage_breaker";
+  const pushIn = getDeviceSpecification(variant)?.connectionMethod === "push_in";
+  const alert = target?.tightening === "loose" || target?.retention === "releases_on_pull";
+  const caption = cannotClose
+    ? "電線が干渉し、カバーが閉じない"
+    : terminalBlock
+      ? "端子台側面"
+      : breaker
+        ? "遮断器側面"
+        : pushIn
+          ? "埋込器具側面"
+          : mirrored ? "右側面" : "左側面";
+
   return (
     <>
       <g transform={mirrored ? "translate(720 0) scale(-1 1)" : undefined}>
-        <rect className="orthographic-mount" x="292" y="105" width="22" height="194" rx="7" />
-        {round && cannotClose ? (
+        {terminalBlock ? (
           <>
-            <path className="orthographic-body" d="M 314 150 C 390 150, 424 169, 424 202 C 424 235, 390 254, 314 254 Z" />
-            <path className="orthographic-cover alert-stroke" d="M 438 114 C 518 137, 546 175, 532 228 C 501 219, 475 202, 456 177 Z" />
-            <path className="orthographic-wire black alert-stroke" d="M 390 204 C 442 247, 480 251, 526 230" />
+            <rect className="orthographic-terminal-block" x="278" y="145" width="172" height="114" rx="9" />
+            <rect className="orthographic-terminal-bridge" x="308" y="158" width="112" height="88" rx="7" />
+            <circle className={alert ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx="414" cy={alert ? 177 : 184} r="12" />
+            <path className={alert ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d="M 426 184 H 610" />
+            <path className="orthographic-wire white" d="M 426 222 H 610" />
           </>
-        ) : round
-          ? <path className="orthographic-body" d="M 314 126 C 410 133, 449 161, 449 202 C 449 243, 410 271, 314 278 Z" />
-          : <rect className="orthographic-body" x="314" y="126" width="126" height="152" rx="18" />}
-        <rect className="orthographic-back" x="410" y="146" width="34" height="112" rx="9" />
-        <circle className="orthographic-terminal" cx="427" cy="183" r="10" />
-        <circle className="orthographic-terminal" cx="427" cy="222" r="10" />
-        {!cannotClose && <path className="orthographic-wire black" d="M 427 183 C 500 183, 548 167, 624 160" />}
-        <path className="orthographic-wire white" d="M 427 222 C 500 222, 548 238, 624 245" />
-        <path className="orthographic-depth" d="M 314 304 H 440" />
+        ) : breaker ? (
+          <>
+            <rect className="orthographic-mount" x="292" y="101" width="20" height="202" rx="6" />
+            <rect className="orthographic-breaker-body" x="312" y="111" width="120" height="182" rx="10" />
+            <path className="orthographic-breaker-toggle" d="M 334 220 H 397 V 246 H 334" />
+            <circle className={alert ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx={alert ? 440 : 430} cy="148" r="12" />
+            <circle className="orthographic-terminal" cx="430" cy="256" r="12" />
+            <path className={alert ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d="M 442 148 H 610" />
+            <path className="orthographic-wire white" d="M 442 256 H 610" />
+          </>
+        ) : pushIn ? (
+          <>
+            <rect className="orthographic-mount" x="292" y="102" width="22" height="200" rx="7" />
+            <rect className="orthographic-push-body" x="314" y="128" width="126" height="148" rx="13" />
+            <rect className="orthographic-back" x="410" y="146" width="34" height="112" rx="9" />
+            <circle className={alert ? "orthographic-terminal alert-stroke" : "orthographic-terminal"} cx="427" cy="183" r="10" />
+            <circle className="orthographic-terminal" cx="427" cy="222" r="10" />
+            <path className={alert ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d={alert ? "M 438 183 H 524" : "M 438 183 H 624"} />
+            <path className="orthographic-wire white" d="M 438 222 H 624" />
+          </>
+        ) : (
+          <>
+            <rect className="orthographic-mount" x="292" y="105" width="22" height="194" rx="7" />
+            {round && cannotClose ? (
+              <>
+                <path className="orthographic-body" d="M 314 150 C 390 150, 424 169, 424 202 C 424 235, 390 254, 314 254 Z" />
+                <path className="orthographic-cover alert-stroke" d="M 438 114 C 518 137, 546 175, 532 228 C 501 219, 475 202, 456 177 Z" />
+                <path className="orthographic-wire black alert-stroke" d="M 390 204 C 442 247, 480 251, 526 230" />
+              </>
+            ) : round
+              ? <path className="orthographic-body" d="M 314 126 C 410 133, 449 161, 449 202 C 449 243, 410 271, 314 278 Z" />
+              : <rect className="orthographic-body" x="314" y="126" width="126" height="152" rx="18" />}
+            <rect className="orthographic-back" x="410" y="146" width="34" height="112" rx="9" />
+            <circle className="orthographic-terminal" cx="427" cy="183" r="10" />
+            <circle className="orthographic-terminal" cx="427" cy="222" r="10" />
+            {!cannotClose && <path className={alert ? "orthographic-wire black alert-stroke" : "orthographic-wire black"} d="M 427 183 C 500 183, 548 167, 624 160" />}
+            <path className="orthographic-wire white" d="M 427 222 C 500 222, 548 238, 624 245" />
+          </>
+        )}
+        <path className="orthographic-depth" d="M 292 304 H 450" />
       </g>
-      <text className="orthographic-caption" x="360" y="323" textAnchor="middle">
-        {cannotClose ? "電線が干渉し、カバーが閉じない" : mirrored ? "右側面" : "左側面"}
-      </text>
+      <text className="orthographic-caption" x="360" y="323" textAnchor="middle">{caption}</text>
     </>
   );
 }
@@ -222,6 +431,28 @@ function CableOrthographic({ part, side }: { part: Extract<InspectionPart, { ins
       <text className="orthographic-caption" x="360" y="306" textAnchor="middle">ケーブル端面</text>
     </>
   );
+}
+
+function selectInspectionTarget(part: InspectionPart, latestObservation?: InspectionObservation) {
+  const model = part.physicalInspection;
+  if (latestObservation && !latestObservation.actionId.endsWith(":view")) {
+    const observed = model.installed.targets[latestObservation.targetId];
+    if (observed) return observed;
+  }
+  return Object.values(model.installed.targets).find((target) => {
+    const expected = model.expected.targets[target.id];
+    return expected && JSON.stringify(expected) !== JSON.stringify(target);
+  }) ?? Object.values(model.installed.targets)[0];
+}
+
+function isPhysicalTerminal(target: PhysicalTargetState | undefined, terminalId: string) {
+  return target?.kind === "terminal" && target.id.endsWith(":terminal-" + terminalId);
+}
+
+function terminalTargetId(target: PhysicalTargetState | undefined, terminalId: string) {
+  if (!target) return undefined;
+  const rootId = target.parentId ?? target.id.split(":terminal-")[0].split(":cover")[0];
+  return rootId + ":terminal-" + terminalId;
 }
 
 function isRoundVariant(variant: string | undefined) {

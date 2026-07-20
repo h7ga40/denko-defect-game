@@ -27,6 +27,7 @@ import {
 import { getDeviceSpecification } from "./deviceSpecifications";
 import { problems, type DefectType, type Problem } from "./problems";
 import {
+  createDevicePhysicalInspection,
   createNormalPhysicalTarget,
   createPhysicalInspectionForDefect,
   createPhysicalInspectionModel,
@@ -1122,10 +1123,10 @@ function createMountingFrameMemberPart(
     y: frame.y,
     mountingFrameMember: member,
     parentMountingFrameId: frame.id,
-    physicalInspection: createPhysicalInspectionForDefect(
+    physicalInspection: createDevicePhysicalInspection(
       frameMemberPartKey(frame, member),
       part.defectType,
-      "component",
+      toDevicePhysicalDefinition(memberDevice),
     ),
   };
 }
@@ -1196,15 +1197,27 @@ function createDirectPart(
     answer: defectProblem?.answer ?? "欠陥なし",
     explanation: defectProblem?.explanation
       ?? "この器具は正常に施工されています。接続部の欠陥は、ボックス内配線図で判定します。",
-    physicalInspection: createPhysicalInspectionForDefect(
+    physicalInspection: createDevicePhysicalInspection(
       id,
       defectType,
-      defectType === "lamp_cover_cannot_close" ? "cover" : terminalConnections ? "terminal" : "component",
+      toDevicePhysicalDefinition(detailDevice),
     ),
     x: diagramDevice.x,
     y: diagramDevice.y,
     terminalBlock: detailDevice.terminalBlock,
     terminalConnections,
+  };
+}
+
+function toDevicePhysicalDefinition(device: CandidateDevice) {
+  const specification = getDeviceSpecification(device.variant);
+  return {
+    connectionMethod: specification?.connectionMethod ?? "none",
+    terminals: specification?.terminals.map((terminal) => ({
+      id: terminal.id,
+      label: terminal.label,
+    })) ?? [],
+    hasCover: device.variant === "lamp_receptacle",
   };
 }
 
