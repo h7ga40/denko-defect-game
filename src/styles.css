@@ -141,14 +141,78 @@ button {
 
 .inspection-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.75fr);
   gap: 16px;
   align-items: start;
 }
 
-.inspection-overview,
-.inspection-question {
+.inspection-visual,
+.inspection-controls {
   min-width: 0;
+}
+
+.inspection-visual-diagram {
+  margin-bottom: 0;
+}
+
+.inspection-seed,
+.control-summary {
+  color: #526272;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.inspection-seed {
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.control-summary {
+  margin: 8px 0 12px;
+}
+
+.inspection-unit-selector {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.inspection-unit-button {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 10px;
+  border: 1px solid #b8c7d1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334553;
+  cursor: pointer;
+  text-align: left;
+}
+
+.inspection-unit-button:hover {
+  border-color: #1f6f8b;
+  background: #eaf7fb;
+}
+
+.inspection-unit-button > span:last-child {
+  color: #526272;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.inspection-unit-kind {
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: #e6f0f4;
+  color: #27606d;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-align: center;
 }
 
 .candidate-list {

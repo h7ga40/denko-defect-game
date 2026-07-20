@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart, type InspectionBox, type InspectionPart } from "../data/boxInspectionGame";
+import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type DirectInspectionPart, type InspectionBox, type InspectionPart, type InspectionUnit } from "../data/boxInspectionGame";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { CandidateSvg } from "./CandidateDiagramView";
 import { CandidateConstructionConditions } from "./CandidateConstructionConditions";
@@ -14,13 +14,13 @@ import { PfConduitDiagram } from "./svg/diagrams/PfConduitDiagram";
 import { TerminalBlockDiagram } from "./svg/diagrams/TerminalBlockDiagram";
 
 type InspectionAnswers = Record<string, string>;
-type InspectionStage = "assembly" | "defect";
+type InspectionStage = "overview" | "assembly" | "defect";
 
 export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number; seed?: string }) {
   const [round, setRound] = useState<BoxInspectionRound>(() => createBoxInspectionRound({ candidateNo, seed }));
   const [selectedUnitId, setSelectedUnitId] = useState(() => round.units[0].id);
   const [selectedPartId, setSelectedPartId] = useState(() => round.units[0].parts[0].id);
-  const [stage, setStage] = useState<InspectionStage>("assembly");
+  const [stage, setStage] = useState<InspectionStage>("overview");
   const [answers, setAnswers] = useState<InspectionAnswers>({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -52,6 +52,12 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     setStage("assembly");
   }
 
+  function selectUnit(unit: InspectionUnit) {
+    setSelectedUnitId(unit.id);
+    setSelectedPartId(unit.parts[0].id);
+    setStage(unit.kind === "direct_device" ? "defect" : "assembly");
+  }
+
   function selectDirectPart(partId: string) {
     const unit = round.units.find((item) => item.kind !== "box" && item.parts.some((part) => part.id === partId));
     if (!unit) return;
@@ -75,64 +81,71 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     setRound(nextRound);
     setSelectedUnitId(nextRound.units[0].id);
     setSelectedPartId(nextRound.units[0].parts[0].id);
-    setStage("assembly");
+    setStage("overview");
     setAnswers({});
     setSubmitted(false);
   }
 
+  const stageLabel = stage === "overview" ? "1 / 3 複線図" : stage === "assembly" ? "2 / 3 正常組立図" : "3 / 3 欠陥判定図";
+  const visualTitle = stage === "overview" ? round.title : stage === "assembly" ? selectedUnit.label : selectedPart.title;
+
   return (
     <section className="inspection-layout">
-      <article className="problem-card inspection-overview">
+      <article className="problem-card inspection-visual">
         <div className="problem-meta">
           <span>候補問題 No.{round.candidate.no}</span>
-          {round.seed && <span title={round.seed}>シード {round.seed.length > 20 ? round.seed.slice(0, 20) + "…" : round.seed}</span>}
-          <span>回答 {answeredCount} / {parts.length}</span>
+          <span>{stageLabel}</span>
         </div>
-        <h2>{round.title}</h2>
-        <p className="candidate-theme">
-          ボックスと埋込連用取付枠は正常組立図から点検部を選択し、単独器具は複線図から直接選択します。欠陥は{round.defectCount}か所です。
-        </p>
+        <h2>{visualTitle}</h2>
+        {stage === "overview" && <p className="candidate-theme">{round.candidate.theme}</p>}
+        <div className="diagram-wrap inspection-visual-diagram">
+          {stage === "overview" ? (
+            <CandidateSvg
+              answers={answers}
+              diagram={round.candidate}
+              directParts={directParts}
+              inspectionBoxes={inspectionBoxes}
+              onSelectBox={selectBox}
+              onSelectDirectPart={selectDirectPart}
+              submitted={submitted}
+            />
+          ) : stage === "assembly" ? (
+            selectedUnit.kind === "box" ? (
+              <BoxWiringDiagram answers={{}} box={selectedUnit.assemblyBox} onSelectPart={openInspectionPart} selectedPartId="" submitted={false} />
+            ) : selectedUnit.kind === "mounting_frame" ? (
+              <MountingFrameDiagram defectType="none" frame={selectedUnit.mountingFrame} />
+            ) : selectedDirectPart ? (
+              <DirectDeviceDiagram part={{ ...selectedDirectPart, defectType: "none" }} />
+            ) : null
+          ) : selectedDirectPart ? (
+            <DirectDeviceDiagram part={selectedDirectPart} />
+          ) : infrastructurePart ? (
+            <InfrastructureDiagram part={infrastructurePart} />
+          ) : (
+            <BoxWiringDiagram answers={answers} box={selectedBox!} onSelectPart={openInspectionPart} selectedPartId={selectedPart.id} submitted={submitted} />
+          )}
+        </div>
         <CandidateConstructionConditions conditions={round.candidate.constructionConditions} />
         <CandidateMaterials candidateNo={round.candidate.no} />
-        <div className="diagram-wrap">
-          <CandidateSvg
-            answers={answers}
-            diagram={round.candidate}
-            directParts={directParts}
-            inspectionBoxes={inspectionBoxes}
-            onSelectBox={selectBox}
-            onSelectDirectPart={selectDirectPart}
-            selectedBoxId={selectedBox?.id}
-            selectedDirectPartId={selectedDirectPart?.id}
-            submitted={submitted}
-          />
-        </div>
-        <DefectList markedDefects={markedDefects} />
       </article>
 
-      <article className="problem-card inspection-question">
-        {stage === "assembly" ? (
+      <article className="problem-card inspection-controls">
+        <div className="problem-meta">
+          <span>{stageLabel}</span>
+          <span>回答 {answeredCount} / {parts.length}</span>
+        </div>
+        {round.seed && <p className="inspection-seed" title={round.seed}>シード {round.seed.length > 24 ? round.seed.slice(0, 24) + "…" : round.seed}</p>}
+        {stage === "overview" ? (
           <>
-            <div className="problem-meta">
-              <span>{selectedUnit.location}</span>
-              <span>正常組立図</span>
-            </div>
-            <h2>{selectedUnit.label}</h2>
-            <div className="diagram-wrap focused-diagram">
-              {selectedUnit.kind === "box" ? (
-                <BoxWiringDiagram
-                  answers={{}}
-                  box={selectedUnit.assemblyBox}
-                  onSelectPart={openInspectionPart}
-                  selectedPartId=""
-                  submitted={false}
-                />
-              ) : selectedUnit.kind === "mounting_frame" ? (
-                <MountingFrameDiagram defectType="none" frame={selectedUnit.mountingFrame} />
-              ) : selectedDirectPart ? (
-                <DirectDeviceDiagram part={{ ...selectedDirectPart, defectType: "none" }} />
-              ) : null}
-            </div>
+            <h2>工作部分を選択</h2>
+            <p className="control-summary">ボックスと埋込連用取付枠は正常組立図へ進み、単独器具は欠陥判定図へ進みます。</p>
+            <InspectionUnitSelector answers={answers} onSelect={selectUnit} units={round.units} />
+          </>
+        ) : stage === "assembly" ? (
+          <>
+            <h2>点検対象を選択</h2>
+            <p className="control-summary">{selectedUnit.location}</p>
+            <button className="inspection-back-button" onClick={() => setStage("overview")} type="button">複線図に戻る</button>
             {selectedUnit.kind === "box" && (
               <BoxPartSelector answers={answers} box={selectedUnit.assemblyBox} onSelectPart={openInspectionPart} selectedPartId="" />
             )}
@@ -142,29 +155,11 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
           </>
         ) : (
           <>
-            <div className="problem-meta">
-              <span>{selectedPart.location}</span>
-              <span>{answers[selectedPart.id] ? "回答済み" : "未回答"}</span>
-            </div>
             <h2>{selectedPart.title}</h2>
-            {selectedUnit.kind !== "direct_device" && (
-              <button className="inspection-back-button" onClick={() => setStage("assembly")} type="button">工作部分の組立図に戻る</button>
-            )}
-            <div className="diagram-wrap focused-diagram">
-              {selectedDirectPart ? (
-                <DirectDeviceDiagram part={selectedDirectPart} />
-              ) : infrastructurePart ? (
-                <InfrastructureDiagram part={infrastructurePart} />
-              ) : (
-                <BoxWiringDiagram
-                  answers={answers}
-                  box={selectedBox!}
-                  onSelectPart={openInspectionPart}
-                  selectedPartId={selectedPart.id}
-                  submitted={submitted}
-                />
-              )}
-            </div>
+            <p className="control-summary">{selectedPart.location}・{answers[selectedPart.id] ? "回答済み" : "未回答"}</p>
+            <button className="inspection-back-button" onClick={() => setStage(selectedUnit.kind === "direct_device" ? "overview" : "assembly")} type="button">
+              {selectedUnit.kind === "direct_device" ? "複線図に戻る" : "工作部分の組立図に戻る"}
+            </button>
             <p className="question">{selectedPart.question}</p>
             <div className="choices" role="list">
               {selectedPart.choices.map((choice) => {
@@ -180,11 +175,38 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             </div>
           </>
         )}
+        <DefectList markedDefects={markedDefects} />
         {submitted ? <InspectionResult answers={answers} correctCount={correctCount} onRestart={restart} parts={parts} /> : (
           <button className="primary complete-button" onClick={() => setSubmitted(true)} type="button">完了して採点する</button>
         )}
       </article>
     </section>
+  );
+}
+
+function InspectionUnitSelector({
+  answers,
+  onSelect,
+  units,
+}: {
+  answers: InspectionAnswers;
+  onSelect: (unit: InspectionUnit) => void;
+  units: InspectionUnit[];
+}) {
+  return (
+    <div className="inspection-unit-selector" aria-label="工作部分一覧">
+      {units.map((unit) => {
+        const answered = unit.parts.filter((part) => answers[part.id]).length;
+        const kindLabel = unit.kind === "box" ? "配線" : unit.kind === "mounting_frame" ? "配置" : "器具";
+        return (
+          <button className="inspection-unit-button" key={unit.id} onClick={() => onSelect(unit)} type="button">
+            <span className="inspection-unit-kind">{kindLabel}</span>
+            <strong>{unit.label}</strong>
+            <span>{answered} / {unit.parts.length}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
