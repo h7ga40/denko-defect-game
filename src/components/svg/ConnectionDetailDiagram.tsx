@@ -50,12 +50,18 @@ function ConnectionConductor({
   y: number;
 }) {
   const foreign = !part.connection.correctConductorIds.includes(conductor.id);
+  const ring = part.connection.method === "ring_sleeve";
   const insufficient = part.defectType === "ring_sleeve_insufficient_insert" && index === 0;
   const insulationBite = part.defectType === "ring_sleeve_insulation_bite" && index === 0;
   const pushInsufficient = part.defectType === "push_connector_insufficient_insert" && index === 0;
+  const pushExposed = part.defectType === "push_connector_exposed_conductor" && index === 0;
+  const pushOverinserted = part.defectType === "push_connector_insulation_overinserted" && index === 0;
+  const ringOverhang = part.defectType === "ring_sleeve_conductor_overhang" && index === 0;
   const disconnected = loose || insufficient || pushInsufficient;
-  const targetX = disconnected ? 285 : 350;
-  const copperStart = insulationBite ? 350 : 300;
+  const targetX = disconnected ? 285 : pushOverinserted ? 390 : 350;
+  const copperStart = ring
+    ? insulationBite ? 350 : 300
+    : pushExposed ? 292 : pushOverinserted ? 370 : 338;
   const className = foreign || loose ? "wire alert" : `wire ${conductor.color}`;
 
   return (
@@ -63,10 +69,11 @@ function ConnectionConductor({
       <text className="small" x="88" y={y + 4} textAnchor="start">
         {conductor.remoteLabel} {colorLabels[conductor.color]} {conductor.conductorDiameterMm.toFixed(1)}mm
       </text>
-      <path className={className} d={`M 210 ${y} L ${Math.min(copperStart, targetX)} ${y}`} />
-      {!disconnected && !insulationBite && <path className="radial-copper" d={`M ${copperStart} ${y} L ${targetX} ${y}`} />}
+      <path className={pushOverinserted ? `${className} alert` : className} d={`M 210 ${y} L ${Math.min(copperStart, targetX)} ${y}`} />
+      {!disconnected && !insulationBite && !pushOverinserted && <path className={pushExposed ? "radial-copper alert-stroke" : "radial-copper"} d={`M ${copperStart} ${y} L ${targetX} ${y}`} />}
       {insulationBite && <path className={`${className} alert`} d={`M ${copperStart} ${y} L ${targetX} ${y}`} />}
       {disconnected && <line className="missing" x1={targetX + 4} y1={y} x2="342" y2={y} />}
+      {ringOverhang && <path className="radial-copper alert-stroke" d={`M 420 ${y} L 485 ${y}`} />}
     </g>
   );
 }
@@ -79,13 +86,27 @@ function SleeveBody({ part }: { part: BoxInspectionPart }) {
   const width = displayed === "large" ? 100 : displayed === "medium" ? 86 : 72;
   const expectedMark = part.connection.mark ?? "○";
   const displayedMark = part.defectType === "ring_sleeve_wrong_mark" ? wrongMark(expectedMark) : expectedMark;
+  const uncrimped = part.defectType === "ring_sleeve_uncrimped";
+  const partialMark = part.defectType === "ring_sleeve_partial_mark";
+  const doubleMark = part.defectType === "ring_sleeve_double_mark";
   return (
     <g>
-      <rect className={part.defectType === "ring_sleeve_wrong_size" ? "sleeve alert-fill" : "sleeve"} x={350} y="112" width={width} height="156" rx="24" />
-      <rect className={part.defectType === "ring_sleeve_wrong_mark" ? "sleeve-mark alert-fill" : "sleeve-mark"} x={370} y="170" width="40" height="40" rx="8" />
-      <text className="sleeve-text" x="390" y="197" textAnchor="middle">{displayedMark}</text>
+      <rect className={part.defectType === "ring_sleeve_wrong_size" || uncrimped ? "sleeve alert-fill" : "sleeve"} x={350} y="112" width={width} height="156" rx={uncrimped ? "10" : "24"} />
+      {!uncrimped && (
+        <>
+          <rect className={part.defectType === "ring_sleeve_wrong_mark" || partialMark || doubleMark ? "sleeve-mark alert-fill" : "sleeve-mark"} x={partialMark ? 342 : 370} y="170" width="40" height="40" rx="8" />
+          <text className="sleeve-text" x={partialMark ? 362 : 390} y="197" textAnchor="middle">{displayedMark}</text>
+          {doubleMark && (
+            <>
+              <rect className="sleeve-mark alert-fill" x="370" y="218" width="40" height="32" rx="8" />
+              <text className="sleeve-text" x="390" y="241" textAnchor="middle">{displayedMark}</text>
+            </>
+          )}
+        </>
+      )}
       <text className="small" x="500" y="175">使用: {sleeveLabel(displayed)}</text>
       <text className="small" x="500" y="202">適合: {sleeveLabel(expected)}・刻印{expectedMark}</text>
+      {uncrimped && <text className="defect-label" x="500" y="232">圧着跡なし</text>}
     </g>
   );
 }

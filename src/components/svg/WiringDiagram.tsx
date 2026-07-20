@@ -27,6 +27,10 @@ type WiringDiagramProps = {
 
 export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName, deviceVariant }: WiringDiagramProps) {
   switch (defectType) {
+    case "none":
+    case "reverse_loop":
+    case "reverse_polarity":
+      return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
     case "missing_ground":
       return <GroundedReceptacleDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
     case "sheath_too_short":
@@ -71,6 +75,6 @@ export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName,
     case "box_conductor_unconnected":
       return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType="none" />;
     default:
-      return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
+      return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType="none" />;
   }
 }
