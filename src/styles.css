@@ -155,6 +155,43 @@ button {
   margin-bottom: 0;
 }
 
+.inspection-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 12px;
+  color: #526272;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.inspection-breadcrumb button {
+  padding: 2px 3px;
+  border: 0;
+  background: transparent;
+  color: #1f6f8b;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.inspection-breadcrumb button:hover {
+  color: #164f64;
+}
+
+.inspection-breadcrumb [aria-current="page"] {
+  color: #172033;
+  overflow-wrap: anywhere;
+}
+
+.breadcrumb-separator {
+  color: #8a9aa6;
+  font-size: 1rem;
+}
+
 .inspection-seed,
 .control-summary {
   color: #526272;

@@ -86,7 +86,6 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
     setSubmitted(false);
   }
 
-  const stageLabel = stage === "overview" ? "1 / 3 複線図" : stage === "assembly" ? "2 / 3 正常組立図" : "3 / 3 欠陥判定図";
   const visualTitle = stage === "overview" ? round.title : stage === "assembly" ? selectedUnit.label : selectedPart.title;
 
   return (
@@ -94,8 +93,14 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
       <article className="problem-card inspection-visual">
         <div className="problem-meta">
           <span>候補問題 No.{round.candidate.no}</span>
-          <span>{stageLabel}</span>
         </div>
+        <InspectionBreadcrumb
+          onAssembly={() => setStage("assembly")}
+          onOverview={() => setStage("overview")}
+          part={selectedPart}
+          stage={stage}
+          unit={selectedUnit}
+        />
         <h2>{visualTitle}</h2>
         {stage === "overview" && <p className="candidate-theme">{round.candidate.theme}</p>}
         <div className="diagram-wrap inspection-visual-diagram">
@@ -131,7 +136,6 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
 
       <article className="problem-card inspection-controls">
         <div className="problem-meta">
-          <span>{stageLabel}</span>
           <span>回答 {answeredCount} / {parts.length}</span>
         </div>
         {round.seed && <p className="inspection-seed" title={round.seed}>シード {round.seed.length > 24 ? round.seed.slice(0, 24) + "…" : round.seed}</p>}
@@ -181,6 +185,41 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
         )}
       </article>
     </section>
+  );
+}
+
+function InspectionBreadcrumb({
+  onAssembly,
+  onOverview,
+  part,
+  stage,
+  unit,
+}: {
+  onAssembly: () => void;
+  onOverview: () => void;
+  part: InspectionPart;
+  stage: InspectionStage;
+  unit: InspectionUnit;
+}) {
+  const partLabel = "connection" in part ? part.title.split("（")[0].trim() : part.title;
+  return (
+    <nav className="inspection-breadcrumb" aria-label="施工チェックの現在位置">
+      {stage === "overview" ? (
+        <span aria-current="page">複線図</span>
+      ) : (
+        <button onClick={onOverview} type="button">複線図</button>
+      )}
+      {stage !== "overview" && <span className="breadcrumb-separator" aria-hidden="true">›</span>}
+      {stage === "assembly" && <span aria-current="page">{unit.label}</span>}
+      {stage === "defect" && unit.kind === "direct_device" && <span aria-current="page">{partLabel}</span>}
+      {stage === "defect" && unit.kind !== "direct_device" && (
+        <>
+          <button onClick={onAssembly} type="button">{unit.label}</button>
+          <span className="breadcrumb-separator" aria-hidden="true">›</span>
+          <span aria-current="page">{partLabel}</span>
+        </>
+      )}
+    </nav>
   );
 }
 
