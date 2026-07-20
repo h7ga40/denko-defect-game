@@ -8,6 +8,8 @@ export type DefectType =
   | "cable_too_short"
   | "cable_sheath_strip_short"
   | "cable_sheath_strip_long"
+  | "cable_sheath_damage"
+  | "cable_insulation_damage"
   | "ring_sleeve_wrong_mark"
   | "ring_sleeve_wrong_size"
   | "ring_sleeve_insufficient_insert"
@@ -25,6 +27,9 @@ export type DefectType =
   | "box_wrong_connection"
   | "box_conductor_unconnected"
   | "terminal_block_wrong_terminal"
+  | "terminal_screw_loose"
+  | "push_in_retention_failure"
+  | "lamp_cover_cannot_close"
   | "ceiling_connector_polarity"
   | "mounting_frame_loose"
   | "mounting_frame_wrong_position"
@@ -99,6 +104,26 @@ export const problems: Problem[] = [
     answer: "白線と黒線の接続が逆",
     explanation:
       "ランプレセプタクルでは、非接地側の黒線を中心接点側、接地側の白線をねじ受け側へ接続します。図は白黒が逆です。",
+  },
+  {
+    id: "lamp-terminal-screw-loose",
+    title: "ランプレセプタクル 端子ねじ締付不足",
+    circuitName: "ランプレセプタクルの端子部",
+    defectType: "terminal_screw_loose",
+    question: "端子ねじの締付状態を確認し、欠陥を選んでください。",
+    choices: ["欠陥なし", "端子ねじの締付けが緩い", "輪作りの向きが逆", "白線と黒線の接続が逆"],
+    answer: "端子ねじの締付けが緩い",
+    explanation: "端子ねじの締付けが不足しており、電線を軽く引くと端子から抜ける状態です。",
+  },
+  {
+    id: "lamp-cover-cannot-close",
+    title: "ランプレセプタクル カバー取付不良",
+    circuitName: "ランプレセプタクルの組立状態",
+    defectType: "lamp_cover_cannot_close",
+    question: "カバーと内部配線の収まりを確認し、欠陥を選んでください。",
+    choices: ["欠陥なし", "電線が干渉してカバーが閉まらない", "端子ねじの締付けが緩い", "白線と黒線の接続が逆"],
+    answer: "電線が干渉してカバーが閉まらない",
+    explanation: "器具内の電線が外周へはみ出し、カバーを所定位置まで閉じられない状態です。",
   },
   {
     id: "receptacle-ground",
@@ -248,6 +273,16 @@ export const problems: Problem[] = [
     explanation: "端子台は指定された端子番号へ接続します。図では赤く示した線が指定端子ではなく別の端子へ入っています。",
   },
   {
+    id: "terminal-screw-loose",
+    title: "ねじ端子 締付不足",
+    circuitName: "ねじ端子の保持状態",
+    defectType: "terminal_screw_loose",
+    question: "ねじ端子の締付状態を確認し、欠陥を選んでください。",
+    choices: ["欠陥なし", "端子ねじの締付けが緩い", "指定端子と異なる端子へ接続している", "心線の差し込み不足"],
+    answer: "端子ねじの締付けが緩い",
+    explanation: "端子ねじの締付けが不足しており、電線を軽く引くと端子から抜ける状態です。",
+  },
+  {
     id: "ceiling-connector-polarity",
     title: "引掛シーリングローゼット 極性誤り",
     circuitName: "引掛シーリングローゼットの簡略施工図",
@@ -296,6 +331,16 @@ export const problems: Problem[] = [
     choices: ["欠陥なし", "指定と異なる端子へ接続している", "リングスリーブの刻印が不適合", "外装がボックス内に十分入っていない"],
     answer: "指定と異なる端子へ接続している",
     explanation: "スイッチは回路に応じて指定端子へ接続します。図では黒線が共通側ではなく別端子へ接続されています。",
+  },
+  {
+    id: "push-in-retention-failure",
+    title: "差込端子 電線保持不良",
+    circuitName: "差込端子の保持状態",
+    defectType: "push_in_retention_failure",
+    question: "差込端子へ接続した電線の保持状態を確認してください。",
+    choices: ["欠陥なし", "固定爪の掛かりが弱く電線が抜ける", "指定と異なる端子へ接続している", "心線の差し込み不足"],
+    answer: "固定爪の掛かりが弱く電線が抜ける",
+    explanation: "心線を差し込んでいても固定爪が確実に掛かっておらず、電線を軽く引くと抜ける状態です。",
   },
   {
     id: "receptacle-polarity",

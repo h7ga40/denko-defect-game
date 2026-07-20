@@ -562,6 +562,8 @@ const cableDefectTypes = [
   "cable_too_short",
   "cable_sheath_strip_short",
   "cable_sheath_strip_long",
+  "cable_sheath_damage",
+  "cable_insulation_damage",
 ] as const satisfies DefectType[];
 
 function createCableInspectionUnit(
@@ -590,12 +592,16 @@ function createCableInspectionUnit(
     cable_too_short: "ケーブル長が指定寸法の50%以下",
     cable_sheath_strip_short: "ケーブル外装の剥ぎ取りが不足している",
     cable_sheath_strip_long: "ケーブル外装を剥ぎ取りすぎている",
+    cable_sheath_damage: "ケーブル外装に傷がある",
+    cable_insulation_damage: "絶縁被覆に傷がある",
   };
   const explanations: Record<string, string> = {
     cable_wrong_type: `指定は${formatCableType(correctCable)}ですが、${formatCableType(installedCable)}を使用しています。`,
     cable_too_short: `指定寸法${correctCable.diagramLengthMm}mmに対し、施工結果は${installedCable.diagramLengthMm}mmです。`,
     cable_sheath_strip_short: "器具またはボックスへ入る側のケーブル外装の剥ぎ取りが不足しています。",
     cable_sheath_strip_long: "器具またはボックスへ入る側のケーブル外装を必要以上に剥ぎ取っています。",
+    cable_sheath_damage: "ケーブル外装に切り傷があり、内部の心線を保護できない状態です。",
+    cable_insulation_damage: "心線の絶縁被覆に傷があり、導体が露出するおそれがある状態です。",
   };
   const part: CableInspectionPart = {
     id: `cable-part:${cable.id}`,
@@ -609,12 +615,14 @@ function createCableInspectionUnit(
       "ケーブル長が指定寸法の50%以下",
       "ケーブル外装の剥ぎ取りが不足している",
       "ケーブル外装を剥ぎ取りすぎている",
+      "ケーブル外装に傷がある",
+      "絶縁被覆に傷がある",
     ],
     answer: defectType === "none" ? "欠陥なし" : answers[defectType],
     explanation: defectType === "none"
       ? `${formatCableType(correctCable)}を指定寸法と適切な外装処理で施工しています。`
       : explanations[defectType],
-    physicalInspection: createCablePhysicalInspection(`cable-part:${cable.id}`, correctCable, installedCable),
+    physicalInspection: createCablePhysicalInspection(`cable-part:${cable.id}`, correctCable, installedCable, defectType),
     sourceConnectionIndex: connectionIndex,
     correctCable,
     installedCable,
@@ -689,15 +697,17 @@ function createCablePhysicalInspection(
   targetId: string,
   correctCable: CableRunSpecification,
   installedCable: CableRunSpecification,
+  defectType: DefectType,
 ) {
-  const expected = createNormalPhysicalTarget(targetId, "cable");
+  const model = createPhysicalInspectionForDefect(targetId, defectType, "cable");
+  const expected = model.expected.targets[targetId];
   expected.materialId = formatCableType(correctCable);
   expected.measurements = {
     lengthMm: correctCable.diagramLengthMm,
     sheathStripLengthMm: correctCable.fromEnd.sheathStripLengthMm,
   };
   const installed = {
-    ...expected,
+    ...model.installed.targets[targetId],
     materialId: formatCableType(installedCable),
     measurements: {
       lengthMm: installedCable.diagramLengthMm,
@@ -1042,24 +1052,24 @@ function groupDirectInspectionDevices(
 
 function getDirectDefectProblems(device: CandidateDevice): Problem[] {
   const idsByVariant: Partial<Record<NonNullable<CandidateDevice["variant"]>, string[]>> = {
-    lamp_receptacle: ["lamp-loop-reverse", "lamp-polarity"],
-    ceiling_connector: ["ceiling-connector-polarity"],
-    exposed_receptacle: ["exposed-receptacle-sheath", "receptacle-polarity"],
-    grounded_receptacle: ["receptacle-ground", "receptacle-polarity"],
-    grounded_20a_receptacle: ["receptacle-ground", "receptacle-polarity"],
-    eet_receptacle: ["receptacle-ground", "receptacle-polarity"],
-    circuit_breaker: ["breaker-line-load-reverse"],
-    earth_leakage_breaker: ["breaker-line-load-reverse"],
-    terminal_block: ["terminal-block-wrong-terminal"],
-    timer_switch: ["terminal-block-wrong-terminal"],
-    automatic_switch: ["terminal-block-wrong-terminal"],
-    single_pole_switch: ["switch-wrong-terminal"],
-    three_way_switch: ["switch-wrong-terminal"],
-    four_way_switch: ["switch-wrong-terminal"],
-    switch_group: ["switch-wrong-terminal"],
-    embedded_receptacle: ["receptacle-polarity"],
-    double_receptacle: ["receptacle-polarity"],
-    pilot_lamp: ["pilot-lamp-wrong-terminal"],
+    lamp_receptacle: ["lamp-loop-reverse", "lamp-polarity", "lamp-terminal-screw-loose", "lamp-cover-cannot-close"],
+    ceiling_connector: ["ceiling-connector-polarity", "push-in-retention-failure"],
+    exposed_receptacle: ["exposed-receptacle-sheath", "receptacle-polarity", "terminal-screw-loose"],
+    grounded_receptacle: ["receptacle-ground", "receptacle-polarity", "push-in-retention-failure"],
+    grounded_20a_receptacle: ["receptacle-ground", "receptacle-polarity", "push-in-retention-failure"],
+    eet_receptacle: ["receptacle-ground", "receptacle-polarity", "push-in-retention-failure"],
+    circuit_breaker: ["breaker-line-load-reverse", "terminal-screw-loose"],
+    earth_leakage_breaker: ["breaker-line-load-reverse", "terminal-screw-loose"],
+    terminal_block: ["terminal-block-wrong-terminal", "terminal-screw-loose"],
+    timer_switch: ["terminal-block-wrong-terminal", "terminal-screw-loose"],
+    automatic_switch: ["terminal-block-wrong-terminal", "terminal-screw-loose"],
+    single_pole_switch: ["switch-wrong-terminal", "push-in-retention-failure"],
+    three_way_switch: ["switch-wrong-terminal", "push-in-retention-failure"],
+    four_way_switch: ["switch-wrong-terminal", "push-in-retention-failure"],
+    switch_group: ["switch-wrong-terminal", "push-in-retention-failure"],
+    embedded_receptacle: ["receptacle-polarity", "push-in-retention-failure"],
+    double_receptacle: ["receptacle-polarity", "push-in-retention-failure"],
+    pilot_lamp: ["pilot-lamp-wrong-terminal", "push-in-retention-failure"],
   };
   const ids = device.variant ? idsByVariant[device.variant] ?? [] : [];
   return problems.filter((problem) => ids.includes(problem.id));
@@ -1189,7 +1199,7 @@ function createDirectPart(
     physicalInspection: createPhysicalInspectionForDefect(
       id,
       defectType,
-      terminalConnections ? "terminal" : "component",
+      defectType === "lamp_cover_cannot_close" ? "cover" : terminalConnections ? "terminal" : "component",
     ),
     x: diagramDevice.x,
     y: diagramDevice.y,

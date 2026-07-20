@@ -30,6 +30,8 @@ export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName,
     case "none":
     case "reverse_loop":
     case "reverse_polarity":
+    case "terminal_screw_loose":
+    case "lamp_cover_cannot_close":
       return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
     case "missing_ground":
       return <GroundedReceptacleDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;

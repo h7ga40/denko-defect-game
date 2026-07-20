@@ -246,3 +246,22 @@
     animation: none;
   }
 }
+.orthographic-cover {
+  fill: #20262c;
+  stroke: #596a78;
+  stroke-width: 6;
+}
+
+.orthographic-retention-claw {
+  fill: #d8e0e5;
+  stroke: #172033;
+  stroke-width: 2;
+}
+
+.damage-cut {
+  fill: none;
+  stroke: #c82f48;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 7;
+}

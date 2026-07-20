@@ -381,7 +381,7 @@ function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   if (part.deviceVariant === "terminal_block" || part.deviceVariant === "timer_switch" || part.deviceVariant === "automatic_switch") {
     return (
       <TerminalBlockDiagram
-        defect={part.defectType !== "none"}
+        defect={part.defectType === "terminal_block_wrong_terminal"}
         terminalBlock={part.terminalBlock}
         terminalConnections={part.terminalConnections}
         title={part.title}
@@ -389,7 +389,9 @@ function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
       />
     );
   }
-  if (part.defectType !== "none") {
+  const physicalOnlyDefect = part.defectType === "push_in_retention_failure"
+    || (part.defectType === "terminal_screw_loose" && part.deviceVariant !== "lamp_receptacle");
+  if (part.defectType !== "none" && !physicalOnlyDefect) {
     return <WiringDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }
 

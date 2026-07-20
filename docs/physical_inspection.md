@@ -52,6 +52,19 @@
 
 `resolveInspectionAction()`は`installed`と操作から観察結果を生成する。引張りは保持または脱落、がたつき確認は安定または動きを返す。観察結果は回答や正解を直接表示せず、ユーザーが欠陥判定するための事実だけを示す。視点と観察履歴は点検部品ごとの`PhysicalInspectionSession`へ保持する。
 
+## 欠陥写真を反映した状態
+
+_Ref/欠陥写真の写真は形状と観察結果の参照に使い、アプリには転載せず独自SVGで表現する。
+
+- terminal_screw_loose: ねじ端子の浮きと、軽い引張りで電線が抜ける状態
+- push_in_retention_failure: 差込端子の固定爪が心線を保持せず、軽い引張りで抜ける状態
+- lamp_cover_cannot_close: 内部配線が外周へ干渉し、ランプレセプタクルのカバーが閉じない状態
+- cable_sheath_damage: ケーブル外装の局所的な切り傷
+- cable_insulation_damage: 心線の絶縁被覆の局所的な切り傷
+- ring_sleeve_insulation_bite: リングスリーブが絶縁被覆をかみ込んだ圧着変形
+
+端子保持不良は外観だけで確定せず、pull操作の結果を判断材料にする。カバー閉鎖不良は左右側面、差込端子は背面、ケーブル損傷は正面・背面・側面のSVGで確認できる。
+
 ## ID規約
 
 物理対象IDは`InspectionPart.id`を基点にする。将来、1部品内に複数対象を持つ場合は次のように接尾辞を付ける。

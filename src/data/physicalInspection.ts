@@ -258,6 +258,30 @@ function applyDefectState(target: PhysicalTargetState, defectType: DefectType): 
     case "ring_sleeve_conductor_overhang":
     case "push_connector_exposed_conductor":
       return { ...target, measurements: { ...target.measurements, conductorProjectionMm: 5 } };
+    case "terminal_screw_loose":
+      return { ...target, tightening: "loose", retention: "releases_on_pull" };
+    case "push_in_retention_failure":
+      return { ...target, retention: "releases_on_pull" };
+    case "lamp_cover_cannot_close":
+      return { ...target, assembly: "cannot_close" };
+    case "cable_sheath_damage":
+      return {
+        ...target,
+        integrity: "damaged",
+        damage: [{ id: target.id + ":sheath-cut", type: "cut", location: "sheath", visibleFrom: ["front", "back", "left", "right"] }],
+      };
+    case "cable_insulation_damage":
+      return {
+        ...target,
+        integrity: "damaged",
+        damage: [{ id: target.id + ":insulation-cut", type: "cut", location: "insulation", visibleFrom: ["front", "back"] }],
+      };
+    case "ring_sleeve_insulation_bite":
+      return {
+        ...target,
+        integrity: "damaged",
+        damage: [{ id: target.id + ":insulation-bite", type: "deformation", location: "insulation", visibleFrom: ["front", "back"] }],
+      };
     case "mounting_frame_loose":
       return { ...target, tightening: "loose", retention: "moves" };
     case "box_wrong_connection":

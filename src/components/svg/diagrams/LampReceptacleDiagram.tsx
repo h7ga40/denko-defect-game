@@ -6,11 +6,13 @@ export function LampReceptacleDiagram({
   defectType,
 }: {
   cableEntrySide?: CableEntrySide;
-  defectType: "none" | "reverse_loop" | "reverse_polarity";
+  defectType: "none" | "reverse_loop" | "reverse_polarity" | "terminal_screw_loose" | "lamp_cover_cannot_close";
 }) {
   const blackTarget = defectType === "reverse_polarity" ? "shell" : "center";
   const whiteTarget = defectType === "reverse_polarity" ? "center" : "shell";
   const reverseLoop = defectType === "reverse_loop";
+  const looseScrew = defectType === "terminal_screw_loose";
+  const coverCannotClose = defectType === "lamp_cover_cannot_close";
 
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label="ランプレセプタクル配線図">
@@ -18,8 +20,17 @@ export function LampReceptacleDiagram({
       <DirectionalSheath side={cableEntrySide} />
       <circle className="fixture" cx="424" cy="190" r="92" />
       <circle className="fixture-inner" cx="424" cy="190" r="58" />
-      <circle className="terminal center" cx="424" cy="190" r="21" />
+      <circle className={looseScrew ? "terminal center alert-fill" : "terminal center"} cx="424" cy={looseScrew ? 181 : 190} r="21" />
+      <line className={looseScrew ? "terminal-screw alert-stroke" : "terminal-screw"} x1="410" y1={looseScrew ? 181 : 190} x2="438" y2={looseScrew ? 181 : 190} />
       <circle className="terminal side" cx="508" cy="190" r="21" />
+      <line className="terminal-screw" x1="494" y1="190" x2="522" y2="190" />
+      {coverCannotClose && (
+        <g className="lamp-open-cover">
+          <path className="fixture alert-stroke" d="M 520 92 C 604 112, 634 176, 614 248 C 584 234, 560 214, 548 184 C 544 151, 535 118, 520 92 Z" />
+          <path className="wire alert" d="M 485 226 C 546 260, 575 257, 607 230" />
+          <text className="defect-label" x="590" y="276" textAnchor="middle">電線がカバーに干渉</text>
+        </g>
+      )}
       <text className="label" x="360" y="55" textAnchor="middle">
         ランプレセプタクル
       </text>

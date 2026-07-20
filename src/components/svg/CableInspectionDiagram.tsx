@@ -17,6 +17,9 @@ export function CableInspectionDiagram({ part }: { part: CableInspectionPart }) 
       </text>
 
       <line className="cable-sheath" x1="110" y1="112" x2={cableEndX} y2="112" />
+      {part.defectType === "cable_sheath_damage" && (
+        <path className="damage-cut" d="M 344 91 L 354 112 L 366 91 M 352 133 L 362 112 L 374 133" />
+      )}
       <line className="missing" x1={cableEndX} y1="96" x2="610" y2="96" />
       <text className={part.defectType === "cable_too_short" ? "defect-label" : "small"} x="360" y="137" textAnchor="middle">
         施工寸法 {installedLength ?? "未設定"}mm / 指定寸法 {correctLength ?? "未設定"}mm
@@ -52,6 +55,12 @@ function CableEnd({ cablePart, end, label, y }: { cablePart: CableInspectionPart
         外装剥ぎ {installed.sheathStripLengthMm ?? 0}mm
       </text>
       {differs && <text className="small" x="545" y={y + 23}>基準 {correct.sheathStripLengthMm ?? 0}mm</text>}
+      {cablePart.defectType === "cable_insulation_damage" && end === "to" && (
+        <>
+          <path className="damage-cut" d={`M 390 ${y - 17} L 400 ${y - 5} L 410 ${y - 17}`} />
+          <text className="defect-label" x="440" y={y - 12}>絶縁被覆の傷</text>
+        </>
+      )}
     </g>
   );
 }
