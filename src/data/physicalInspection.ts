@@ -1,0 +1,294 @@
+import type { DefectType } from "./problems";
+
+export type PhysicalTargetKind =
+  | "component"
+  | "terminal"
+  | "fastener"
+  | "conductor"
+  | "cable"
+  | "cover"
+  | "connector"
+  | "conduit";
+
+export type TighteningState = "secure" | "loose" | "unfastened" | "over_tightened";
+export type RetentionState = "secure" | "moves" | "releases_on_pull";
+export type InsertionState = "correct" | "shallow" | "overinserted" | "not_inserted";
+export type CrimpState = "correct" | "not_crimped" | "partial_mark" | "multiple_marks";
+export type AssemblyState = "correct" | "misaligned" | "missing" | "cannot_close";
+export type IntegrityState = "intact" | "damaged";
+export type ConnectionState = "correct" | "wrong_target" | "unconnected";
+
+export type DamageType = "crack" | "chip" | "deformation" | "cut" | "abrasion" | "burn";
+export type DamageLocation = "body" | "terminal" | "cover" | "insulation" | "conductor" | "sheath";
+
+export type PhysicalDamage = {
+  id: string;
+  type: DamageType;
+  location: DamageLocation;
+  visibleFrom: InspectionViewpoint[];
+  lengthMm?: number;
+  depthMm?: number;
+};
+
+export type PhysicalMeasurements = {
+  lengthMm?: number | null;
+  insertionDepthMm?: number | null;
+  exposedConductorLengthMm?: number | null;
+  conductorProjectionMm?: number | null;
+  sheathStripLengthMm?: number | null;
+};
+
+export type PhysicalTargetState = {
+  id: string;
+  kind: PhysicalTargetKind;
+  materialId?: string;
+  tightening?: TighteningState;
+  retention?: RetentionState;
+  insertion?: InsertionState;
+  crimp?: CrimpState;
+  assembly?: AssemblyState;
+  integrity?: IntegrityState;
+  connection?: ConnectionState;
+  measurements?: PhysicalMeasurements;
+  damage?: PhysicalDamage[];
+};
+
+export type PhysicalStateSnapshot = {
+  targets: Record<string, PhysicalTargetState>;
+};
+
+export type InspectionViewpoint = "front" | "back" | "left" | "right" | "top" | "bottom" | "free";
+export type Vector3 = readonly [x: number, y: number, z: number];
+
+type InspectionActionBase = {
+  id: string;
+  label: string;
+  targetId: string;
+};
+
+export type InspectionAction =
+  | (InspectionActionBase & {
+      kind: "view";
+      viewpoints: InspectionViewpoint[];
+    })
+  | (InspectionActionBase & {
+      kind: "pull";
+      direction: Vector3;
+      force: "inspection_pull";
+    })
+  | (InspectionActionBase & {
+      kind: "wiggle";
+      direction: Vector3;
+    })
+  | (InspectionActionBase & {
+      kind: "remove_cover";
+      revealsTargetIds: string[];
+    });
+
+export type InspectionObservationResult =
+  | "visible"
+  | "not_visible"
+  | "retained"
+  | "released"
+  | "stable"
+  | "movement_detected"
+  | "cover_removed";
+
+export type InspectionObservation = {
+  actionId: string;
+  targetId: string;
+  result: InspectionObservationResult;
+  revealedTargetIds: string[];
+};
+
+export type PhysicalInspectionSession = {
+  selectedActionId: string | null;
+  viewpoint: InspectionViewpoint;
+  observations: InspectionObservation[];
+};
+
+export type PhysicalInspectionModel = {
+  schemaVersion: 1;
+  expected: PhysicalStateSnapshot;
+  installed: PhysicalStateSnapshot;
+  actions: InspectionAction[];
+};
+
+export function createPhysicalInspectionForDefect(
+  targetId: string,
+  defectType: DefectType,
+  kind: PhysicalTargetKind = "component",
+): PhysicalInspectionModel {
+  const expectedTarget = addDefectCapabilities(createNormalPhysicalTarget(targetId, kind), defectType);
+  const installedTarget = applyDefectState(expectedTarget, defectType);
+  return createPhysicalInspectionModel(expectedTarget, installedTarget);
+}
+
+export function createPhysicalInspectionModel(
+  expectedTarget: PhysicalTargetState,
+  installedTarget: PhysicalTargetState,
+  additionalActions: InspectionAction[] = [],
+): PhysicalInspectionModel {
+  const actions = [
+    createViewAction(expectedTarget.id),
+    ...createStateActions(installedTarget),
+    ...additionalActions,
+  ];
+  const model: PhysicalInspectionModel = {
+    schemaVersion: 1,
+    expected: { targets: { [expectedTarget.id]: expectedTarget } },
+    installed: { targets: { [installedTarget.id]: installedTarget } },
+    actions,
+  };
+  const errors = validatePhysicalInspectionModel(model);
+  if (errors.length > 0) throw new Error(`物理点検データが不正です: ${errors.join(" ")}`);
+  return model;
+}
+
+export function toExpectedPhysicalInspection(model: PhysicalInspectionModel): PhysicalInspectionModel {
+  return {
+    ...model,
+    installed: {
+      targets: Object.fromEntries(
+        Object.entries(model.expected.targets).map(([id, target]) => [id, cloneTarget(target)]),
+      ),
+    },
+  };
+}
+
+export function createPhysicalInspectionSession(): PhysicalInspectionSession {
+  return { selectedActionId: null, viewpoint: "front", observations: [] };
+}
+
+export function validatePhysicalInspectionModel(model: PhysicalInspectionModel) {
+  const errors: string[] = [];
+  if (model.schemaVersion !== 1) errors.push("未対応のスキーマバージョンです。");
+  const expectedIds = new Set(Object.keys(model.expected.targets));
+  const installedIds = new Set(Object.keys(model.installed.targets));
+  for (const id of expectedIds) {
+    if (!installedIds.has(id)) errors.push(`施工状態に対象${id}がありません。`);
+  }
+  const actionIds = new Set<string>();
+  for (const action of model.actions) {
+    if (actionIds.has(action.id)) errors.push(`検査操作ID ${action.id}が重複しています。`);
+    actionIds.add(action.id);
+    if (!installedIds.has(action.targetId)) errors.push(`検査操作${action.id}の対象${action.targetId}がありません。`);
+    if (action.kind === "remove_cover") {
+      for (const targetId of action.revealsTargetIds) {
+        if (!installedIds.has(targetId)) errors.push(`取り外し操作${action.id}の表示対象${targetId}がありません。`);
+      }
+    }
+  }
+  return errors;
+}
+
+export function createNormalPhysicalTarget(id: string, kind: PhysicalTargetKind): PhysicalTargetState {
+  const target: PhysicalTargetState = {
+    id,
+    kind,
+    assembly: "correct",
+    integrity: "intact",
+    connection: "correct",
+    measurements: {},
+    damage: [],
+  };
+  if (kind === "component" || kind === "terminal" || kind === "fastener") {
+    target.tightening = "secure";
+    target.retention = "secure";
+  }
+  if (kind === "terminal" || kind === "conductor" || kind === "connector" || kind === "conduit") {
+    target.insertion = "correct";
+    target.retention = "secure";
+  }
+  if (kind === "cable") target.retention = "secure";
+  return target;
+}
+
+function addDefectCapabilities(target: PhysicalTargetState, defectType: DefectType): PhysicalTargetState {
+  if (defectType.startsWith("ring_sleeve_")) return { ...target, crimp: "correct", insertion: "correct", retention: "secure" };
+  if (defectType.startsWith("push_connector_")) return { ...target, insertion: "correct", retention: "secure" };
+  return target;
+}
+
+function applyDefectState(target: PhysicalTargetState, defectType: DefectType): PhysicalTargetState {
+  switch (defectType) {
+    case "ring_sleeve_insufficient_insert":
+    case "push_connector_insufficient_insert":
+    case "metal_conduit_insufficient_insert":
+    case "pf_conduit_insufficient_insert":
+      return { ...target, insertion: "shallow" };
+    case "push_connector_insulation_overinserted":
+      return { ...target, insertion: "overinserted" };
+    case "ring_sleeve_uncrimped":
+      return { ...target, crimp: "not_crimped", retention: "releases_on_pull" };
+    case "ring_sleeve_partial_mark":
+      return { ...target, crimp: "partial_mark" };
+    case "ring_sleeve_double_mark":
+      return { ...target, crimp: "multiple_marks" };
+    case "ring_sleeve_conductor_overhang":
+    case "push_connector_exposed_conductor":
+      return { ...target, measurements: { ...target.measurements, conductorProjectionMm: 5 } };
+    case "mounting_frame_loose":
+      return { ...target, tightening: "loose", retention: "moves" };
+    case "box_wrong_connection":
+    case "terminal_block_wrong_terminal":
+    case "pilot_lamp_wrong_terminal":
+    case "switch_wrong_terminal":
+      return { ...target, connection: "wrong_target" };
+    case "box_conductor_unconnected":
+    case "missing_ground":
+      return { ...target, connection: "unconnected" };
+    case "rubber_bushing_missing":
+    case "metal_conduit_missing_insulation_bushing":
+    case "metal_conduit_missing_locknut":
+    case "pf_conduit_missing_locknut":
+      return { ...target, assembly: "missing" };
+    case "mounting_frame_wrong_position":
+    case "outlet_box_wrong_hole":
+      return { ...target, assembly: "misaligned" };
+    default:
+      return target;
+  }
+}
+
+function createViewAction(targetId: string): InspectionAction {
+  return {
+    id: `${targetId}:view`,
+    kind: "view",
+    label: "角度を変えて確認",
+    targetId,
+    viewpoints: ["front", "back", "left", "right", "top", "bottom", "free"],
+  };
+}
+
+function createStateActions(target: PhysicalTargetState): InspectionAction[] {
+  const actions: InspectionAction[] = [];
+  if (target.retention !== undefined) {
+    actions.push({
+      id: `${target.id}:pull`,
+      kind: "pull",
+      label: "電線・器具を軽く引いて確認",
+      targetId: target.id,
+      direction: [0, 0, 1],
+      force: "inspection_pull",
+    });
+  }
+  if (target.tightening !== undefined) {
+    actions.push({
+      id: `${target.id}:wiggle`,
+      kind: "wiggle",
+      label: "固定部のがたつきを確認",
+      targetId: target.id,
+      direction: [1, 0, 0],
+    });
+  }
+  return actions;
+}
+
+function cloneTarget(target: PhysicalTargetState): PhysicalTargetState {
+  return {
+    ...target,
+    measurements: target.measurements ? { ...target.measurements } : undefined,
+    damage: target.damage?.map((damage) => ({ ...damage, visibleFrom: [...damage.visibleFrom] })),
+  };
+}

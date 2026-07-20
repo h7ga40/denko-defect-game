@@ -227,6 +227,12 @@ boxWirings: [{
 
 DefectType、Problem、欠陥判定モードの全28問を管理する。
 
+### physicalInspection.ts
+
+完成状態の物理的な施工事実を`PhysicalInspectionModel`で管理する。各`InspectionPart`は正常状態`expected`、出題用施工状態`installed`、検査可能な`actions`を持つ。締付け、保持、挿入、圧着、組立、破損、接続、施工寸法をSVGと将来の3D表示で共通利用し、操作結果は`InspectionObservation`へ記録する。
+
+検査操作は視点変更、引張り、がたつき確認、カバー取り外しを判別可能な型として保持する。数値基準がない引張り力や締付けトルクを独自に判定基準へ加えない。詳細は`docs/physical_inspection.md`を参照する。
+
 ### 埋込連用取付枠
 
 `CandidateDiagram.mountingFrames`で取付枠の座標と、上・中・下の各位置へ取り付ける器具を管理する。器具は`sourceDeviceId`で既存の複線図器具と関連付けでき、関連付けた器具の配線終端は取付枠内の該当位置へ移動する。No.2は上段パイロットランプ・下段スイッチ、No.10は上段パイロットランプ・中段スイッチ・下段コンセントとする。No.3・13は接地極付コンセント側に取付枠を配置する。

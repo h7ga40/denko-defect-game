@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createBoxInspectionRound, type BoxInspectionPart, type BoxInspectionRound, type CableInspectionPart, type DirectInspectionPart, type InspectionBox, type InspectionPart, type InspectionUnit } from "../data/boxInspectionGame";
+import { toExpectedPhysicalInspection } from "../data/physicalInspection";
 import { BoxWiringDiagram } from "./BoxWiringDiagram";
 import { ConnectionDetailDiagram } from "./svg/ConnectionDetailDiagram";
 import { CableInspectionDiagram } from "./svg/CableInspectionDiagram";
@@ -135,7 +136,11 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             ) : selectedUnit.kind === "mounting_frame" ? (
               <MountingFrameDiagram defectType="none" frame={selectedUnit.mountingFrame} />
             ) : selectedDirectPart ? (
-              <DirectDeviceDiagram part={{ ...selectedDirectPart, defectType: "none" }} />
+              <DirectDeviceDiagram part={{
+                ...selectedDirectPart,
+                defectType: "none",
+                physicalInspection: toExpectedPhysicalInspection(selectedDirectPart.physicalInspection),
+              }} />
             ) : null
           ) : selectedCablePart ? (
             <CableInspectionDiagram part={selectedCablePart} />

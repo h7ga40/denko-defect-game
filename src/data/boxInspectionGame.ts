@@ -26,6 +26,14 @@ import {
 } from "./boxWiringSpecifications";
 import { getDeviceSpecification } from "./deviceSpecifications";
 import { problems, type DefectType, type Problem } from "./problems";
+import {
+  createNormalPhysicalTarget,
+  createPhysicalInspectionForDefect,
+  createPhysicalInspectionModel,
+  toExpectedPhysicalInspection,
+  type PhysicalInspectionModel,
+  type PhysicalTargetKind,
+} from "./physicalInspection";
 import { createRandomSource, type RandomSource } from "./random";
 
 export type BoxType = "joint" | "outlet";
@@ -62,6 +70,7 @@ export type BoxInspectionPart = {
   choices: string[];
   answer: string;
   explanation: string;
+  physicalInspection: PhysicalInspectionModel;
   connection: ConnectionSpec;
 };
 
@@ -605,6 +614,7 @@ function createCableInspectionUnit(
     explanation: defectType === "none"
       ? `${formatCableType(correctCable)}を指定寸法と適切な外装処理で施工しています。`
       : explanations[defectType],
+    physicalInspection: createCablePhysicalInspection(`cable-part:${cable.id}`, correctCable, installedCable),
     sourceConnectionIndex: connectionIndex,
     correctCable,
     installedCable,
@@ -673,6 +683,28 @@ function applyCableDefect(cable: CableRunSpecification, defectType: DefectType, 
 function formatCableType(cable: CableRunSpecification) {
   const cores = cable.coreCount === 1 ? "" : ` ${cable.coreCount}心`;
   return `${cable.cableType} ${cable.conductorDiameterMm.toFixed(1)}mm${cores}`;
+}
+
+function createCablePhysicalInspection(
+  targetId: string,
+  correctCable: CableRunSpecification,
+  installedCable: CableRunSpecification,
+) {
+  const expected = createNormalPhysicalTarget(targetId, "cable");
+  expected.materialId = formatCableType(correctCable);
+  expected.measurements = {
+    lengthMm: correctCable.diagramLengthMm,
+    sheathStripLengthMm: correctCable.fromEnd.sheathStripLengthMm,
+  };
+  const installed = {
+    ...expected,
+    materialId: formatCableType(installedCable),
+    measurements: {
+      lengthMm: installedCable.diagramLengthMm,
+      sheathStripLengthMm: installedCable.fromEnd.sheathStripLengthMm,
+    },
+  };
+  return createPhysicalInspectionModel(expected, installed);
 }
 
 type PlannedBox = {
@@ -887,6 +919,7 @@ function createAssemblyBox(box: InspectionBox): InspectionBox {
       choices: [],
       answer: "欠陥なし",
       explanation: "正常な配線・組立状態です。",
+      physicalInspection: toExpectedPhysicalInspection(part.physicalInspection),
       connection: connectionById.get(part.connection.id) ?? part.connection,
     })),
   };
@@ -909,20 +942,29 @@ function toPart(
   hasDefect: boolean,
 ): BoxInspectionPart {
   const conductorSummary = summarizeConductors(connection);
+  const id = boxId + "-" + connection.id;
+  const defectType = hasDefect ? template.defectType : "none";
   return {
-    id: boxId + "-" + connection.id,
+    id,
     boxId,
     title: template.title + " " + (index + 1) + "（" + conductorSummary + "）",
     location: label + "内",
-    defectType: hasDefect ? template.defectType : "none",
+    defectType,
     question: conductorSummary + "の接続です。" + template.question,
     choices: template.choices,
     answer: hasDefect ? template.defectAnswer : "欠陥なし",
     explanation: (hasDefect ? template.defectExplanation : template.normalExplanation)
-      + connectionDefectExplanation(connection, hasDefect ? template.defectType : "none")
+      + connectionDefectExplanation(connection, defectType)
       + " 接続状態: " + conductorSummary + "。",
+    physicalInspection: createPhysicalInspectionForDefect(id, defectType, physicalKindForConnection(connection.method)),
     connection,
   };
+}
+
+function physicalKindForConnection(method: ConnectionMethod): PhysicalTargetKind {
+  if (method === "ring_sleeve" || method === "push_connector") return "connector";
+  if (method === "metal_conduit" || method === "pf_conduit") return "conduit";
+  return "component";
 }
 
 function connectionDefectExplanation(connection: ConnectionSpec, defectType: DefectType) {
@@ -1070,6 +1112,11 @@ function createMountingFrameMemberPart(
     y: frame.y,
     mountingFrameMember: member,
     parentMountingFrameId: frame.id,
+    physicalInspection: createPhysicalInspectionForDefect(
+      frameMemberPartKey(frame, member),
+      part.defectType,
+      "component",
+    ),
   };
 }
 
@@ -1083,19 +1130,22 @@ function createMountingFramePart(
     problem.id === "mounting-frame-loose" || problem.id === "mounting-frame-wrong-position"
   );
   const defectProblem = hasDefect ? randomItem(frameProblems, random) : undefined;
+  const id = "frame-" + frame.id;
+  const defectType = defectProblem?.defectType ?? "none";
   return {
-    id: "frame-" + frame.id,
+    id,
     boxId: "",
     sourceDeviceId: frame.id,
     deviceType: "switch",
     cableEntrySide: "bottom",
     title: frame.label,
     location: `複線図上の${frame.label}（${frame.members.length}器具）`,
-    defectType: defectProblem?.defectType ?? "none",
+    defectType,
     question: defectProblem?.question ?? `${frame.label}の器具構成と取付状態を判定してください。`,
     choices: defectProblem?.choices ?? ["欠陥なし", "器具の取付位置が施工条件と違う", "器具が取付枠へ確実に固定されていない", "端子番号が違う"],
     answer: defectProblem?.answer ?? "欠陥なし",
     explanation: defectProblem?.explanation ?? "指定された器具が上・中・下の正しい位置へ確実に固定されています。",
+    physicalInspection: createPhysicalInspectionForDefect(id, defectType, "component"),
     x: frame.x,
     y: frame.y,
     mountingFrame: frame,
@@ -1118,8 +1168,10 @@ function createDirectPart(
   const terminalConnections = defectProblem && isTerminalConnectionDefect(defectProblem.defectType)
     ? createWrongTerminalConnections(detailDevice, correctTerminalConnections)
     : correctTerminalConnections;
+  const id = "device-" + group.key;
+  const defectType = defectProblem?.defectType ?? "none";
   return {
-    id: "device-" + group.key,
+    id,
     boxId: "",
     sourceDeviceId: diagramDevice.id,
     sourceDeviceIds: devices.map((device) => device.id),
@@ -1128,12 +1180,17 @@ function createDirectPart(
     cableEntrySide: getCableEntrySide(candidate, diagramDevice),
     title: deviceName,
     location: "複線図上の" + deviceName + "（表示記号「" + devices.map((device) => device.label).join("・") + "」）",
-    defectType: defectProblem?.defectType ?? "none",
+    defectType,
     question: defectProblem?.question ?? deviceName + "の施工状態を判定してください。",
     choices: defectProblem?.choices ?? ["欠陥なし", "接続不良", "取付不良", "極性誤り"],
     answer: defectProblem?.answer ?? "欠陥なし",
     explanation: defectProblem?.explanation
       ?? "この器具は正常に施工されています。接続部の欠陥は、ボックス内配線図で判定します。",
+    physicalInspection: createPhysicalInspectionForDefect(
+      id,
+      defectType,
+      terminalConnections ? "terminal" : "component",
+    ),
     x: diagramDevice.x,
     y: diagramDevice.y,
     terminalBlock: detailDevice.terminalBlock,
