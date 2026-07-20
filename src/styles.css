@@ -1181,10 +1181,12 @@ button {
 .radial-connection.answered .outlet-box-shell-hit,
 .radial-connection.correct .outlet-box-shell-hit {
   stroke: #198754;
+  stroke-width: 7;
 }
 
 .radial-connection.wrong .outlet-box-shell-hit {
   stroke: #c83349;
+  stroke-width: 7;
 }
 
 .radial-cable,
@@ -1316,16 +1318,22 @@ button {
 .radial-connection.answered .radial-connection-hit {
   fill: rgba(25, 135, 84, 0.13);
   stroke: #198754;
+  stroke-dasharray: none;
+  stroke-width: 4;
 }
 
 .radial-connection.correct .radial-connection-hit {
   fill: rgba(25, 135, 84, 0.2);
   stroke: #198754;
+  stroke-dasharray: none;
+  stroke-width: 4;
 }
 
 .radial-connection.wrong .radial-connection-hit {
   fill: rgba(200, 51, 73, 0.13);
   stroke: #c83349;
+  stroke-dasharray: none;
+  stroke-width: 4;
 }
 
 .radial-connection:focus-visible .radial-connection-hit {
@@ -1343,6 +1351,23 @@ button {
   fill: rgba(31, 111, 139, 0.15);
   stroke: #1f6f8b;
   stroke-width: 3;
+}
+
+.radial-connection.answered .radial-infrastructure-hit,
+.radial-connection.correct .radial-infrastructure-hit,
+.radial-connection.wrong .radial-infrastructure-hit {
+  stroke-width: 4;
+}
+
+.radial-connection.answered .radial-infrastructure-hit,
+.radial-connection.correct .radial-infrastructure-hit {
+  fill: rgba(25, 135, 84, 0.13);
+  stroke: #198754;
+}
+
+.radial-connection.wrong .radial-infrastructure-hit {
+  fill: rgba(200, 51, 73, 0.13);
+  stroke: #c83349;
 }
 
 .connection-title {

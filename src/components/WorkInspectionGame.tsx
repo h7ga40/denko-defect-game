@@ -132,7 +132,7 @@ export function WorkInspectionGame({ candidateNo, seed }: { candidateNo?: number
             />
           ) : stage === "assembly" ? (
             selectedUnit.kind === "box" ? (
-              <BoxWiringDiagram answers={{}} box={selectedUnit.assemblyBox} onSelectPart={openInspectionPart} selectedPartId="" submitted={false} />
+              <BoxWiringDiagram answers={answers} box={selectedUnit.assemblyBox} onSelectPart={openInspectionPart} selectedPartId="" submitted={submitted} />
             ) : selectedUnit.kind === "mounting_frame" ? (
               <MountingFrameDiagram defectType="none" frame={selectedUnit.mountingFrame} />
             ) : selectedDirectPart ? (
