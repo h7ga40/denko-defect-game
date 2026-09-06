@@ -1053,9 +1053,9 @@ function groupDirectInspectionDevices(
 
 function getDirectDefectProblems(device: CandidateDevice): Problem[] {
   const idsByVariant: Partial<Record<NonNullable<CandidateDevice["variant"]>, string[]>> = {
-    lamp_receptacle: ["lamp-loop-reverse", "lamp-polarity", "lamp-terminal-screw-loose", "lamp-cover-cannot-close"],
+    lamp_receptacle: ["lamp-loop-reverse", "lamp-polarity", "lamp-terminal-screw-loose", "lamp-cover-cannot-close", "lamp-cable-entry-bypass"],
     ceiling_connector: ["ceiling-connector-polarity", "push-in-retention-failure"],
-    exposed_receptacle: ["exposed-receptacle-sheath", "receptacle-polarity", "terminal-screw-loose"],
+    exposed_receptacle: ["exposed-receptacle-sheath", "exposed-receptacle-entry-bypass", "receptacle-polarity", "terminal-screw-loose"],
     grounded_receptacle: ["receptacle-ground", "receptacle-polarity", "push-in-retention-failure"],
     grounded_20a_receptacle: ["receptacle-ground", "receptacle-polarity", "push-in-retention-failure"],
     eet_receptacle: ["receptacle-ground", "receptacle-polarity", "push-in-retention-failure"],
@@ -1218,6 +1218,8 @@ function toDevicePhysicalDefinition(device: CandidateDevice) {
       label: terminal.label,
     })) ?? [],
     hasCover: device.variant === "lamp_receptacle",
+    hasCableEntry: device.variant === "lamp_receptacle" || device.variant === "exposed_receptacle",
+    sheathEntersBase: device.variant === "exposed_receptacle",
   };
 }
 

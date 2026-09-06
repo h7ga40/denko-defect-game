@@ -19,6 +19,7 @@ export type DefectType =
   | "ring_sleeve_double_mark"
   | "ring_sleeve_conductor_overhang"
   | "exposed_receptacle_sheath"
+  | "exposed_receptacle_entry_bypass"
   | "breaker_line_load_reverse"
   | "push_connector_insufficient_insert"
   | "push_connector_wrong_wire_count"
@@ -30,6 +31,7 @@ export type DefectType =
   | "terminal_screw_loose"
   | "push_in_retention_failure"
   | "lamp_cover_cannot_close"
+  | "lamp_cable_entry_bypass"
   | "ceiling_connector_polarity"
   | "mounting_frame_loose"
   | "mounting_frame_wrong_position"
@@ -78,7 +80,7 @@ export const problems: Problem[] = [
     title: "ランプレセプタクル 輪作り向き不良",
     circuitName: "候補問題の簡略配線",
     defectType: "reverse_loop",
-    question: "赤く示した端子まわりの欠陥を選んでください。",
+    question: "黒線と白線の輪づくりを確認し、欠陥を選んでください。",
     choices: [
       "欠陥なし",
       "輪作りの向きが逆",
@@ -87,7 +89,7 @@ export const problems: Problem[] = [
     ],
     answer: "輪作りの向きが逆",
     explanation:
-      "輪作りはねじを締める方向に沿わせるのが基本です。逆向きだと締付け時に輪が開きやすく、欠陥になります。",
+      "図の黒線は、被覆から銅線の先端へたどると左巻きになっています。輪作りはねじを締める方向に沿わせます。白線は右巻きの正常な輪作りです。",
   },
   {
     id: "lamp-polarity",
@@ -124,6 +126,16 @@ export const problems: Problem[] = [
     choices: ["欠陥なし", "電線が干渉してカバーが閉まらない", "端子ねじの締付けが緩い", "白線と黒線の接続が逆"],
     answer: "電線が干渉してカバーが閉まらない",
     explanation: "器具内の電線が外周へはみ出し、カバーを所定位置まで閉じられない状態です。",
+  },
+  {
+    id: "lamp-cable-entry-bypass",
+    title: "ランプレセプタクル 電線通し穴の通し忘れ",
+    circuitName: "ランプレセプタクルの電線引込み",
+    defectType: "lamp_cable_entry_bypass",
+    question: "台座と電線の通り方を確認し、欠陥を選んでください。",
+    choices: ["欠陥なし", "電線を台座の通し穴に通していない", "輪作りの向きが逆", "白線と黒線の接続が逆"],
+    answer: "電線を台座の通し穴に通していない",
+    explanation: "電線は台座の裏側から電線通し穴を通して、表側の端子へ接続します。図では通し穴を通さず台座の縁をまたいでおり、カバーの取付けにも干渉する施工不良です。",
   },
   {
     id: "receptacle-ground",
@@ -229,7 +241,17 @@ export const problems: Problem[] = [
     question: "露出形コンセントに入るケーブル外装の状態として、欠陥を選んでください。",
     choices: ["欠陥なし", "ケーブル外装が器具内に入っていない", "白線と黒線の接続が逆", "接地線の接続忘れ"],
     answer: "ケーブル外装が器具内に入っていない",
-    explanation: "露出形コンセントではケーブル外装を器具内まで適切に入れて固定します。図は外装が手前で終わっており、心線が長く露出しています。",
+    explanation: "露出形コンセントではケーブル外装を台座の中まで入れます。図は電線を通し穴に通していますが、外装が台座の手前で終わり、台座の外に黒白の絶縁電線が見えています。裸の銅線の露出とは別の欠陥です。",
+  },
+  {
+    id: "exposed-receptacle-entry-bypass",
+    title: "露出形コンセント 台座の通し忘れ",
+    circuitName: "露出形コンセントの電線引込み",
+    defectType: "exposed_receptacle_entry_bypass",
+    question: "台座と電線の通り方を確認し、欠陥を選んでください。",
+    choices: ["欠陥なし", "電線を台座の通し穴に通していない", "白線と黒線の接続が逆", "輪作りの向きが逆"],
+    answer: "電線を台座の通し穴に通していない",
+    explanation: "電線は台座の下から通し穴を通して端子へ接続します。図は台座の上から縁をまたいで結線されており、通し穴が空いたままです。カバーの取付けにも干渉します。",
   },
   {
     id: "breaker-line-load-reverse",

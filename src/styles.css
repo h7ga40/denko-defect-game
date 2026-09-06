@@ -593,6 +593,38 @@ button {
   stroke-width: 8;
 }
 
+.lamp-base { fill: #303639; stroke: #171b1d; stroke-width: 4; }
+.lamp-base-rim { fill: none; stroke: #525a5e; stroke-width: 3; }
+.lamp-center-recess { fill: #1d2326; stroke: #5c666b; stroke-width: 2; }
+.lamp-mounting-hole { fill: #f7fbfd; stroke: #15191b; stroke-width: 4; }
+.lamp-entry-hole { fill: #dce8ec; stroke: #111719; stroke-width: 4; }
+.lamp-entry-section { fill: none; stroke: #77858b; stroke-width: 3; }
+.exposed-base { fill: #f6f5f0; stroke: #919b9f; stroke-width: 3; }
+.exposed-entry { fill: #dce8ec; stroke: #7c8b92; stroke-width: 3; }
+.exposed-divider { fill: #e9e8e2; stroke: #a7acaa; stroke-width: 2; }
+.exposed-contact { fill: none; stroke: #c0a644; stroke-width: 8; }
+.exposed-screw { fill: #d3bc72; stroke: #7d6e3e; stroke-width: 2; }
+.exposed-polarity { fill: #4d595d; font-size: 18px; font-weight: 700; }
+.lamp-cable-sheath { fill: none; stroke: #8b9499; stroke-width: 34; stroke-linecap: butt; }
+.lamp-insulation { fill: none; stroke-width: 12; stroke-linecap: butt; }
+.lamp-insulation.black { stroke: #111416; }
+.lamp-insulation.white { stroke: #fafafa; filter: drop-shadow(0 0 1px #53616b); }
+.lamp-terminal-plate { fill: #ada178; stroke: #726a4f; stroke-width: 2; }
+.lamp-screw-shank { fill: #8d9497; stroke: #444f55; stroke-width: 2; }
+.lamp-loop-outline, .lamp-loop-copper, .lamp-loop-highlight {
+  fill: none;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+}
+.lamp-loop-outline { stroke: #714130; stroke-width: 9; }
+.lamp-loop-copper { stroke: #c77c52; stroke-width: 7; }
+.lamp-loop-highlight { stroke: #f3bb91; stroke-width: 2; }
+.lamp-copper-tip { fill: #edaf7c; stroke: #865034; stroke-width: 1; }
+.lamp-screw-head { fill: #d9e0e4; fill-opacity: 0.24; stroke: #465459; stroke-width: 2; }
+.lamp-screw-slot { fill: none; stroke: #48585f; stroke-width: 4; stroke-linecap: round; }
+.lamp-terminal-name { fill: #fff; font-size: 15px; font-weight: 700; paint-order: stroke; stroke: #303639; stroke-width: 3; }
+.lamp-view-note { fill: #526272; font-size: 16px; }
+
 .wire.alert,
 .missing {
   stroke: #c83349;

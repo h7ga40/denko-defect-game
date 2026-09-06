@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import type { DeviceVariant } from "../data/candidateDiagrams";
-import type { WireColor } from "../data/boxInspectionGame";
+import type { CableEntrySide, WireColor } from "../data/boxInspectionGame";
+import { LampEntryOrthographic } from "./svg/diagrams/LampEntryOrthographic";
+import { ExposedReceptacleDiagram } from "./svg/diagrams/ExposedReceptacleDiagram";
 import { getDeviceSpecification } from "../data/deviceSpecifications";
 import type {
   InspectionObservation,
@@ -14,6 +16,7 @@ export type PhysicalInspectionDisplayPart = {
   defectType: import("../data/problems").DefectType;
   physicalInspection: PhysicalInspectionModel;
   deviceVariant?: DeviceVariant;
+  cableEntrySide?: CableEntrySide;
   connection?: { method: string; wireColors: WireColor[] };
   installedCable?: { coreColors: WireColor[] };
 };
@@ -66,13 +69,32 @@ function OrthographicDiagram({
   const terminalCount = directVariant ? getDeviceSpecification(directVariant)?.terminals.length ?? 2 : 2;
   const side = viewpoint === "left" || viewpoint === "right";
 
+  if (directVariant === "exposed_receptacle") {
+    const states = Object.values(part.physicalInspection.installed.targets);
+    const defectType = states.some(item => item.cableRouting === "over_base")
+      ? "exposed_receptacle_entry_bypass"
+      : states.some(item => item.sheathPosition === "outside_base") ? "exposed_receptacle_sheath"
+      : states.some(item => item.tightening === "loose") ? "terminal_screw_loose"
+      : states.some(item => item.connection === "wrong_target") ? "receptacle_polarity" : "none";
+    return <div className="orthographic-object"><ExposedReceptacleDiagram cableEntrySide={part.cableEntrySide} defectType={defectType} viewpoint={viewpoint} /></div>;
+  }
+
   return (
     <svg viewBox="0 0 720 390" role="img" aria-label={`${title}の${viewpointName(viewpoint)}確認図`}>
       <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
       <text className="label" x="360" y="52" textAnchor="middle">{title}</text>
       <text className="inspection-view-label" x="360" y="78" textAnchor="middle">{viewpointName(viewpoint)}確認図</text>
       <g className="orthographic-object" data-physical-target={target?.id}>
-        {part.installedCable ? (
+        {directVariant === "lamp_receptacle" ? (
+          <LampEntryOrthographic
+            bypassEntry={Object.values(part.physicalInspection.installed.targets).some((item) => item.cableRouting === "over_base")}
+            cableEntrySide={part.cableEntrySide}
+            side={side}
+            mirrored={viewpoint === "right"}
+            loose={Object.values(part.physicalInspection.installed.targets).some((item) => item.tightening === "loose")}
+            cannotClose={Object.values(part.physicalInspection.installed.targets).some((item) => item.assembly === "cannot_close")}
+          />
+        ) : part.installedCable ? (
           <CableOrthographic part={part} side={side} />
         ) : part.connection ? (
           <ConnectionOrthographic method={part.connection.method} side={side} wireColors={part.connection.wireColors} />

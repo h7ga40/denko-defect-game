@@ -16,6 +16,7 @@ const subjectByProblemId: Record<string, InspectionSubject> = {
   "lamp-polarity": { kind: "device", variant: "lamp_receptacle" },
   "lamp-terminal-screw-loose": { kind: "device", variant: "lamp_receptacle" },
   "lamp-cover-cannot-close": { kind: "device", variant: "lamp_receptacle" },
+  "lamp-cable-entry-bypass": { kind: "device", variant: "lamp_receptacle" },
   "receptacle-ground": { kind: "device", variant: "grounded_receptacle" },
   "box-sheath": { kind: "connection", method: "outlet_box" },
   "ring-sleeve-wrong-mark": { kind: "connection", method: "ring_sleeve", wireColors: ["black", "white", "red"] },
@@ -23,6 +24,7 @@ const subjectByProblemId: Record<string, InspectionSubject> = {
   "ring-sleeve-wrong-size": { kind: "connection", method: "ring_sleeve", wireColors: ["black", "white", "red"] },
   "ring-sleeve-insulation-bite": { kind: "connection", method: "ring_sleeve", wireColors: ["black", "white", "red"] },
   "exposed-receptacle-sheath": { kind: "device", variant: "exposed_receptacle" },
+  "exposed-receptacle-entry-bypass": { kind: "device", variant: "exposed_receptacle" },
   "breaker-line-load-reverse": { kind: "device", variant: "circuit_breaker" },
   "push-connector-insert": { kind: "connection", method: "push_connector", wireColors: ["black", "white", "red"] },
   "push-connector-wire-count": { kind: "connection", method: "push_connector", wireColors: ["black", "white", "red"] },
@@ -59,6 +61,8 @@ export function createProblemInspectionPart(problem: Problem): PhysicalInspectio
         connectionMethod: specification?.connectionMethod ?? "none",
         terminals: specification?.terminals.map(({ id, label }) => ({ id, label })) ?? [],
         hasCover: subject.variant === "lamp_receptacle",
+        hasCableEntry: subject.variant === "lamp_receptacle" || subject.variant === "exposed_receptacle",
+        sheathEntersBase: subject.variant === "exposed_receptacle",
       }),
     };
   }

@@ -27,11 +27,18 @@ type WiringDiagramProps = {
 };
 
 export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName, deviceVariant }: WiringDiagramProps) {
+  if (deviceVariant === "exposed_receptacle" && (defectType === "receptacle_polarity" || defectType === "terminal_screw_loose")) {
+    return <ExposedReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
+  }
   switch (defectType) {
     case "none":
+      return deviceVariant === "exposed_receptacle"
+        ? <ExposedReceptacleDiagram cableEntrySide={cableEntrySide} defectType="none" />
+        : <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType="none" />;
     case "reverse_loop":
     case "reverse_polarity":
     case "lamp_cover_cannot_close":
+    case "lamp_cable_entry_bypass":
       return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
     case "terminal_screw_loose":
       return deviceVariant === "terminal_block"
@@ -49,7 +56,8 @@ export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName,
     case "ring_sleeve_insulation_bite":
       return <RingSleeveDiagram defectType={defectType} />;
     case "exposed_receptacle_sheath":
-      return <ExposedReceptacleDiagram cableEntrySide={cableEntrySide} />;
+    case "exposed_receptacle_entry_bypass":
+      return <ExposedReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
     case "breaker_line_load_reverse":
       return <BreakerDiagram title={deviceName} variant={deviceVariant} />;
     case "push_connector_insufficient_insert":

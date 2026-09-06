@@ -51,6 +51,8 @@ export type PhysicalTargetState = {
   assembly?: AssemblyState;
   integrity?: IntegrityState;
   connection?: ConnectionState;
+  cableRouting?: "through_entry" | "over_base";
+  sheathPosition?: "inside_base" | "outside_base" | "above_base";
   measurements?: PhysicalMeasurements;
   damage?: PhysicalDamage[];
 };
@@ -120,6 +122,8 @@ export type DevicePhysicalDefinition = {
   connectionMethod: "screw" | "push_in" | "terminal_block" | "none";
   terminals: ReadonlyArray<{ id: string; label: string }>;
   hasCover?: boolean;
+  hasCableEntry?: boolean;
+  sheathEntersBase?: boolean;
 };
 
 export function createPhysicalInspectionForDefect(
@@ -157,6 +161,17 @@ export function createDevicePhysicalInspection(
       ...createNormalPhysicalTarget(coverId, "cover"),
       parentId: rootId,
       label: "カバー",
+    };
+  }
+
+  if (definition.hasCableEntry) {
+    const entryId = rootId + ":cable-entry";
+    expectedTargets[entryId] = {
+      ...createNormalPhysicalTarget(entryId, "cable"),
+      parentId: rootId,
+      label: "引込み電線",
+      cableRouting: "through_entry",
+      ...(definition.sheathEntersBase ? { sheathPosition: "inside_base" as const } : {}),
     };
   }
 
@@ -314,6 +329,12 @@ function applyDefectState(target: PhysicalTargetState, defectType: DefectType): 
       return { ...target, retention: "releases_on_pull" };
     case "lamp_cover_cannot_close":
       return { ...target, assembly: "cannot_close" };
+    case "lamp_cable_entry_bypass":
+      return { ...target, cableRouting: "over_base" };
+    case "exposed_receptacle_entry_bypass":
+      return { ...target, cableRouting: "over_base", sheathPosition: "above_base" };
+    case "exposed_receptacle_sheath":
+      return { ...target, sheathPosition: "outside_base" };
     case "cable_sheath_damage":
       return {
         ...target,
@@ -335,6 +356,7 @@ function applyDefectState(target: PhysicalTargetState, defectType: DefectType): 
     case "mounting_frame_loose":
       return { ...target, tightening: "loose", retention: "moves" };
     case "box_wrong_connection":
+    case "receptacle_polarity":
     case "terminal_block_wrong_terminal":
     case "pilot_lamp_wrong_terminal":
     case "switch_wrong_terminal":
@@ -361,6 +383,8 @@ function selectDeviceDefectTarget(
   definition: DevicePhysicalDefinition,
 ) {
   if (defectType === "lamp_cover_cannot_close" && definition.hasCover) return rootId + ":cover";
+  if (defectType === "lamp_cable_entry_bypass" && definition.hasCableEntry) return rootId + ":cable-entry";
+  if (["exposed_receptacle_entry_bypass", "exposed_receptacle_sheath"].includes(defectType) && definition.hasCableEntry) return rootId + ":cable-entry";
   const terminalDefects: DefectType[] = [
     "terminal_screw_loose",
     "push_in_retention_failure",

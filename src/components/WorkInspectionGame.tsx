@@ -374,7 +374,7 @@ function InfrastructureDiagram({ part }: { part: BoxInspectionPart }) {
   }
   return <OutletBoxAccessoryDiagram defectType={part.defectType} />;
 }
-function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
+export function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   if (part.mountingFrame) {
     return <MountingFrameDiagram defectType={part.defectType} frame={part.mountingFrame} />;
   }
@@ -391,7 +391,7 @@ function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   }
   const physicalOnlyDefect = part.defectType === "push_in_retention_failure"
     || (part.defectType === "terminal_screw_loose" && part.deviceVariant !== "lamp_receptacle");
-  if (part.defectType !== "none" && !physicalOnlyDefect) {
+  if (part.deviceVariant === "lamp_receptacle" || part.deviceVariant === "exposed_receptacle" || (part.defectType !== "none" && !physicalOnlyDefect)) {
     return <WiringDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }
 
