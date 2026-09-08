@@ -1,5 +1,6 @@
 import type { CableEntrySide } from "../../../data/boxInspectionGame";
 import type { InspectionViewpoint } from "../../../data/physicalInspection";
+import { ScrewLoopTerminal } from "../ScrewLoopTerminal";
 
 type ExposedDefect = "none" | "exposed_receptacle_sheath" | "exposed_receptacle_entry_bypass" | "receptacle_polarity" | "terminal_screw_loose";
 const rotation: Record<CableEntrySide, number> = { bottom: 0, left: 90, top: 180, right: 270 };
@@ -60,13 +61,7 @@ export function ExposedReceptacleDiagram({ cableEntrySide = "left", defectType =
                   <path className="lamp-screw-slot" d={`M ${x - 9} -60 H ${x + 9}`} />
                   <path className={`lamp-insulation ${color}`} d={`M ${index ? 10 : -10} ${wireStart} C ${x} ${bypass ? 120 : 82}, ${x} 60, ${x} 46`} />
                   <g transform={`translate(${x} 12) scale(.65)`}>
-                    <circle className="lamp-screw-shank" r="15" />
-                    <path className="lamp-loop-outline" d="M 0 52 C 0 38 -9 33 -17 22.25 A 28 28 0 1 1 6 27.35" />
-                    <path className="lamp-loop-copper" d="M 0 52 C 0 38 -9 33 -17 22.25 A 28 28 0 1 1 6 27.35" />
-                    <g transform={loose && index === 1 ? "translate(0 -12)" : undefined}>
-                      <circle className="lamp-screw-head" r="35" />
-                      <path className="lamp-screw-slot" d="M -17 0 H 17 M 0 -13 V 13" />
-                    </g>
+                    <ScrewLoopTerminal loose={loose && index === 1} plate={false} />
                   </g>
                 </g>;
               })}

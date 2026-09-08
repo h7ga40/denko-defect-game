@@ -1,4 +1,5 @@
 import type { CableEntrySide } from "../../../data/boxInspectionGame";
+import { ScrewLoopTerminal } from "../ScrewLoopTerminal";
 
 type LampDefect = "none" | "reverse_loop" | "reverse_polarity" | "terminal_screw_loose" | "lamp_cover_cannot_close" | "lamp_cable_entry_bypass";
 const entryRotation: Record<CableEntrySide, number> = { bottom: 0, left: 90, top: 180, right: 270 };
@@ -47,7 +48,7 @@ export function LampReceptacleDiagram({
             <g key={terminal} data-lamp-terminal={terminal} data-wire-color={color}>
               <path className={`lamp-insulation ${color}`} d={`M ${start.x} ${start.y} C ${start.x} ${start.y}, ${bend.x} ${bend.y}, ${end.x} ${end.y}`} />
               <g transform={`translate(${position.x} ${position.y}) rotate(${angle})`}>
-                <LoopTerminal reverse={reverse} loose={defectType === "terminal_screw_loose" && terminal === "center"} />
+                <ScrewLoopTerminal reverse={reverse} loose={defectType === "terminal_screw_loose" && terminal === "center"} />
               </g>
               <text className="lamp-terminal-name" x={position.x} y={position.y - 44} textAnchor="middle">
                 {terminal === "center" ? "中心接点側" : "受金側"}
@@ -64,27 +65,5 @@ export function LampReceptacleDiagram({
       </g>
       <text className="lamp-view-note" x="43" y="345">ねじ頭を透過表示</text>
     </svg>
-  );
-}
-
-function LoopTerminal({ reverse, loose }: { reverse: boolean; loose: boolean }) {
-  // From the insulated lead, the open end runs clockwise around the screw.
-  // Mirror only the copper geometry for the reverse-loop defect.
-  const loopPath = "M 0 52 C 0 38 -9 33 -17 22.25 A 28 28 0 1 1 6 27.35";
-  return (
-    <g data-loop-direction={reverse ? "counterclockwise" : "clockwise"}>
-      <rect className="lamp-terminal-plate" x="-38" y="-36" width="76" height="74" rx="9" />
-      <circle className="lamp-screw-shank" r="15" />
-      <g transform={reverse ? "scale(-1 1)" : undefined}>
-        <path className="lamp-loop-outline" d={loopPath} />
-        <path className="lamp-loop-copper" d={loopPath} />
-        <path className="lamp-loop-highlight" d={loopPath} />
-        <circle className="lamp-copper-tip" cx="6" cy="27.35" r="3" />
-      </g>
-      <g transform={loose ? "translate(0 -9)" : undefined}>
-        <circle className="lamp-screw-head" r="35" />
-        <path className="lamp-screw-slot" d="M -17 0 H 17 M 0 -13 V 13" />
-      </g>
-    </g>
   );
 }

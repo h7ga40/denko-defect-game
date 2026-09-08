@@ -1,7 +1,9 @@
-import type { CableInspectionPart, WireColor } from "../../data/boxInspectionGame";
-import { StrippedCableEnd } from "./StrippedCableEnd";
+import type { CableInspectionPart } from "../../data/boxInspectionGame";
+import { CableEndBundle } from "./CableEndBundle";
+import type { InspectionViewpoint } from "../../data/physicalInspection";
+export type CableDiagramPart = Pick<CableInspectionPart, "title" | "defectType" | "installedCable" | "correctCable" | "fromLabel" | "toLabel">;
 
-export function CableInspectionDiagram({ part }: { part: CableInspectionPart }) {
+export function CableInspectionDiagram({ part, viewpoint = "front" }: { part: CableDiagramPart; viewpoint?: InspectionViewpoint }) {
   const cable = part.installedCable;
   const correctLength = part.correctCable.diagramLengthMm;
   const installedLength = cable.diagramLengthMm;
@@ -18,7 +20,10 @@ export function CableInspectionDiagram({ part }: { part: CableInspectionPart }) 
 
       <line className="cable-sheath" x1="110" y1="112" x2={cableEndX} y2="112" />
       {part.defectType === "cable_sheath_damage" && (
-        <path className="damage-cut" d="M 344 91 L 354 112 L 366 91 M 352 133 L 362 112 L 374 133" />
+        <g data-sheath-wound>
+          <path className="material-cut-edge" d="M 330 106 L 363 103 L 380 111 L 361 120 L 333 118 Z" />
+          <path className="cable-insulation black" d="M 339 112 H 367" />
+        </g>
       )}
       <line className="missing" x1={cableEndX} y1="96" x2="610" y2="96" />
       <text className={part.defectType === "cable_too_short" ? "defect-label" : "small"} x="360" y="137" textAnchor="middle">
@@ -27,11 +32,12 @@ export function CableInspectionDiagram({ part }: { part: CableInspectionPart }) 
 
       <CableEnd cablePart={part} end="from" label={part.fromLabel} y={195} />
       <CableEnd cablePart={part} end="to" label={part.toLabel} y={292} />
+      <text className="material-note" x="360" y="362" textAnchor="middle">{viewpoint === "front" ? "加工端の拡大図" : "加工端の展開図（傷の位置を透視）"}</text>
     </svg>
   );
 }
 
-function CableEnd({ cablePart, end, label, y }: { cablePart: CableInspectionPart; end: "from" | "to"; label: string; y: number }) {
+function CableEnd({ cablePart, end, label, y }: { cablePart: CableDiagramPart; end: "from" | "to"; label: string; y: number }) {
   const cable = cablePart.installedCable;
   const installed = end === "from" ? cable.fromEnd : cable.toEnd;
   const correct = end === "from" ? cablePart.correctCable.fromEnd : cablePart.correctCable.toEnd;
@@ -39,28 +45,11 @@ function CableEnd({ cablePart, end, label, y }: { cablePart: CableInspectionPart
   return (
     <g>
       <text className="small" x="80" y={y - 24}>{label}側</text>
-      {cable.coreColors.map((color, index) => (
-        <StrippedCableEnd
-          cable={cable}
-          color={color as WireColor}
-          coreIndex={index}
-          key={`${end}-${index}`}
-          preparation={installed}
-          x1={190}
-          x2={520}
-          y={y + (index - (cable.coreCount - 1) / 2) * 16}
-        />
-      ))}
+      <CableEndBundle cable={cable} preparation={installed} correct={correct} y={y} damaged={cablePart.defectType === "cable_insulation_damage" && end === "to"} />
       <text className={differs ? "defect-label" : "small"} x="545" y={y + 4}>
         外装剥ぎ {installed.sheathStripLengthMm ?? 0}mm
       </text>
       {differs && <text className="small" x="545" y={y + 23}>基準 {correct.sheathStripLengthMm ?? 0}mm</text>}
-      {cablePart.defectType === "cable_insulation_damage" && end === "to" && (
-        <>
-          <path className="damage-cut" d={`M 390 ${y - 17} L 400 ${y - 5} L 410 ${y - 17}`} />
-          <text className="defect-label" x="440" y={y - 12}>絶縁被覆の傷</text>
-        </>
-      )}
     </g>
   );
 }

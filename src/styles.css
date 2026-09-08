@@ -599,6 +599,11 @@ button {
 .lamp-mounting-hole { fill: #f7fbfd; stroke: #15191b; stroke-width: 4; }
 .lamp-entry-hole { fill: #dce8ec; stroke: #111719; stroke-width: 4; }
 .lamp-entry-section { fill: none; stroke: #77858b; stroke-width: 3; }
+.material-sheath { fill: #919b9f; stroke: #536269; stroke-width: 2; }
+.material-sheath-end { fill: none; stroke: #d9e1e4; stroke-width: 3; }
+.material-cut-edge { fill: #3c484d; stroke: #cad6dc; stroke-width: 2; }
+.material-copper { fill: none; stroke: #ce8658; stroke-width: 6; stroke-linecap: butt; }
+.material-note { fill: #586b75; font-size: 14px; }
 .exposed-base { fill: #f6f5f0; stroke: #919b9f; stroke-width: 3; }
 .exposed-entry { fill: #dce8ec; stroke: #7c8b92; stroke-width: 3; }
 .exposed-divider { fill: #e9e8e2; stroke: #a7acaa; stroke-width: 2; }
