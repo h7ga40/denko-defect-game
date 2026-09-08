@@ -27,6 +27,9 @@ type WiringDiagramProps = {
 };
 
 export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName, deviceVariant }: WiringDiagramProps) {
+  if (deviceVariant === "ceiling_connector") {
+    return <CeilingConnectorDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
+  }
   if (deviceVariant === "exposed_receptacle" && (defectType === "receptacle_polarity" || defectType === "terminal_screw_loose")) {
     return <ExposedReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
   }

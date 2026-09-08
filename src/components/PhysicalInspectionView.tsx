@@ -9,6 +9,7 @@ import { CableInspectionDiagram } from "./svg/CableInspectionDiagram";
 import type { ConnectionVisualSpec } from "../data/connectionVisuals";
 import { RingAssemblyDiagram } from "./svg/RingAssemblyDiagram";
 import { PushConnectorAssemblyDiagram } from "./svg/PushConnectorAssemblyDiagram";
+import { CeilingConnectorDiagram } from "./svg/diagrams/CeilingConnectorDiagram";
 import type {
   InspectionObservation,
   InspectionViewpoint,
@@ -76,6 +77,9 @@ function OrthographicDiagram({
   const directVariant = part.deviceVariant;
   const terminalCount = directVariant ? getDeviceSpecification(directVariant)?.terminals.length ?? 2 : 2;
   const side = viewpoint === "left" || viewpoint === "right";
+  if (directVariant === "ceiling_connector") {
+    return <CeilingConnectorDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} viewpoint={viewpoint} />;
+  }
   if (part.connection?.method === "ring_sleeve") {
     return <RingAssemblyDiagram connection={part.connection} defectType={part.defectType} viewpoint={viewpoint} />;
   }

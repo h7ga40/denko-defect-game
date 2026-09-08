@@ -1913,3 +1913,17 @@ button {
   stroke-linejoin: round;
   stroke-width: 4;
 }
+.fitting-shell { fill: #f8f8f4; stroke: #929c9d; stroke-width: 3; }
+.fitting-terminal-body { fill: #21665c; stroke: #15483f; stroke-width: 3; }
+.fitting-contact { fill: none; stroke: #c18b48; stroke-width: 12; }
+.fitting-screw { fill: #dce2e5; stroke: #6a777c; stroke-width: 2; }
+.fitting-slot { fill: none; stroke: #566269; stroke-width: 2; }
+.fitting-terminal-label { fill: #fff; font-size: 16px; font-weight: 700; }
+.fitting-hole { fill: #122d2b; stroke: #83aba3; stroke-width: 2; }
+.fitting-wire-outline { fill: none; stroke: #91999c; stroke-width: 12; stroke-linecap: round; }
+.fitting-wire { fill: none; stroke-width: 9; stroke-linecap: round; }
+.fitting-wire.black { stroke: #20272a; }
+.fitting-wire.white { stroke: #fff; }
+.fitting-wire.red { stroke: #c84451; }
+.fitting-wire.green { stroke: #22815b; }
+.fitting-release { fill: #d5c9a3; stroke: #6a705e; stroke-width: 2; }
