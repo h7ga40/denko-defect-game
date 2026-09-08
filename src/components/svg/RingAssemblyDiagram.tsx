@@ -30,7 +30,7 @@ export function RingAssemblyDiagram({ connection, defectType, viewpoint = "front
           <title>{label}</title>
           <text className="material-wire-label" x="58" y={117 + index * legendGap}>{label.length > 23 ? label.slice(0, 22) + "…" : label}</text>
           <path className="material-wire" stroke={wirePaint[wire.color]} strokeWidth={wire.diameter === 2 ? 13 : 11} d={`M ${x} 321 V ${Math.max(insulationEnd, tip)}`} />
-          <path className="material-copper" strokeWidth={wire.diameter === 2 ? 8 : 6} d={`M ${x} ${Math.max(insulationEnd, tip)} V ${tip}`} />
+          <path className="material-copper" style={{ strokeWidth: wire.diameter === 2 ? 8 : 6 }} d={`M ${x} ${Math.max(insulationEnd, tip)} V ${tip}`} />
           <text className="material-note" x={x} y="340" textAnchor="middle">{index + 1}</text>
         </g>;
       })}

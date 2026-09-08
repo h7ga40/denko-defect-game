@@ -8,6 +8,7 @@ import type { CableRunSpecification } from "../data/cableSpecifications";
 import { CableInspectionDiagram } from "./svg/CableInspectionDiagram";
 import type { ConnectionVisualSpec } from "../data/connectionVisuals";
 import { RingAssemblyDiagram } from "./svg/RingAssemblyDiagram";
+import { PushConnectorAssemblyDiagram } from "./svg/PushConnectorAssemblyDiagram";
 import type {
   InspectionObservation,
   InspectionViewpoint,
@@ -77,6 +78,9 @@ function OrthographicDiagram({
   const side = viewpoint === "left" || viewpoint === "right";
   if (part.connection?.method === "ring_sleeve") {
     return <RingAssemblyDiagram connection={part.connection} defectType={part.defectType} viewpoint={viewpoint} />;
+  }
+  if (part.connection?.method === "push_connector") {
+    return <PushConnectorAssemblyDiagram connection={part.connection} defectType={part.defectType} viewpoint={viewpoint} />;
   }
   if (part.installedCable && part.correctCable) {
     return <CableInspectionDiagram viewpoint={viewpoint} part={{ title: part.title, defectType: part.defectType, installedCable: part.installedCable, correctCable: part.correctCable, fromLabel: part.fromLabel ?? "始端", toLabel: part.toLabel ?? "終端" }} />;

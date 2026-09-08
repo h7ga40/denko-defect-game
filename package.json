@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "audit:images": "node scripts/generate-defect-gallery.mjs",
+    "check:visuals": "node scripts/check-defect-visuals.mjs",
     "dev": "vite",
     "build": "tsc --noEmit -p tsconfig.app.json && vite build",
     "preview": "vite preview"

@@ -73,7 +73,7 @@ export function createProblemInspectionPart(problem: Problem): PhysicalInspectio
     return {
       title: problem.title,
       defectType: problem.defectType,
-      connection: subject.method === "ring_sleeve" ? quizConnectionVisual(problem.defectType, "ring_sleeve") : { method: subject.method, wireColors: subject.wireColors ?? ["black", "white"] },
+      connection: subject.method === "ring_sleeve" || subject.method === "push_connector" ? quizConnectionVisual(problem.defectType, subject.method) : { method: subject.method, wireColors: subject.wireColors ?? ["black", "white"] },
       physicalInspection: createPhysicalInspectionForDefect(
         targetId,
         problem.defectType,

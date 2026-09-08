@@ -610,6 +610,12 @@ button {
 .material-ring-rim { fill: none; stroke: #81959f; stroke-width: 3; }
 .material-crimp { fill: #91a5af; fill-opacity: .6; stroke: #536a76; stroke-width: 2; }
 .material-mark { fill: #203c49; font-size: 23px; font-weight: 700; }
+.material-push-body { fill: #dcf0f0; fill-opacity: .55; stroke: #597d86; stroke-width: 3; }
+.material-push-channel { fill: #f4fafb; fill-opacity: .45; stroke: #a3bfc6; stroke-width: 1; }
+.material-push-entry { fill: #d3e2e6; stroke: #647b84; stroke-width: 2; }
+.material-push-bus { fill: none; stroke: #ada17b; stroke-width: 10; }
+.material-push-spring { fill: none; stroke: #75878c; stroke-width: 3; }
+.material-push-stop { fill: none; stroke: #708d97; stroke-width: 3; }
 .exposed-base { fill: #f6f5f0; stroke: #919b9f; stroke-width: 3; }
 .exposed-entry { fill: #dce8ec; stroke: #7c8b92; stroke-width: 3; }
 .exposed-divider { fill: #e9e8e2; stroke: #a7acaa; stroke-width: 2; }

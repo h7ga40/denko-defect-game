@@ -905,7 +905,8 @@ function createBox(
     installation,
     parts: specs.map((spec, partIndex) => {
       const defectPlan = defectPlans.get(boxPartKey(device.id, spec.id));
-      const availableTemplates = templates.filter((item) => item.method === spec.method);
+      const availableTemplates = templates.filter((item) => item.method === spec.method
+        && (item.defectType !== "push_connector_wrong_wire_count" || spec.wireCount > 2));
       const template = defectPlan && defectPlan !== "random"
         ? availableTemplates.find((item) => item.defectType === defectPlan)
         : randomItem(availableTemplates.filter((item) => !isConnectionDefect(item.defectType)), random);
