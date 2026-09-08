@@ -1,13 +1,14 @@
 import type { PhysicalInspectionDisplayPart } from "../components/PhysicalInspectionView";
 import type { DeviceVariant } from "./candidateDiagrams";
-import type { WireColor } from "./boxInspectionGame";
+import type { ConnectionMethod, WireColor } from "./boxInspectionGame";
 import { getDeviceSpecification } from "./deviceSpecifications";
 import { createDevicePhysicalInspection, createPhysicalInspectionForDefect, type PhysicalTargetKind } from "./physicalInspection";
 import type { Problem } from "./problems";
+import { quizConnectionVisual } from "./connectionVisuals";
 
 type InspectionSubject =
   | { kind: "device"; variant: DeviceVariant }
-  | { kind: "connection"; method: string; wireColors?: WireColor[]; targetKind?: PhysicalTargetKind }
+  | { kind: "connection"; method: ConnectionMethod; wireColors?: WireColor[]; targetKind?: PhysicalTargetKind }
   | { kind: "component"; targetKind?: PhysicalTargetKind };
 
 const subjectByProblemId: Record<string, InspectionSubject> = {
@@ -72,7 +73,7 @@ export function createProblemInspectionPart(problem: Problem): PhysicalInspectio
     return {
       title: problem.title,
       defectType: problem.defectType,
-      connection: { method: subject.method, wireColors: subject.wireColors ?? ["black", "white"] },
+      connection: subject.method === "ring_sleeve" ? quizConnectionVisual(problem.defectType, "ring_sleeve") : { method: subject.method, wireColors: subject.wireColors ?? ["black", "white"] },
       physicalInspection: createPhysicalInspectionForDefect(
         targetId,
         problem.defectType,

@@ -1,5 +1,6 @@
 import type { BoxConductorEndpoint } from "../../data/boxWiringSpecifications";
 import type { BoxInspectionPart, WireColor } from "../../data/boxInspectionGame";
+import { RingAssemblyDiagram } from "./RingAssemblyDiagram";
 
 const colorLabels: Record<WireColor, string> = {
   black: "黒",
@@ -10,6 +11,7 @@ const colorLabels: Record<WireColor, string> = {
 };
 
 export function ConnectionDetailDiagram({ part }: { part: BoxInspectionPart }) {
+  if (part.connection.method === "ring_sleeve") return <RingAssemblyDiagram connection={part.connection} defectType={part.defectType} />;
   const connection = part.connection;
   const conductors = [...connection.conductors, ...connection.looseConductors];
   const rowGap = Math.min(42, 220 / Math.max(1, conductors.length - 1));

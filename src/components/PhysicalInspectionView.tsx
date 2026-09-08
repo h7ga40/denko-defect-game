@@ -6,6 +6,8 @@ import { ExposedReceptacleDiagram } from "./svg/diagrams/ExposedReceptacleDiagra
 import { getDeviceSpecification } from "../data/deviceSpecifications";
 import type { CableRunSpecification } from "../data/cableSpecifications";
 import { CableInspectionDiagram } from "./svg/CableInspectionDiagram";
+import type { ConnectionVisualSpec } from "../data/connectionVisuals";
+import { RingAssemblyDiagram } from "./svg/RingAssemblyDiagram";
 import type {
   InspectionObservation,
   InspectionViewpoint,
@@ -19,7 +21,7 @@ export type PhysicalInspectionDisplayPart = {
   physicalInspection: PhysicalInspectionModel;
   deviceVariant?: DeviceVariant;
   cableEntrySide?: CableEntrySide;
-  connection?: { method: string; wireColors: WireColor[] };
+  connection?: ConnectionVisualSpec;
   installedCable?: CableRunSpecification;
   correctCable?: CableRunSpecification;
   fromLabel?: string;
@@ -73,6 +75,9 @@ function OrthographicDiagram({
   const directVariant = part.deviceVariant;
   const terminalCount = directVariant ? getDeviceSpecification(directVariant)?.terminals.length ?? 2 : 2;
   const side = viewpoint === "left" || viewpoint === "right";
+  if (part.connection?.method === "ring_sleeve") {
+    return <RingAssemblyDiagram connection={part.connection} defectType={part.defectType} viewpoint={viewpoint} />;
+  }
   if (part.installedCable && part.correctCable) {
     return <CableInspectionDiagram viewpoint={viewpoint} part={{ title: part.title, defectType: part.defectType, installedCable: part.installedCable, correctCable: part.correctCable, fromLabel: part.fromLabel ?? "始端", toLabel: part.toLabel ?? "終端" }} />;
   }

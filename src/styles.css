@@ -604,6 +604,12 @@ button {
 .material-cut-edge { fill: #3c484d; stroke: #cad6dc; stroke-width: 2; }
 .material-copper { fill: none; stroke: #ce8658; stroke-width: 6; stroke-linecap: butt; }
 .material-note { fill: #586b75; font-size: 14px; }
+.material-wire { fill: none; stroke-linecap: butt; filter: drop-shadow(0 0 1px #627780); }
+.material-wire-label { fill: #293e48; font-size: 13px; }
+.material-ring-body { fill: #bdc9ce; stroke: #5f747e; stroke-width: 3; }
+.material-ring-rim { fill: none; stroke: #81959f; stroke-width: 3; }
+.material-crimp { fill: #91a5af; fill-opacity: .6; stroke: #536a76; stroke-width: 2; }
+.material-mark { fill: #203c49; font-size: 23px; font-weight: 700; }
 .exposed-base { fill: #f6f5f0; stroke: #919b9f; stroke-width: 3; }
 .exposed-entry { fill: #dce8ec; stroke: #7c8b92; stroke-width: 3; }
 .exposed-divider { fill: #e9e8e2; stroke: #a7acaa; stroke-width: 2; }
