@@ -13,6 +13,7 @@ import { DirectionalSheath, DirectionalWire } from "./svg/DirectionalCable";
 import { WiringDiagram } from "./svg/WiringDiagram";
 import { MetalConduitDiagram } from "./svg/diagrams/MetalConduitDiagram";
 import { MountingFrameDiagram } from "./svg/diagrams/MountingFrameDiagram";
+import { isEmbeddedInspectionVariant } from "./svg/diagrams/EmbeddedDeviceDiagram";
 import { OutletBoxAccessoryDiagram } from "./svg/diagrams/OutletBoxAccessoryDiagram";
 import { PfConduitDiagram } from "./svg/diagrams/PfConduitDiagram";
 import { TerminalBlockDiagram } from "./svg/diagrams/TerminalBlockDiagram";
@@ -391,7 +392,7 @@ export function DirectDeviceDiagram({ part }: { part: DirectInspectionPart }) {
   }
   const physicalOnlyDefect = part.defectType === "push_in_retention_failure"
     || (part.defectType === "terminal_screw_loose" && part.deviceVariant !== "lamp_receptacle");
-  if (part.deviceVariant === "ceiling_connector" || part.deviceVariant === "lamp_receptacle" || part.deviceVariant === "exposed_receptacle" || (part.defectType !== "none" && !physicalOnlyDefect)) {
+  if (isEmbeddedInspectionVariant(part.deviceVariant) || part.deviceVariant === "ceiling_connector" || part.deviceVariant === "lamp_receptacle" || part.deviceVariant === "exposed_receptacle" || (part.defectType !== "none" && !physicalOnlyDefect)) {
     return <WiringDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} deviceName={part.title} deviceVariant={part.deviceVariant} />;
   }
 

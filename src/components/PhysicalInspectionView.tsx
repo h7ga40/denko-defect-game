@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { DeviceVariant } from "../data/candidateDiagrams";
+import type { CandidateMountingFrame, DeviceVariant } from "../data/candidateDiagrams";
 import type { CableEntrySide, WireColor } from "../data/boxInspectionGame";
 import { LampEntryOrthographic } from "./svg/diagrams/LampEntryOrthographic";
 import { ExposedReceptacleDiagram } from "./svg/diagrams/ExposedReceptacleDiagram";
@@ -10,6 +10,8 @@ import type { ConnectionVisualSpec } from "../data/connectionVisuals";
 import { RingAssemblyDiagram } from "./svg/RingAssemblyDiagram";
 import { PushConnectorAssemblyDiagram } from "./svg/PushConnectorAssemblyDiagram";
 import { CeilingConnectorDiagram } from "./svg/diagrams/CeilingConnectorDiagram";
+import { EmbeddedDeviceDiagram, isEmbeddedInspectionVariant } from "./svg/diagrams/EmbeddedDeviceDiagram";
+import { MountingFrameDiagram } from "./svg/diagrams/MountingFrameDiagram";
 import type {
   InspectionObservation,
   InspectionViewpoint,
@@ -28,6 +30,7 @@ export type PhysicalInspectionDisplayPart = {
   correctCable?: CableRunSpecification;
   fromLabel?: string;
   toLabel?: string;
+  mountingFrame?: CandidateMountingFrame;
 };
 
 type Props = {
@@ -56,7 +59,7 @@ export function PhysicalInspectionView({ children, part, viewpoint, latestObserv
 
   return (
     <div className={["physical-inspection-view", `viewpoint-${viewpoint}`, motionClass].filter(Boolean).join(" ")}>
-      {viewpoint === "front" ? children : (
+      {viewpoint === "front" && !(isEmbeddedInspectionVariant(part.deviceVariant) && part.defectType === "push_in_retention_failure") ? children : (
         <OrthographicDiagram latestObservation={latestObservation} part={part} viewpoint={viewpoint} />
       )}
     </div>
@@ -77,8 +80,14 @@ function OrthographicDiagram({
   const directVariant = part.deviceVariant;
   const terminalCount = directVariant ? getDeviceSpecification(directVariant)?.terminals.length ?? 2 : 2;
   const side = viewpoint === "left" || viewpoint === "right";
+  if (part.mountingFrame || part.defectType === "mounting_frame_loose" || part.defectType === "mounting_frame_wrong_position") {
+    return <MountingFrameDiagram frame={part.mountingFrame} defectType={part.defectType} viewpoint={viewpoint} />;
+  }
   if (directVariant === "ceiling_connector") {
     return <CeilingConnectorDiagram cableEntrySide={part.cableEntrySide} defectType={part.defectType} viewpoint={viewpoint} />;
+  }
+  if (isEmbeddedInspectionVariant(directVariant) && ["none", "receptacle_polarity", "switch_wrong_terminal", "pilot_lamp_wrong_terminal", "push_in_retention_failure"].includes(part.defectType)) {
+    return <EmbeddedDeviceDiagram variant={directVariant} title={part.title} defectType={part.defectType} cableEntrySide={part.cableEntrySide} viewpoint={viewpoint} released={latestObservation?.result === "released"} />;
   }
   if (part.connection?.method === "ring_sleeve") {
     return <RingAssemblyDiagram connection={part.connection} defectType={part.defectType} viewpoint={viewpoint} />;

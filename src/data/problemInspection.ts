@@ -35,7 +35,7 @@ const subjectByProblemId: Record<string, InspectionSubject> = {
   "mounting-frame-loose": { kind: "component" },
   "mounting-frame-wrong-position": { kind: "component" },
   "pilot-lamp-wrong-terminal": { kind: "device", variant: "pilot_lamp" },
-  "switch-wrong-terminal": { kind: "device", variant: "single_pole_switch" },
+  "switch-wrong-terminal": { kind: "device", variant: "three_way_switch" },
   "push-in-retention-failure": { kind: "device", variant: "single_pole_switch" },
   "receptacle-polarity": { kind: "device", variant: "embedded_receptacle" },
   "outlet-box-wrong-hole": { kind: "connection", method: "outlet_box" },

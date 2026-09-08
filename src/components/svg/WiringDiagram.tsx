@@ -11,13 +11,10 @@ import { OutletBoxDiagram } from "./diagrams/OutletBoxDiagram";
 import { OutletBoxAccessoryDiagram } from "./diagrams/OutletBoxAccessoryDiagram";
 import { MetalConduitDiagram } from "./diagrams/MetalConduitDiagram";
 import { PfConduitDiagram } from "./diagrams/PfConduitDiagram";
-import { PilotLampDiagram } from "./diagrams/PilotLampDiagram";
 import { PushConnectorDiagram } from "./diagrams/PushConnectorDiagram";
-import { ReceptacleDiagram } from "./diagrams/ReceptacleDiagram";
 import { RingSleeveDiagram } from "./diagrams/RingSleeveDiagram";
-import { SwitchDiagram } from "./diagrams/SwitchDiagram";
 import { TerminalBlockDiagram } from "./diagrams/TerminalBlockDiagram";
-import { DeviceDetailShape } from "./DeviceDetailShape";
+import { EmbeddedDeviceDiagram, isEmbeddedInspectionVariant } from "./diagrams/EmbeddedDeviceDiagram";
 
 type WiringDiagramProps = {
   defectType: DefectType;
@@ -29,6 +26,9 @@ type WiringDiagramProps = {
 export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName, deviceVariant }: WiringDiagramProps) {
   if (deviceVariant === "ceiling_connector") {
     return <CeilingConnectorDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
+  }
+  if (isEmbeddedInspectionVariant(deviceVariant) && ["none", "receptacle_polarity", "switch_wrong_terminal", "pilot_lamp_wrong_terminal", "push_in_retention_failure"].includes(defectType)) {
+    return <EmbeddedDeviceDiagram variant={deviceVariant} title={deviceName} defectType={defectType} cableEntrySide={cableEntrySide} />;
   }
   if (deviceVariant === "exposed_receptacle" && (defectType === "receptacle_polarity" || defectType === "terminal_screw_loose")) {
     return <ExposedReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
@@ -48,7 +48,7 @@ export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName,
         ? <TerminalBlockDiagram defect={false} title={deviceName} variant={deviceVariant} />
         : <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
     case "push_in_retention_failure":
-      return <DeviceOverviewDiagram title={deviceName ?? "埋込連用タンブラスイッチ（片切）"} variant={deviceVariant ?? "single_pole_switch"} />;
+      return <EmbeddedDeviceDiagram variant={deviceVariant} title={deviceName} defectType={defectType} cableEntrySide={cableEntrySide} />;
     case "missing_ground":
       return <GroundedReceptacleDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
     case "sheath_too_short":
@@ -74,11 +74,11 @@ export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName,
     case "mounting_frame_wrong_position":
       return <MountingFrameDiagram defectType={defectType} />;
     case "pilot_lamp_wrong_terminal":
-      return <PilotLampDiagram cableEntrySide={cableEntrySide} title={deviceName} />;
+      return <EmbeddedDeviceDiagram cableEntrySide={cableEntrySide} title={deviceName} variant="pilot_lamp" defectType={defectType} />;
     case "switch_wrong_terminal":
-      return <SwitchDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
+      return <EmbeddedDeviceDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant ?? "three_way_switch"} defectType={defectType} />;
     case "receptacle_polarity":
-      return <ReceptacleDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant} />;
+      return <EmbeddedDeviceDiagram cableEntrySide={cableEntrySide} title={deviceName} variant={deviceVariant ?? "embedded_receptacle"} defectType={defectType} />;
     case "outlet_box_wrong_hole":
     case "rubber_bushing_missing":
     case "rubber_bushing_wrong_size":
@@ -96,15 +96,4 @@ export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName,
     default:
       return <LampReceptacleDiagram cableEntrySide={cableEntrySide} defectType="none" />;
   }
-}
-
-function DeviceOverviewDiagram({ title, variant }: { title: string; variant: DeviceVariant }) {
-  return (
-    <svg viewBox="0 0 720 390" role="img" aria-label={`${title}の正面確認図`}>
-      <rect className="panel" x="18" y="18" width="684" height="354" rx="18" />
-      <text className="label" x="360" y="62" textAnchor="middle">{title}</text>
-      <DeviceDetailShape variant={variant} x={360} y={205} />
-      <text className="small" x="360" y="342" textAnchor="middle">表示方向や検査操作を変えて確認</text>
-    </svg>
-  );
 }
