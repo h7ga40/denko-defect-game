@@ -36,6 +36,7 @@ import {
   type PhysicalTargetKind,
 } from "./physicalInspection";
 import { createRandomSource, type RandomSource } from "./random";
+import { additionalMaterialProblems, materialDefectDefinitions } from "./materialDefects";
 
 export type BoxType = "joint" | "outlet";
 export type ConnectionMethod = BoxConnectionMethod | "outlet_box" | "metal_conduit" | "pf_conduit";
@@ -179,6 +180,12 @@ type Template = {
 };
 
 const templates: Template[] = [
+  ...additionalMaterialProblems.filter(item => item.defectType.startsWith("ring_sleeve_")).map(problem => ({
+    title: "リングスリーブ", method: "ring_sleeve" as const, defectType: problem.defectType,
+    question: problem.question, choices: problem.choices, defectAnswer: problem.answer,
+    normalExplanation: materialDefectDefinitions.find(item => item.defectType === problem.defectType)!.normal,
+    defectExplanation: problem.explanation,
+  })),
   {
     title: "リングスリーブ",
     method: "ring_sleeve",
@@ -565,6 +572,8 @@ const cableDefectTypes = [
   "cable_sheath_strip_long",
   "cable_sheath_damage",
   "cable_insulation_damage",
+  "cable_split_sheath",
+  "cable_conductor_damage",
 ] as const satisfies DefectType[];
 
 function createCableInspectionUnit(
@@ -583,12 +592,14 @@ function createCableInspectionUnit(
   const correctCable = withExpectedCableEnds(cable, fromDevice, toDevice);
   const availableTypes = cableDefectTypes.filter((defectType) => {
     if (defectType === "cable_too_short") return cable.diagramLengthMm !== null;
+    if (defectType === "cable_split_sheath") return cable.hasSheath;
     if (defectType === "cable_sheath_strip_short" || defectType === "cable_sheath_strip_long") return cable.hasSheath;
     return true;
   });
   const defectType = hasDefect ? randomItem(availableTypes, random) : "none";
   const installedCable = applyCableDefect(correctCable, defectType, random);
   const answers: Record<string, string> = {
+    ...Object.fromEntries(materialDefectDefinitions.filter(item => item.group === "電線加工").map(item => [item.defectType, item.answer])),
     cable_wrong_type: "指定と異なる種類のケーブルを使用している",
     cable_too_short: "ケーブル長が指定寸法の50%以下",
     cable_sheath_strip_short: "ケーブル外装の剥ぎ取りが不足している",
@@ -597,6 +608,7 @@ function createCableInspectionUnit(
     cable_insulation_damage: "絶縁被覆に傷がある",
   };
   const explanations: Record<string, string> = {
+    ...Object.fromEntries(materialDefectDefinitions.filter(item => item.group === "電線加工").map(item => [item.defectType, item.explanation])),
     cable_wrong_type: `指定は${formatCableType(correctCable)}ですが、${formatCableType(installedCable)}を使用しています。`,
     cable_too_short: `指定寸法${correctCable.diagramLengthMm}mmに対し、施工結果は${installedCable.diagramLengthMm}mmです。`,
     cable_sheath_strip_short: "器具またはボックスへ入る側のケーブル外装の剥ぎ取りが不足しています。",
@@ -618,6 +630,7 @@ function createCableInspectionUnit(
       "ケーブル外装を剥ぎ取りすぎている",
       "ケーブル外装に傷がある",
       "絶縁被覆に傷がある",
+      ...materialDefectDefinitions.filter(item => item.group === "電線加工").map(item => item.answer),
     ],
     answer: defectType === "none" ? "欠陥なし" : answers[defectType],
     explanation: defectType === "none"
@@ -906,6 +919,7 @@ function createBox(
     parts: specs.map((spec, partIndex) => {
       const defectPlan = defectPlans.get(boxPartKey(device.id, spec.id));
       const availableTemplates = templates.filter((item) => item.method === spec.method
+        && (item.defectType !== "ring_sleeve_short_insulation" || spec.sourceCables[0]?.hasSheath)
         && (item.defectType !== "push_connector_wrong_wire_count" || spec.wireCount > 2));
       const template = defectPlan && defectPlan !== "random"
         ? availableTemplates.find((item) => item.defectType === defectPlan)
@@ -1054,7 +1068,7 @@ function groupDirectInspectionDevices(
 
 function getDirectDefectProblems(device: CandidateDevice): Problem[] {
   const idsByVariant: Partial<Record<NonNullable<CandidateDevice["variant"]>, string[]>> = {
-    lamp_receptacle: ["lamp-loop-reverse", "lamp-polarity", "lamp-terminal-screw-loose", "lamp-cover-cannot-close", "lamp-cable-entry-bypass"],
+    lamp_receptacle: ["lamp-loop-reverse", "lamp-polarity", "lamp-terminal-screw-loose", "lamp-cover-cannot-close", "lamp-cable-entry-bypass", ...materialDefectDefinitions.filter(item => item.group === "輪づくり").map(item => item.id)],
     ceiling_connector: ["ceiling-connector-polarity", "push-in-retention-failure"],
     exposed_receptacle: ["exposed-receptacle-sheath", "exposed-receptacle-entry-bypass", "receptacle-polarity", "terminal-screw-loose"],
     grounded_receptacle: ["receptacle-ground", "receptacle-polarity", "push-in-retention-failure"],

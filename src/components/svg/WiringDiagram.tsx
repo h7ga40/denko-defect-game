@@ -15,6 +15,8 @@ import { PushConnectorDiagram } from "./diagrams/PushConnectorDiagram";
 import { RingSleeveDiagram } from "./diagrams/RingSleeveDiagram";
 import { TerminalBlockDiagram } from "./diagrams/TerminalBlockDiagram";
 import { EmbeddedDeviceDiagram, isEmbeddedInspectionVariant } from "./diagrams/EmbeddedDeviceDiagram";
+import { isMaterialDefect } from "../../data/materialDefects";
+import { MaterialDefectDiagram } from "./MaterialDefectDiagram";
 
 type WiringDiagramProps = {
   defectType: DefectType;
@@ -24,6 +26,9 @@ type WiringDiagramProps = {
 };
 
 export function WiringDiagram({ defectType, cableEntrySide = "left", deviceName, deviceVariant }: WiringDiagramProps) {
+  if (isMaterialDefect(defectType)) {
+    return defectType.startsWith("ring_sleeve_") ? <RingSleeveDiagram defectType={defectType} /> : <MaterialDefectDiagram defectType={defectType} />;
+  }
   if (deviceVariant === "ceiling_connector") {
     return <CeilingConnectorDiagram cableEntrySide={cableEntrySide} defectType={defectType} />;
   }

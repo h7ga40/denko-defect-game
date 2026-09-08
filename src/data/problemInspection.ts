@@ -5,6 +5,7 @@ import { getDeviceSpecification } from "./deviceSpecifications";
 import { createDevicePhysicalInspection, createPhysicalInspectionForDefect, type PhysicalTargetKind } from "./physicalInspection";
 import type { Problem } from "./problems";
 import { quizConnectionVisual } from "./connectionVisuals";
+import { isMaterialDefect } from "./materialDefects";
 
 type InspectionSubject =
   | { kind: "device"; variant: DeviceVariant }
@@ -49,7 +50,8 @@ const subjectByProblemId: Record<string, InspectionSubject> = {
 };
 
 export function createProblemInspectionPart(problem: Problem): PhysicalInspectionDisplayPart {
-  const subject = subjectByProblemId[problem.id] ?? { kind: "component" as const };
+  const subject: InspectionSubject = subjectByProblemId[problem.id] ?? (isMaterialDefect(problem.defectType) && problem.defectType.startsWith("ring_sleeve_")
+    ? { kind: "connection", method: "ring_sleeve" } : { kind: "component" });
   const targetId = `quiz:${problem.id}`;
 
   if (subject.kind === "device") {

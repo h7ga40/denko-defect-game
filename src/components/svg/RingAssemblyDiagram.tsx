@@ -23,7 +23,7 @@ export function RingAssemblyDiagram({ connection, defectType, viewpoint = "front
     <g className="orthographic-object" data-ring-size={size} data-ring-mark={uncrimped ? "" : mark}>
       {wires.map((wire, index) => {
         const x = wire.loose ? 450 - width / 2 - 26 : 450 + (index - (wires.length - 1) / 2) * gap;
-        const insulationEnd = defectType === "ring_sleeve_insulation_bite" && index === 0 ? 217 : 264;
+        const insulationEnd = defectType === "ring_sleeve_insulation_bite" && index === 0 ? 217 : defectType === "ring_sleeve_excess_bare" ? 310 : 264;
         const tip = wire.loose ? 274 : defectType === "ring_sleeve_insufficient_insert" && index === 0 ? 209 : defectType === "ring_sleeve_conductor_overhang" && index === 0 ? 102 : 134;
         const label = `${index + 1}. ${wire.label || "電線"} ${wire.diameter.toFixed(1)}mm`;
         return <g key={index} data-ring-wire={index} data-copper-tip={tip} data-insulation-end={insulationEnd}>
@@ -36,6 +36,21 @@ export function RingAssemblyDiagram({ connection, defectType, viewpoint = "front
       })}
       <rect className="material-ring-body" x={450 - width / 2} y="140" width={width} height="110" rx={uncrimped ? 7 : 16} fillOpacity={side ? .25 : .72} />
       <path className="material-ring-rim" d={`M ${450 - width / 2} 146 Q 450 155 ${450 + width / 2} 146 M ${450 - width / 2} 245 Q 450 253 ${450 + width / 2} 245`} />
+      {defectType === "ring_sleeve_damaged" && <path className="material-cut-edge" data-sleeve-fracture="true" d={`M ${450 + width / 2 - 24} 139 L ${450 + width / 2 - 15} 160 L ${450 + width / 2 - 3} 145 L ${450 + width / 2 - 6} 181 L ${450 + width / 2 - 16} 164 L ${450 + width / 2 - 31} 152 Z`} />}
+      {defectType === "ring_sleeve_extra" && <g data-extra-sleeve="true">
+        <rect className="material-ring-body" x={450 - (wires.length - 1) * gap / 2 - 12} y="282" width="24" height="34" rx="3" />
+        <path className="material-ring-rim" d={`M ${450 - (wires.length - 1) * gap / 2 - 12} 286 h 24`} />
+      </g>}
+      {defectType === "ring_sleeve_short_insulation" && <g data-insulated-length-mm="10">
+        <rect className="material-sheath" x={450 - (wires.length - 1) * gap / 2 - 10} y="300" width="20" height="28" rx="3" />
+        <path className="fitting-slot" d="M 520 264 h 10 M 525 264 v 36 M 520 300 h 10" />
+        <text className="small" x="540" y="282">電線1：10mm</text>
+        <text className="material-note" x="540" y="302">外装端～絶縁被覆端</text>
+      </g>}
+      {defectType === "ring_sleeve_excess_bare" && <g data-bare-length-mm="15">
+        <path className="fitting-slot" d="M 520 250 h 10 M 525 250 v 60 M 520 310 h 10" />
+        <text className="small" x="540" y="282">裸銅線 15mm</text>
+      </g>}
       {!uncrimped && <g data-crimp-count={double ? 2 : 1}>
         <path className="material-crimp" d={partial ? `M ${450 - width / 2} 180 H 449 V 213 H ${450 - width / 2}` : "M 429 179 Q 450 185 471 179 V 212 Q 450 206 429 212 Z"} />
         {viewpoint !== "back" && <text className="material-mark" x={partial ? 435 : 450} y="202" textAnchor="middle">{mark}</text>}

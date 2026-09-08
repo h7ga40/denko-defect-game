@@ -33,6 +33,11 @@ try {
     assert(!html.includes('NaN'));
     const count = token => html.split(token).length - 1;
     if (part.installedCable) {
+      if (['cable_split_sheath', 'cable_conductor_damage'].includes(part.defectType)) {
+        assert.equal(count('data-preparation-core='), part.installedCable.coreCount);
+        assert(html.includes(part.defectType === 'cable_split_sheath' ? 'data-split-sheath-mm="30"' : 'data-conductor-notch="true"'));
+        continue;
+      }
       assert.equal(count('data-cable-core='), part.installedCable.coreCount * 2);
       assert.equal(count('data-common-sheath='), part.installedCable.hasSheath ? 2 : 0);
       if (part.defectType === 'cable_insulation_damage') assert.equal(count('data-insulation-wound='), 1);

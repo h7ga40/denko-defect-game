@@ -1,4 +1,7 @@
+import { additionalMaterialProblems, type MaterialDefectType } from "./materialDefects";
+
 export type DefectType =
+  | MaterialDefectType
   | "none"
   | "reverse_loop"
   | "reverse_polarity"
@@ -453,4 +456,6 @@ export const problems: Problem[] = [
     choices: ["欠陥なし", "ロックナットがない", "絶縁ブッシングがない", "PF管の色が違う"],
     answer: "ロックナットがない",
     explanation: "PF管用ボックスコネクタはボックス内側からロックナットで固定します。図ではロックナットがありません。",
-  },];
+  },
+  ...additionalMaterialProblems,
+];

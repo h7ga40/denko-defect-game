@@ -1,9 +1,13 @@
 import type { CableInspectionPart } from "../../data/boxInspectionGame";
 import { CableEndBundle } from "./CableEndBundle";
 import type { InspectionViewpoint } from "../../data/physicalInspection";
+import { MaterialDefectDiagram } from "./MaterialDefectDiagram";
 export type CableDiagramPart = Pick<CableInspectionPart, "title" | "defectType" | "installedCable" | "correctCable" | "fromLabel" | "toLabel">;
 
 export function CableInspectionDiagram({ part, viewpoint = "front" }: { part: CableDiagramPart; viewpoint?: InspectionViewpoint }) {
+  if (part.defectType === "cable_split_sheath" || part.defectType === "cable_conductor_damage") {
+    return <MaterialDefectDiagram defectType={part.defectType} viewpoint={viewpoint} cable={part.installedCable} />;
+  }
   const cable = part.installedCable;
   const correctLength = part.correctCable.diagramLengthMm;
   const installedLength = cable.diagramLengthMm;

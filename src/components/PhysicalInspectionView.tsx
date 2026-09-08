@@ -12,6 +12,8 @@ import { PushConnectorAssemblyDiagram } from "./svg/PushConnectorAssemblyDiagram
 import { CeilingConnectorDiagram } from "./svg/diagrams/CeilingConnectorDiagram";
 import { EmbeddedDeviceDiagram, isEmbeddedInspectionVariant } from "./svg/diagrams/EmbeddedDeviceDiagram";
 import { MountingFrameDiagram } from "./svg/diagrams/MountingFrameDiagram";
+import { isMaterialDefect } from "../data/materialDefects";
+import { MaterialDefectDiagram } from "./svg/MaterialDefectDiagram";
 import type {
   InspectionObservation,
   InspectionViewpoint,
@@ -80,6 +82,9 @@ function OrthographicDiagram({
   const directVariant = part.deviceVariant;
   const terminalCount = directVariant ? getDeviceSpecification(directVariant)?.terminals.length ?? 2 : 2;
   const side = viewpoint === "left" || viewpoint === "right";
+  if (isMaterialDefect(part.defectType) && !part.defectType.startsWith("ring_sleeve_")) {
+    return <MaterialDefectDiagram defectType={part.defectType} viewpoint={viewpoint} cable={part.installedCable} />;
+  }
   if (part.mountingFrame || part.defectType === "mounting_frame_loose" || part.defectType === "mounting_frame_wrong_position") {
     return <MountingFrameDiagram frame={part.mountingFrame} defectType={part.defectType} viewpoint={viewpoint} />;
   }

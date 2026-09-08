@@ -36,6 +36,8 @@ export type PhysicalMeasurements = {
   exposedConductorLengthMm?: number | null;
   conductorProjectionMm?: number | null;
   sheathStripLengthMm?: number | null;
+  splitSheathLengthMm?: number;
+  insulatedLeadLengthMm?: number;
 };
 
 export type PhysicalTargetState = {
@@ -52,6 +54,8 @@ export type PhysicalTargetState = {
   integrity?: IntegrityState;
   connection?: ConnectionState;
   cableRouting?: "through_entry" | "over_base";
+  loopShape?: "short" | "overlap" | "long_tail" | "oversized";
+  unusedSleeveCount?: number;
   sheathPosition?: "inside_base" | "outside_base" | "above_base";
   measurements?: PhysicalMeasurements;
   damage?: PhysicalDamage[];
@@ -323,6 +327,26 @@ function applyDefectState(target: PhysicalTargetState, defectType: DefectType): 
     case "ring_sleeve_conductor_overhang":
     case "push_connector_exposed_conductor":
       return { ...target, measurements: { ...target.measurements, conductorProjectionMm: 5 } };
+    case "loop_insufficient_wrap":
+      return { ...target, loopShape: "short" };
+    case "loop_tip_overlap":
+      return { ...target, loopShape: "overlap" };
+    case "loop_excess_tail":
+      return { ...target, loopShape: "long_tail", measurements: { ...target.measurements, conductorProjectionMm: 8 } };
+    case "loop_oversized":
+      return { ...target, loopShape: "oversized" };
+    case "cable_split_sheath":
+      return { ...target, measurements: { ...target.measurements, splitSheathLengthMm: 30 } };
+    case "cable_conductor_damage":
+      return { ...target, integrity: "damaged", damage: [{ id: target.id + ":conductor-cut", type: "cut", location: "conductor", visibleFrom: ["front", "back", "left", "right"] }] };
+    case "ring_sleeve_damaged":
+      return { ...target, integrity: "damaged", damage: [{ id: target.id + ":sleeve-crack", type: "crack", location: "body", visibleFrom: ["front", "back", "left", "right"] }] };
+    case "ring_sleeve_extra":
+      return { ...target, unusedSleeveCount: 1 };
+    case "ring_sleeve_short_insulation":
+      return { ...target, measurements: { ...target.measurements, insulatedLeadLengthMm: 10 } };
+    case "ring_sleeve_excess_bare":
+      return { ...target, measurements: { ...target.measurements, exposedConductorLengthMm: 15 } };
     case "terminal_screw_loose":
       return { ...target, tightening: "loose", retention: "releases_on_pull" };
     case "push_in_retention_failure":
